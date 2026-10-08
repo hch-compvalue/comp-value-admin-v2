@@ -1148,13 +1148,13 @@ const GuideOverlay = ({ onClose, data }) => {
                             📊 엑셀 대량조회 색상 기준
                         </div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
-                            투자판단 등급 기반
+                            가치등급 기반 (1~5단계 펀더멘털, 타이밍 미반영)
                         </div>
                         <div className="space-y-2">
                             <div className="flex items-start gap-2">
                                 <span className="inline-block w-3 h-3 mt-0.5 rounded-sm flex-shrink-0" style={{ backgroundColor: '#FDE68A' }} />
                                 <div>
-                                    <span className="font-medium text-[11px] text-slate-700 dark:text-slate-300">노란색 — 투자 권장</span>
+                                    <span className="font-medium text-[11px] text-slate-700 dark:text-slate-300">노란색 — 펀더멘털 최우수/우수</span>
                                     <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                                         S 또는 A 등급
                                     </div>
@@ -1163,7 +1163,7 @@ const GuideOverlay = ({ onClose, data }) => {
                             <div className="flex items-start gap-2">
                                 <span className="inline-block w-3 h-3 mt-0.5 rounded-sm flex-shrink-0" style={{ backgroundColor: '#BBF7D0' }} />
                                 <div>
-                                    <span className="font-medium text-[11px] text-slate-700 dark:text-slate-300">초록색 — 투자 고려</span>
+                                    <span className="font-medium text-[11px] text-slate-700 dark:text-slate-300">초록색 — 펀더멘털 양호</span>
                                     <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                                         B 등급
                                     </div>
@@ -1172,7 +1172,7 @@ const GuideOverlay = ({ onClose, data }) => {
                             <div className="flex items-start gap-2">
                                 <span className="inline-block w-3 h-3 mt-0.5 rounded-sm flex-shrink-0" style={{ backgroundColor: '#E0F2FE' }} />
                                 <div>
-                                    <span className="font-medium text-[11px] text-slate-700 dark:text-slate-300">하늘색 — 관심</span>
+                                    <span className="font-medium text-[11px] text-slate-700 dark:text-slate-300">하늘색 — 펀더멘털 보통</span>
                                     <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                                         C 등급
                                     </div>

@@ -149,7 +149,7 @@ export default function BulkQueryModal({ open, onClose, fetcher, initialSymbols 
 
                     {/* 엑셀 행 색상 범례 */}
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
-                        <span className="font-medium text-slate-600 dark:text-slate-300">엑셀 행 색상 (투자판단 등급):</span>
+                        <span className="font-medium text-slate-600 dark:text-slate-300">엑셀 행 색상 (가치등급):</span>
                         <span className="flex items-center gap-1">
                             <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: '#fde68a' }} />
                             S · A등급
@@ -359,11 +359,11 @@ async function defaultBulkFetcher(symbols, onProgress, abortRef) {
 
             const { data, error } = compResult;
 
-            // 투자판단 등급 매핑 (symbol → grade)
+            // 가치등급 매핑 (symbol → valueGrade) — 오늘의 매수후보/투자판단 화면과 동일 기준
             const evalMap = {};
             if (!evalResult.error && evalResult.data?.response) {
                 for (const item of evalResult.data.response) {
-                    if (item.symbol) evalMap[item.symbol] = item.grade;
+                    if (item.symbol) evalMap[item.symbol] = item.valueGrade;
                 }
             }
 
@@ -381,7 +381,7 @@ async function defaultBulkFetcher(symbols, onProgress, abortRef) {
                         현재가격: responseData.현재가격,
                         주당가치: responseData.주당가치,
                         peg: responseData.상세정보?.peg,
-                        evaluationGrade: evalMap[symbolValue] || null,
+                        valueGrade: evalMap[symbolValue] || null,
                         json: responseData,
                     };
                     results.push(resData);
@@ -456,8 +456,8 @@ async function exportToExcel(items) {
         const future = toNum(it.주당가치);
         const peg = toNum(it.peg);
 
-        // 투자판단 등급 기반 하이라이트
-        const evalGrade = it.evaluationGrade;
+        // 가치등급 기반 하이라이트 (Step1~5 펀더멘털, 타이밍/게이트 감점 미반영)
+        const evalGrade = it.valueGrade;
         const yellow = evalGrade === 'S' || evalGrade === 'A';
         const green = !yellow && evalGrade === 'B';
         const sky = !yellow && !green && evalGrade === 'C';
@@ -493,7 +493,7 @@ async function exportToExcel(items) {
     const legendWs = wb.addWorksheet('범례');
     legendWs.columns = [
         { header: '색상', key: 'color', width: 20 },
-        { header: '등급', key: 'grade', width: 10 },
+        { header: '가치등급', key: 'grade', width: 10 },
         { header: '의미', key: 'meaning', width: 55 },
     ];
 
@@ -506,10 +506,11 @@ async function exportToExcel(items) {
     const fillSkyLegend = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
 
     const legendData = [
-        { fill: fillYellowLegend, grade: 'S / A', meaning: '92점+ / 83점+ — 강력 매수 추천 / 매수 추천 (저평가 + 재무 건전성 우수)' },
-        { fill: fillGreenLegend, grade: 'B', meaning: '73~82점 — 매수 고려 가능 (전반적 양호, 일부 주의 필요)' },
-        { fill: fillSkyLegend, grade: 'C', meaning: '63~72점 — 신중한 검토 필요 (리스크 요인 존재)' },
-        { fill: null, grade: 'D / F', meaning: '62점 이하 — 투자 주의 / 비추천 (색상 없음)' },
+        { fill: fillYellowLegend, grade: 'S / A', meaning: '92점+ / 83점+ — 펀더멘털 최우수 / 우수 (저평가 + 재무 건전성)' },
+        { fill: fillGreenLegend, grade: 'B', meaning: '73~82점 — 펀더멘털 양호 (S/A/B = 가치 양호, 타이밍 양호 시 매수 후보)' },
+        { fill: fillSkyLegend, grade: 'C', meaning: '63~72점 — 펀더멘털 보통 (리스크 요인 존재)' },
+        { fill: null, grade: 'D / F', meaning: '62점 이하 — 펀더멘털 미흡 (색상 없음)' },
+        { fill: null, grade: '※', meaning: '가치등급 = 1~5단계(82점)를 100점 환산. 타이밍/모멘텀 감점 미반영 — 진입 시점은 투자판단 화면에서 확인' },
     ];
 
     legendData.forEach((item) => {
