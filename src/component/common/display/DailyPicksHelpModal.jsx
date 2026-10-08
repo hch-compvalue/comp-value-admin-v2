@@ -322,6 +322,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                             헤더를 클릭하면 해당 컬럼 기준으로 정렬됩니다(▲ 오름차순 / ▼ 내림차순).
+                            행을 더블클릭하면 해당 종목의 기업가치를 실시간으로 다시 계산해 결과 팝업을 띄웁니다(평가 시점 적정가와 다를 수 있음).
                         </p>
                     </section>
 

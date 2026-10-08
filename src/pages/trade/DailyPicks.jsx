@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { send } from '@/util/ClientUtil';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { send, API_ENDPOINTS } from '@/util/ClientUtil';
 import PageTitle from '@/component/common/display/PageTitle';
 import DailyPicksHelpModal from '@/component/common/display/DailyPicksHelpModal';
+import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
 
 // 색각이상 친화 팔레트 (파랑/노랑/회색) — 초록 대신 파랑
 const SIGNAL_STYLE = {
@@ -42,6 +43,10 @@ const DailyPicks = () => {
     const [signalFilter, setSignalFilter] = useState('매수 후보');  // 기본: 매수후보만
     const [sortKey, setSortKey] = useState('valueScore');
     const [sortDir, setSortDir] = useState('desc');
+    const [showValueModal, setShowValueModal] = useState(false);
+    const [compValueData, setCompValueData] = useState({});
+    const [valueLoadingSymbol, setValueLoadingSymbol] = useState(null);
+    const valueInFlight = useRef(false);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -59,6 +64,26 @@ const DailyPicks = () => {
     }, []);
 
     useEffect(() => { fetchData(); }, [fetchData]);
+
+    // 행 더블클릭 → 기업가치 실시간 재계산 후 결과 모달 표시
+    const handleRowDoubleClick = useCallback(async (symbol) => {
+        if (!symbol || valueInFlight.current) return;
+        valueInFlight.current = true;
+        setValueLoadingSymbol(symbol);
+        setError('');
+        try {
+            const { data, error } = await send(API_ENDPOINTS.ABROAD_COMP_VALUE(symbol), {}, 'GET');
+            if (!error && data?.response && Object.keys(data.response).length > 0) {
+                setCompValueData(data.response);
+                setShowValueModal(true);
+            } else {
+                setError(`${symbol}: 기업가치 계산 결과가 없거나 서버 응답을 받지 못했습니다.`);
+            }
+        } finally {
+            setValueLoadingSymbol(null);
+            valueInFlight.current = false;
+        }
+    }, []);
 
     // 투자판정별 집계
     const counts = useMemo(() => {
@@ -143,7 +168,8 @@ const DailyPicks = () => {
 
             <div className="flex items-center justify-between mb-3">
                 <div className="text-sm text-slate-500 dark:text-slate-400">
-                    {baseDate && `평가 기준일: ${baseDate}`} · 매일 오전 10시 자동 전수평가 결과
+                    {baseDate && `평가 기준일: ${baseDate}`} · 매일 오전 10시 자동 전수평가 결과 · 행 더블클릭 시 기업가치 계산
+                    {valueLoadingSymbol && <span className="ml-2 text-blue-600 dark:text-blue-400">({valueLoadingSymbol} 계산 중…)</span>}
                 </div>
                 <button
                     onClick={fetchData}
@@ -183,7 +209,14 @@ const DailyPicks = () => {
                             </td></tr>
                         )}
                         {filtered.map((r) => (
-                            <tr key={r.symbol} className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                            <tr
+                                key={r.symbol}
+                                onDoubleClick={() => handleRowDoubleClick(r.symbol)}
+                                title="더블클릭: 기업가치 계산 결과 보기"
+                                className={`border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer select-none ${
+                                    valueLoadingSymbol === r.symbol ? 'opacity-60' : ''
+                                }`}
+                            >
                                 <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-white">{r.symbol}</td>
                                 <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 max-w-[200px] truncate">{r.companyName || '-'}</td>
                                 <td className="px-4 py-2.5">
@@ -207,6 +240,11 @@ const DailyPicks = () => {
             </div>
 
             <DailyPicksHelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
+            <CompanyValueResultModal
+                isOpen={showValueModal}
+                onClose={() => setShowValueModal(false)}
+                data={compValueData}
+            />
         </div>
     );
 };
