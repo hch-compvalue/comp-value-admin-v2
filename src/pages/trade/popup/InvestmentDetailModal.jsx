@@ -27,18 +27,29 @@ const getGradeStyle = (grade) => {
     return styles[grade] || 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200';
 };
 
+// 투자판정 아이콘 (색각이상 친화: 파랑/노랑/회색) — DailyPicks와 동일
+const SIGNAL_ICON = { '매수 후보': '🔵', '관심목록': '🟡', '관망': '⚪' };
+
+// 소수점 1자리로 표시할 점수 필드
+const SCORE_FIELDS = new Set(['valueScore', 'totalScore']);
+
 // 필드 레이블 매핑 (영문 -> 한글)
 const FIELD_LABELS = {
     symbol: '심볼',
     companyName: '기업명',
+    investmentSignal: '투자판정',
+    valueGrade: '가치등급',
+    valueScore: '가치점수',
+    timingSignal: '타이밍',
+    timingScore: '타이밍 점수',
     currentPrice: '현재가',
     fairValue: '적정가치',
     calFairValue: '계산된 주당가치',
     priceDifference: '가격차이',
     priceGapPercent: '가격차이율',
-    totalScore: '총점',
-    grade: '등급',
-    recommendation: '추천',
+    totalScore: '종합점수(레거시)',
+    grade: '종합등급(레거시)',
+    recommendation: '추천(종합점수 기준)',
     purchasePrice: '매수적정가',
     sellTarget: '목표매도가',
     stopLossPrice: '손절매가',
@@ -144,7 +155,7 @@ const formatResultDetailValue = (key, value) => {
 /**
  * 하이라이트 카드 컴포넌트
  */
-const HighlightCard = ({ label, value, isGrade, onClick, clickable, subValue = null, subLabel = '' }) => {
+const HighlightCard = ({ label, value, isGrade, onClick, clickable, subValue = null, subLabel = '', valueSuffix = null }) => {
     const CardWrapper = clickable ? 'button' : 'div';
     return (
         <CardWrapper
@@ -165,8 +176,11 @@ const HighlightCard = ({ label, value, isGrade, onClick, clickable, subValue = n
             </div>
             <div className={`mt-1 text-base font-semibold text-slate-900 dark:text-white truncate ${clickable ? 'group-hover:text-blue-600 dark:group-hover:text-blue-400' : ''}`}>
                 {isGrade ? (
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-sm font-bold ${getGradeStyle(value)}`}>
-                        {value || '-'}
+                    <span className="flex items-center gap-2">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-sm font-bold ${getGradeStyle(value)}`}>
+                            {value || '-'}
+                        </span>
+                        {valueSuffix && <span className="text-sm">{valueSuffix}</span>}
                     </span>
                 ) : (
                     <span className="flex items-center gap-1">
@@ -872,9 +886,26 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                 {/* 콘텐츠 */}
                 <div className="p-4 overflow-y-auto overflow-x-hidden max-h-[calc(85vh-60px)]">
                     {/* 요약 정보 */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                        <HighlightCard label="등급" value={data.grade} isGrade />
-                        <HighlightCard label="총점" value={`${data.totalScore?.toFixed(1) ?? '-'} / 100`} />
+                    {/* 가치등급/투자판정은 오늘의 매수후보·투자판단 표와 동일 기준, 레거시 종합점수는 보조 표시 */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+                        <HighlightCard
+                            label="투자판정"
+                            value={data.investmentSignal ? `${SIGNAL_ICON[data.investmentSignal] || ''} ${data.investmentSignal}` : '-'}
+                        />
+                        <HighlightCard
+                            label="가치등급"
+                            value={data.valueGrade}
+                            isGrade
+                            valueSuffix={data.valueScore != null ? `${data.valueScore.toFixed(1)} / 100` : null}
+                            subLabel="종합(모멘텀·감점 포함)"
+                            subValue={data.grade ? `${data.grade} · ${data.totalScore?.toFixed(1) ?? '-'}` : null}
+                        />
+                        <HighlightCard
+                            label="타이밍"
+                            value={data.timingSignal || '-'}
+                            subLabel="타이밍 점수"
+                            subValue={data.timingScore != null ? `${data.timingScore} / 100` : null}
+                        />
                         <HighlightCard
                             label="현재가"
                             value={data.currentPrice ? `$${data.currentPrice}` : '-'}
@@ -962,8 +993,9 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                         );
                     })()}
 
-                    {/* 추천 */}
+                    {/* 추천 (백엔드가 레거시 종합점수로 생성) */}
                     <div className="mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
+                        <div className="text-[11px] text-blue-600/80 dark:text-blue-300/70 mb-0.5">종합점수 기준 코멘트</div>
                         <div className="text-sm font-medium text-blue-800 dark:text-blue-200">{data.recommendation || '-'}</div>
                     </div>
 
@@ -1157,7 +1189,7 @@ export const FullDetailModal = ({ isOpen, data, onClose, zIndex = 70 }) => {
                                 {Object.entries(FIELD_LABELS).map(([key, label]) => {
                                     if (key.startsWith('step') || !data.hasOwnProperty(key)) return null;
                                     const value = data[key];
-                                    const displayValue = value ?? '-';
+                                    const displayValue = SCORE_FIELDS.has(key) && typeof value === 'number' ? value.toFixed(1) : (value ?? '-');
                                     const valueStr = String(displayValue);
 
                                     // 적정가치인 경우 계산된주당가치도 함께 표시
