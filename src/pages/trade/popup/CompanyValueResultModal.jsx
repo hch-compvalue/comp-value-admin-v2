@@ -6,6 +6,14 @@ import CompanyInfoModal from './CompanyInfoModal';
 import InvestmentDetailModal, { FullDetailModal } from './InvestmentDetailModal';
 import { send } from '@/util/ClientUtil';
 
+// 투자판정 배너 스타일 (색각이상 친화: 파랑/노랑/회색) — DailyPicks SIGNAL_STYLE과 동일 팔레트
+const SIGNAL_BANNER_STYLE = {
+    '매수 후보': 'border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+    '관심목록': 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+    '관망': 'border-slate-300 bg-slate-50 text-slate-700 dark:border-slate-600 dark:bg-slate-700/30 dark:text-slate-300',
+};
+const SIGNAL_ICON = { '매수 후보': '🔵', '관심목록': '🟡', '관망': '⚪' };
+
 /**
  * 기업가치 계산 결과 모달 컴포넌트
  */
@@ -500,29 +508,22 @@ const MetricExplanation = ({ onOpenGuide, 매출기반평가 }) => (
 );
 
 /**
- * 투자 권장 배너 (투자판단 등급 기반 단일 판단)
+ * 투자판정 배너 (가치등급 × 타이밍 → 투자판정, 오늘의 매수후보와 동일 기준)
  */
 const RecommendationBanner = ({ data, investmentData }) => {
     const metrics = useCompanyMetrics(data, investmentData);
 
     // 투자판단 데이터 로딩 전에는 배너 미표시
-    if (!metrics.evalGrade) return null;
-    if (!metrics.isRecommended && !metrics.isConsider) return null;
+    if (!metrics.valueGrade || !metrics.investmentSignal) return null;
 
-    const scoreText = metrics.evalScore != null ? ` (${Number(metrics.evalScore).toFixed(1)}점)` : '';
+    const scoreText = metrics.valueScore != null ? ` (${Number(metrics.valueScore).toFixed(1)}점)` : '';
+    const timingText = metrics.timingSignal ? ` · 타이밍 ${metrics.timingSignal}` : '';
+    const style = SIGNAL_BANNER_STYLE[metrics.investmentSignal] || SIGNAL_BANNER_STYLE['관망'];
 
-    if (metrics.isRecommended) {
-        return (
-            <div className="mt-2 w-full rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-[13px] text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                {`📊 투자판단 ${metrics.evalGrade}등급${scoreText} — `}<span className="font-semibold">투자 권장</span>
-            </div>
-        );
-    }
-
-    // 투자 고려 (B등급)
     return (
-        <div className="mt-2 w-full rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-[13px] text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-            {`📊 투자판단 ${metrics.evalGrade}등급${scoreText} — `}<span className="font-semibold">투자 고려</span>
+        <div className={`mt-2 w-full rounded-md border px-3 py-2 text-[13px] ${style}`}>
+            {`📊 가치 ${metrics.valueGrade}등급${scoreText}${timingText} → `}
+            <span className="font-semibold">{SIGNAL_ICON[metrics.investmentSignal]} {metrics.investmentSignal}</span>
         </div>
     );
 };
@@ -1108,18 +1109,19 @@ const GuideOverlay = ({ onClose, data }) => {
                         )}
                     </div>
 
-                    {/* 투자판단 6단계 통합 시스템 */}
-                    <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 dark:border-emerald-800 dark:bg-emerald-900/20">
-                        <div className="text-[12px] font-semibold text-emerald-800 dark:text-emerald-300 mb-1.5">
-                            📋 투자판단 6단계 통합 시스템
+                    {/* 투자판정 (가치등급 × 타이밍) */}
+                    <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 px-3 py-2.5 dark:border-blue-800 dark:bg-blue-900/20">
+                        <div className="text-[12px] font-semibold text-blue-800 dark:text-blue-300 mb-1.5">
+                            📋 투자판정 = 가치등급 × 타이밍
                         </div>
-                        <div className="text-[11px] text-emerald-700 dark:text-emerald-400 space-y-1">
-                            <div className="font-medium">투자판단 등급에 따른 단일 판단:</div>
+                        <div className="text-[11px] text-blue-700 dark:text-blue-400 space-y-1">
+                            <div className="font-medium">가치등급: 1~5단계(펀더멘털 82점)를 100점 환산 — S≥92 / A≥83 / B≥73 / C≥63 / D≥50 / F</div>
                             <ul className="list-disc pl-4 space-y-0.5">
-                                <li><span className="font-semibold">S/A 등급 (90+/80+점)</span> → 투자 권장</li>
-                                <li><span className="font-semibold">B 등급 (70+점)</span> → 투자 고려</li>
-                                <li><span className="font-semibold">C/D/F 등급</span> → 신중 검토 필요</li>
+                                <li><span className="font-semibold">가치 S/A/B + 타이밍 양호</span> → 🔵 매수 후보</li>
+                                <li><span className="font-semibold">가치 S/A/B + 타이밍 미흡(대기/하락/관망)</span> → 🟡 관심목록</li>
+                                <li><span className="font-semibold">가치 C/D/F</span> → ⚪ 관망</li>
                             </ul>
+                            <div>초소형주(&lt;$300M)·극단 괴리(±200%)는 매수 후보에서 관심목록으로 강등, 채권/이상치는 관망</div>
                         </div>
                     </div>
 
@@ -1316,7 +1318,7 @@ const AnalysisIcon = () => (
 
 /**
  * 기업 지표 계산 Hook
- * 투자판단 등급 기반 단일 판단 (6단계 통합 시스템)
+ * 투자판정: 가치등급 × 타이밍 (오늘의 매수후보/투자판단 화면과 동일 필드)
  */
 const useCompanyMetrics = (data, evaluationData) => {
     return useMemo(() => {
@@ -1380,11 +1382,11 @@ const useCompanyMetrics = (data, evaluationData) => {
 
         const grahamGrade = getValDeep(data, ['그레이엄_등급']);
 
-        // 투자판단 등급 기반 단일 판단
-        const evalGrade = evaluationData?.grade;
-        const evalScore = evaluationData?.totalScore;
-        const isRecommended = evalGrade === 'S' || evalGrade === 'A';
-        const isConsider = evalGrade === 'B';
+        // 투자판정 (가치등급 × 타이밍) — 레거시 grade/totalScore(게이트 적용)는 사용 안 함
+        const valueGrade = evaluationData?.valueGrade;
+        const valueScore = evaluationData?.valueScore;
+        const timingSignal = evaluationData?.timingSignal;
+        const investmentSignal = evaluationData?.investmentSignal;
 
         return {
             symbol,
@@ -1394,12 +1396,12 @@ const useCompanyMetrics = (data, evaluationData) => {
             peg: Number.isFinite(pegToShow) ? pegToShow : null,
             psr: Number.isNaN(psrNum) ? null : psrNum,
             eps: Number.isNaN(toNum(eps)) ? null : toNum(eps),
-            isRecommended,
-            isConsider,
             매출기반평가,
             grahamGrade,
-            evalGrade: evalGrade || null,
-            evalScore: evalScore ?? null,
+            valueGrade: valueGrade || null,
+            valueScore: valueScore ?? null,
+            timingSignal: timingSignal || null,
+            investmentSignal: investmentSignal || null,
         };
     }, [data, evaluationData]);
 };
