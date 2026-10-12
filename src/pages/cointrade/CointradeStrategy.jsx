@@ -16,6 +16,7 @@ const API = '/dart/api/cointrade/strategy';
 const STATUS_REFRESH_MS = 60_000;
 const RUN_LIMIT = 90;
 const MIN_CAPITAL_KRW = 5000;
+const EMERGENCY_CONFIRM_WORD = '매도';
 const RUN_HOURS = Array.from({ length: 15 }, (_, i) => i + 9);   // 9~23시 (09시 일봉 마감 이후)
 const COLOR_STRATEGY = '#3b82f6';
 const COLOR_BTC = '#f59e0b';
@@ -70,6 +71,8 @@ export default function CointradeStrategy() {
     const [busy, setBusy] = useState(false);
     const [capitalInput, setCapitalInput] = useState('');
     const [confirm, setConfirm] = useState({ open: false, message: '', onConfirm: null });
+    const [emergencyOpen, setEmergencyOpen] = useState(false);
+    const [emergencyText, setEmergencyText] = useState('');
 
     const showToast = (msg) => {
         setToast(msg);
@@ -162,7 +165,22 @@ export default function CointradeStrategy() {
         });
     };
 
+    const runEmergencyExit = async () => {
+        if (emergencyText.trim() !== EMERGENCY_CONFIRM_WORD) {
+            showToast(`'${EMERGENCY_CONFIRM_WORD}'를 정확히 입력해야 실행됩니다 — 취소됨`);
+            return;
+        }
+        setBusy(true);
+        const { data, error } = await send(`${API}/emergency-exit`, { confirm: EMERGENCY_CONFIRM_WORD }, 'POST');
+        setBusy(false);
+        if (error) showToast(`긴급 매도 실패: ${error}`);
+        else showToast(data.response.message || '긴급 매도 처리됨');
+        refresh();
+    };
+
     const modeLedger = status?.ledgers?.[status?.mode];
+    const liveLedger = status?.ledgers?.LIVE;
+    const liveHasBtc = (liveLedger?.btcUnits || 0) > 0;
     const sig = status?.signal;
 
     const chartData = useMemo(() => {
@@ -298,6 +316,22 @@ export default function CointradeStrategy() {
                             <p className="text-[11px] text-slate-400 mt-1">시작: {fmtDateTime(modeLedger.startedAt)}</p>
                         </>
                     ) : <p className="text-sm text-slate-400">이 모드의 첫 실행 때 장부가 생성됩니다.</p>}
+                    {liveHasBtc && (
+                        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                                실전 장부 BTC {fmtBtc(liveLedger.btcUnits)} (약 {fmtKrw(liveLedger.btcUnits * (sig?.btcPrice || 0))})
+                            </p>
+                            <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() => { setEmergencyText(''); setEmergencyOpen(true); }}
+                                className="w-full rounded-lg bg-orange-500 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                긴급 전량 매도 + 중지
+                            </button>
+                            <p className="text-[11px] text-slate-400 mt-1">비상용입니다. 전략 규칙이 아니므로 하락 때마다 쓰면 검증 결과와 다른 매매가 됩니다.</p>
+                        </div>
+                    )}
                     {status.account && (
                         <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
                             <p className="text-xs text-slate-500 mb-1">업비트 계좌 (대조용)</p>
@@ -368,6 +402,22 @@ export default function CointradeStrategy() {
                 onConfirm={confirm.onConfirm}
                 onClose={() => setConfirm({ open: false, message: '', onConfirm: null })}
             />
+            <AlertModal
+                open={emergencyOpen}
+                title="긴급 전량 매도 + 중지"
+                onConfirm={runEmergencyExit}
+                onClose={() => setEmergencyOpen(false)}
+            >
+                <p className="whitespace-pre-line mb-3">
+                    {`실전 장부의 BTC ${fmtBtc(liveLedger?.btcUnits)}를 지금 시장가로 전량 매도하고 모드를 '중지'로 바꿉니다.\n계좌의 다른 자산은 건드리지 않습니다.\n계속하려면 '${EMERGENCY_CONFIRM_WORD}'를 입력하세요.`}
+                </p>
+                <input
+                    value={emergencyText}
+                    onChange={(e) => setEmergencyText(e.target.value)}
+                    placeholder={EMERGENCY_CONFIRM_WORD}
+                    className={`w-full ${INPUT_CLASS}`}
+                />
+            </AlertModal>
             <Toast message={toast} />
         </div>
     );

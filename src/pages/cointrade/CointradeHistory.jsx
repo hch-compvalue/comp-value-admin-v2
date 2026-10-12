@@ -83,6 +83,7 @@ const formatHoldDuration = (sec) => {
 const getReasonColor = (reason) => {
     const colors = {
         'TREND_REBALANCE': 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300',
+        'EMERGENCY_EXIT': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
         'MOMENTUM_SIGNAL': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
         'SIGNAL': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
         'PARTIAL_SIGNAL': 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400',
@@ -117,6 +118,7 @@ const getReasonColor = (reason) => {
 const getReasonLabel = (reason) => {
     const labels = {
         'TREND_REBALANCE': '추세 리밸런싱',
+        'EMERGENCY_EXIT': '긴급 매도',
         'MOMENTUM_SIGNAL': '모멘텀 진입',
         'SIGNAL': '매수',
         'PARTIAL_SIGNAL': '부분매수',
