@@ -21,14 +21,8 @@ import MyProfile from '@/pages/member/MyProfile'
 import EditProfile from '@/pages/member/EditProfile'
 import MemberManagement from '@/pages/member/MemberManagement'
 import Join from '@/pages/member/Join'
-import CointradeDashboard from '@/pages/cointrade/CointradeDashboard'
-import CointradeConfig from '@/pages/cointrade/CointradeConfig'
-import CointradeCoins from '@/pages/cointrade/CointradeCoins'
-import CointradeScheduler from '@/pages/cointrade/CointradeScheduler'
+import CointradeStrategy from '@/pages/cointrade/CointradeStrategy'
 import CointradeHistory from '@/pages/cointrade/CointradeHistory'
-import MlModelInfo from '@/pages/cointrade/MlModelInfo'
-import CointradeMLRetrain from '@/pages/cointrade/CointradeMLRetrain'
-import Backtest from '@/pages/cointrade/Backtest'
 // BacktestOptimizer 삭제됨 (v4.0 모멘텀 스캘핑 전환)
 import ExcelViewer from '@/pages/util/excel-viewer'
 import ExchangeRate from '@/pages/util/exchange-rate'
@@ -40,8 +34,8 @@ import MonitoringDashboard from '@/pages/monitoring/MonitoringDashboard'
 import { SECTIONS } from '@/component/layouts/common/SideBar001';
 import {
     Home as HomeIcon, List, BarChart3, Pencil, Sparkles, Brain, Scale, Briefcase,
-    Receipt, MessageSquare, LayoutDashboard, Settings, Coins, CalendarClock,
-    History, LineChart, FlaskConical, FileSpreadsheet, DollarSign, Braces,
+    Receipt, MessageSquare, LayoutDashboard,
+    History, LineChart, FileSpreadsheet, DollarSign, Braces,
     StickyNote, Calculator as CalculatorIcon, Activity
 } from 'lucide-react';
 
@@ -96,36 +90,13 @@ const routes = {
     },
 
     /* 코인 */
-    "CointradeDashboard": {
+    // v5.0: 대시보드+스케줄러 통합. 파라미터 설정·대상 종목·ML·페이퍼 트레이딩 페이지는 메뉴 제거 (파일 삭제는 docs/phase4_plan.md 정리 단계)
+    "CointradeStrategy": {
         section: SECTIONS[5],
-        label: '자동매매 대시보드',
+        label: '자동매매 (BTC 추세)',
         path: '/cointrade/dashboard',
-        element: <CointradeDashboard />,
+        element: <CointradeStrategy />,
         icon: LayoutDashboard,
-        accessRoles: ['ROLE_SUPER_ADMIN']
-    },
-    "CointradeConfig": {
-        section: SECTIONS[5],
-        label: '자동매매 파라미터 설정',
-        path: '/cointrade/config',
-        element: <CointradeConfig />,
-        icon: Settings,
-        accessRoles: ['ROLE_SUPER_ADMIN']
-    },
-    "CointradeCoins": {
-        section: SECTIONS[5],
-        label: '대상 종목 설정',
-        path: '/cointrade/coins',
-        element: <CointradeCoins />,
-        icon: Coins,
-        accessRoles: ['ROLE_SUPER_ADMIN']
-    },
-    "CointradeScheduler": {
-        section: SECTIONS[5],
-        label: '스케줄러 관리',
-        path: '/cointrade/scheduler',
-        element: <CointradeScheduler />,
-        icon: CalendarClock,
         accessRoles: ['ROLE_SUPER_ADMIN']
     },
     "CointradeHistory": {
@@ -134,30 +105,6 @@ const routes = {
         path: '/cointrade/history',
         element: <CointradeHistory />,
         icon: History,
-        accessRoles: ['ROLE_SUPER_ADMIN']
-    },
-    "MlModelInfo": {
-        section: SECTIONS[5],
-        label: '모델 예측정보 조회',
-        path: '/cointrade/ml-models',
-        element: <MlModelInfo />,
-        icon: LineChart,
-        accessRoles: ['ROLE_SUPER_ADMIN']
-    },
-    "CointradeMLRetrain": {
-        section: SECTIONS[5],
-        label: 'AI 모델 관리',
-        path: '/cointrade/ml-retrain',
-        element: <CointradeMLRetrain />,
-        icon: Brain,
-        accessRoles: ['ROLE_SUPER_ADMIN']
-    },
-    "Backtest": {
-        section: SECTIONS[5],
-        label: '페이퍼 트레이딩',
-        path: '/cointrade/backtest',
-        element: <Backtest />,
-        icon: FlaskConical,
         accessRoles: ['ROLE_SUPER_ADMIN']
     },
     // BacktestOptimizer 라우트 삭제됨 (v4.0)
