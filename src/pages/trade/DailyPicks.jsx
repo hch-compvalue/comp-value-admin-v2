@@ -28,6 +28,11 @@ const TIMING_STYLE = {
     '관망': 'text-slate-500 dark:text-slate-400',
 };
 
+// 추천 프로파일 태그 (백엔드 EvaluationHistoryEntity.PROFILE_DELIMITER와 동일)
+const PROFILE_DELIMITER = '|';
+const ALL_PROFILES = '전체';
+const parseProfiles = (value) => (value ? value.split(PROFILE_DELIMITER).filter(Boolean) : []);
+
 const fmtPrice = (v) => (v == null ? '-' : `$${Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
 
 /**
@@ -41,6 +46,7 @@ const DailyPicks = () => {
     const [error, setError] = useState('');
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
     const [signalFilter, setSignalFilter] = useState('매수 후보');  // 기본: 매수후보만
+    const [profileFilter, setProfileFilter] = useState(ALL_PROFILES);
     const [sortKey, setSortKey] = useState('valueScore');
     const [sortDir, setSortDir] = useState('desc');
     const [showValueModal, setShowValueModal] = useState(false);
@@ -85,15 +91,34 @@ const DailyPicks = () => {
         }
     }, []);
 
+    // 프로파일별 종목 수 (태그 등장 순서 = 프로파일 정렬순). 태그 없는 옛 스냅샷이면 빈 배열
+    const profileCounts = useMemo(() => {
+        const map = new Map();
+        rows.forEach((r) => parseProfiles(r.sourceProfiles).forEach((p) => map.set(p, (map.get(p) || 0) + 1)));
+        return Array.from(map.entries());
+    }, [rows]);
+
+    // 선택한 프로파일이 다른 날짜 스냅샷에 없으면 전체로 되돌림
+    useEffect(() => {
+        if (profileFilter !== ALL_PROFILES && !profileCounts.some(([p]) => p === profileFilter)) {
+            setProfileFilter(ALL_PROFILES);
+        }
+    }, [profileCounts, profileFilter]);
+
+    // 프로파일 필터 적용 → 투자판정 타일과 표가 같은 모집단을 보도록
+    const profileRows = useMemo(() => (
+        profileFilter === ALL_PROFILES ? rows : rows.filter((r) => parseProfiles(r.sourceProfiles).includes(profileFilter))
+    ), [rows, profileFilter]);
+
     // 투자판정별 집계
     const counts = useMemo(() => {
         const c = { '매수 후보': 0, '관심목록': 0, '관망': 0 };
-        rows.forEach((r) => { if (c[r.investmentSignal] != null) c[r.investmentSignal]++; });
+        profileRows.forEach((r) => { if (c[r.investmentSignal] != null) c[r.investmentSignal]++; });
         return c;
-    }, [rows]);
+    }, [profileRows]);
 
     const filtered = useMemo(() => {
-        let list = signalFilter === '전체' ? rows : rows.filter((r) => r.investmentSignal === signalFilter);
+        let list = signalFilter === '전체' ? profileRows : profileRows.filter((r) => r.investmentSignal === signalFilter);
         list = [...list].sort((a, b) => {
             const av = a[sortKey], bv = b[sortKey];
             if (av == null) return 1;
@@ -104,7 +129,7 @@ const DailyPicks = () => {
             return sortDir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
         });
         return list;
-    }, [rows, signalFilter, sortKey, sortDir]);
+    }, [profileRows, signalFilter, sortKey, sortDir]);
 
     const handleSort = (key) => {
         if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -121,6 +146,7 @@ const DailyPicks = () => {
         { key: 'fairValue', label: '적정가', num: true },
         { key: 'purchasePrice', label: '매수적정가', num: true },
         { key: 'sector', label: '섹터' },
+        { key: 'sourceProfiles', label: '추천 프로파일' },
     ];
 
     return (
@@ -162,9 +188,33 @@ const DailyPicks = () => {
                     }`}
                 >
                     <div className="text-xs font-medium text-slate-500 dark:text-slate-400">전체</div>
-                    <div className="text-2xl font-bold text-slate-900 dark:text-white">{rows.length}</div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-white">{profileRows.length}</div>
                 </button>
             </div>
+
+            {/* 추천 프로파일 필터 (태그가 있는 스냅샷만) */}
+            {profileCounts.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">추천 프로파일</span>
+                    {[[ALL_PROFILES, rows.length], ...profileCounts].map(([name, count]) => (
+                        <button
+                            key={name}
+                            type="button"
+                            onClick={() => setProfileFilter(name)}
+                            aria-pressed={profileFilter === name}
+                            className={`px-3 py-1 rounded-full border text-xs font-medium transition-colors ${
+                                profileFilter === name
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                            }`}
+                        >
+                            {name} <span className="ml-0.5 text-slate-400">{count}</span>
+                        </button>
+                    ))}
+                </div>
+            ) : rows.length > 0 && (
+                <div className="mb-4 text-xs text-slate-400">이 평가 스냅샷에는 추천 프로파일 정보가 없습니다 (2026-10-13 이후 평가분부터 표시)</div>
+            )}
 
             <div className="flex items-center justify-between mb-3">
                 <div className="text-sm text-slate-500 dark:text-slate-400">
@@ -233,6 +283,15 @@ const DailyPicks = () => {
                                 <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-300">{fmtPrice(r.fairValue)}</td>
                                 <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-300">{fmtPrice(r.purchasePrice)}</td>
                                 <td className="px-4 py-2.5 text-left text-slate-500 dark:text-slate-400 whitespace-nowrap">{r.sector || '-'}</td>
+                                <td className="px-4 py-2.5 text-left whitespace-nowrap">
+                                    {parseProfiles(r.sourceProfiles).length === 0 ? <span className="text-slate-400">-</span> : (
+                                        <div className="flex gap-1">
+                                            {parseProfiles(r.sourceProfiles).map((p) => (
+                                                <span key={p} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 text-xs">{p}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </td>
                             </tr>
                         ))}
                     </tbody>

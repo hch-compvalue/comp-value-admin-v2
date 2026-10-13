@@ -317,6 +317,12 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                             적정가 × (1 − 안전마진율). <strong>현재가 &lt; 매수적정가</strong>면 안전마진을 확보한 가격대
                                         </td>
                                     </tr>
+                                    <tr className="bg-white dark:bg-slate-800">
+                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">추천 프로파일</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">
+                                            이 종목을 뽑은 추천 프로파일(여러 개일 수 있음). 표 위 버튼으로 프로파일별로 거르면 투자판정 집계도 함께 바뀝니다. 2026-10-13 이후 평가분부터 표시
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
