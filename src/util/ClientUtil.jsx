@@ -11,9 +11,6 @@ export const API_ENDPOINTS = {
     // 해외 기업가치 계산 (단일)
     ABROAD_COMP_VALUE: (symbol) =>
         `/dart/main/cal/per_value/abroad?symbol=${encodeURIComponent(symbol)}`,
-    // 해외 기업가치 계산 (배열)
-    ABROAD_COMP_VALUE_ARR: (symbols) =>
-        `/dart/main/cal/per_value/abroad/arr?symbol=${symbols}`,
 };
 
 /**

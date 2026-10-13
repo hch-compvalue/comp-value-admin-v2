@@ -7,7 +7,7 @@ import { useTab } from '@/context/TabContext';
 import GlobalSearchBar from './GlobalSearchBar';
 import CommandPalette from './CommandPalette';
 import {
-    Home as HomeIcon, Building2, Globe, Wallet, MessageSquare, Bot, Wrench,
+    Home as HomeIcon, Globe, MessageSquare, Bot, Wrench,
     Activity, ChevronDown
 } from 'lucide-react';
 
@@ -21,18 +21,16 @@ function useIsMobile(breakpoint = 768) {
     return isMobile;
 }
 
-export const SECTIONS = ['시작하기', '기업분석(국내)', '기업분석(미국)', '거래(미국)', '게시판', '코인자동매매', '유틸', '모니터링'];
+export const SECTIONS = ['시작하기', '미국주식', '게시판', '코인자동매매', '유틸', '관리'];
 
 // 섹션별 헤더 아이콘 (아코디언 헤더에 표시)
 const SECTION_ICONS = {
     '시작하기': HomeIcon,
-    '기업분석(국내)': Building2,
-    '기업분석(미국)': Globe,
-    '거래(미국)': Wallet,
+    '미국주식': Globe,
     '게시판': MessageSquare,
     '코인자동매매': Bot,
     '유틸': Wrench,
-    '모니터링': Activity,
+    '관리': Activity,
 };
 
 // 아코디언 펼침 상태를 localStorage에 저장하는 키

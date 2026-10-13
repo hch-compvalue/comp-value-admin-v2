@@ -10,7 +10,6 @@ import CompValue from '@/pages/trade/CompValue'
 import CompValueCustom from '@/pages/trade/CompValueCustom'
 import TransactionOverview from '@/pages/transaction/TransactionOverview'
 import AbroadCompValue from '@/pages/trade/AbroadCompValue'
-import AbroadCompanyList from '@/pages/trade/AbroadCompanyList'
 import AbroadRecommendedStock from '@/pages/trade/AbroadRecommendedStock'
 import MLRetrainManagement from '@/pages/trade/MLRetrainManagement'
 import SellRecordHistory from '@/pages/trade/SellRecordHistory'
@@ -30,11 +29,14 @@ import JsonViewer from '@/pages/util/json-viewer'
 import Memo from '@/pages/util/memo'
 import Calculator from '@/pages/util/calculator'
 import MonitoringDashboard from '@/pages/monitoring/MonitoringDashboard'
+import SubTabPage from '@/component/common/layout/SubTabPage'
+import LegacyRedirect from '@/component/common/layout/LegacyRedirect'
+import { STOCK_DISCOVER_PATH, STOCK_ANALYSIS_PATH, PORTFOLIO_PATH, SUB_TAB } from '@/config/menuPaths'
 
 import { SECTIONS } from '@/component/layouts/common/SideBar001';
 import {
-    Home as HomeIcon, List, BarChart3, Pencil, Sparkles, Brain, Scale, Briefcase,
-    Receipt, MessageSquare, LayoutDashboard,
+    Home as HomeIcon, List, BarChart3, Pencil, Sparkles, Brain, Briefcase,
+    MessageSquare, LayoutDashboard,
     History, LineChart, FileSpreadsheet, DollarSign, Braces,
     StickyNote, Calculator as CalculatorIcon, Activity
 } from 'lucide-react';
@@ -55,44 +57,80 @@ const routes = {
     "EditProfile": { section: '회원정보', show: false, label: '회원정보 수정', path: '/member/myprofile/edit', element: <EditProfile /> },
     "MemberManagement": { section: '회원정보', show: false, label: '회원 관리 (관리자)', path: '/member/management', element: <MemberManagement /> },
 
-    /* 기업분석(국내) */
-    "CompList": { section: SECTIONS[1], label: '기업목록', path: '/complist', element: <CompList />, icon: List },
-    "CompValue": { section: SECTIONS[1], label: '기업분석', path: '/compvalue', element: <CompValue />, icon: BarChart3 },
-    "CompValueCustom": { section: SECTIONS[1], label: '기업분석(수동)', path: '/compvalue/custom', element: <CompValueCustom />, icon: Pencil },
+    /* 기업분석(국내) — 2026-10 메뉴 숨김 (KIS 전환 시 새로 구현 예정, 그때 코드 삭제) */
+    "CompList": { section: '기업분석(국내)', show: false, label: '기업목록', path: '/complist', element: <CompList />, icon: List },
+    "CompValue": { section: '기업분석(국내)', show: false, label: '기업분석', path: '/compvalue', element: <CompValue />, icon: BarChart3 },
+    "CompValueCustom": { section: '기업분석(국내)', show: false, label: '기업분석(수동)', path: '/compvalue/custom', element: <CompValueCustom />, icon: Pencil },
 
-    /* 기업분석(미국) */
-    "AbroadCompanyList": { section: SECTIONS[2], label: '기업목록', path: '/complist/abroad', element: <AbroadCompanyList />, icon: List },
-    "AbroadRecommendedStock": { section: SECTIONS[2], label: '기업추천', path: '/recommended/abroad', element: <AbroadRecommendedStock />, icon: Sparkles },
-    "AbroadCompValue": { section: SECTIONS[2], label: '기업분석', path: '/compvalue/abroad', element: <AbroadCompValue />, icon: BarChart3 },
-    "MLRetrainManagement": { section: SECTIONS[2], label: 'AI 모델 관리', path: '/ml/retrain', element: <MLRetrainManagement />, icon: Brain },
+    /* 미국주식 — 발굴(추천·매수후보·성과) / 분석(단건·일괄) / 포트폴리오(보유·매도) */
+    "StockDiscover": {
+        section: SECTIONS[1],
+        label: '종목 발굴',
+        path: STOCK_DISCOVER_PATH,
+        icon: Sparkles,
+        element: (
+            <SubTabPage basePath={STOCK_DISCOVER_PATH} section={SECTIONS[1]} label='종목 발굴' tabs={[
+                { key: SUB_TAB.DAILY_PICKS, label: '오늘의 매수후보', element: <DailyPicks /> },
+                { key: SUB_TAB.RECOMMEND, label: '프로파일별 추천', element: <AbroadRecommendedStock /> },
+                { key: SUB_TAB.PERFORMANCE, label: '성과 추적', element: <EvaluationPerformance /> },
+            ]} />
+        ),
+    },
+    "StockAnalysis": {
+        section: SECTIONS[1],
+        label: '종목 분석',
+        path: STOCK_ANALYSIS_PATH,
+        icon: BarChart3,
+        element: (
+            <SubTabPage basePath={STOCK_ANALYSIS_PATH} section={SECTIONS[1]} label='종목 분석' tabs={[
+                { key: SUB_TAB.SEARCH, label: '종목 검색', element: <AbroadCompValue /> },
+                { key: SUB_TAB.EVALUATE, label: '일괄 평가', element: <InvestmentEvaluation /> },
+            ]} />
+        ),
+    },
+    "Portfolio": {
+        section: SECTIONS[1],
+        label: '포트폴리오',
+        path: PORTFOLIO_PATH,
+        icon: Briefcase,
+        element: (
+            <SubTabPage basePath={PORTFOLIO_PATH} section={SECTIONS[1]} label='포트폴리오' tabs={[
+                { key: SUB_TAB.HOLDINGS, label: '보유종목', element: <TransactionOverview /> },
+                { key: SUB_TAB.SELL_RECORD, label: '매도기록', element: <SellRecordHistory /> },
+            ]} />
+        ),
+    },
 
-    /* 거래 */
-    "InvestmentEvaluation": { section: SECTIONS[3], label: '투자판단', path: '/trade/evaluation', element: <InvestmentEvaluation />, icon: Scale },
-    "DailyPicks": { section: SECTIONS[3], label: '오늘의 매수후보', path: '/trade/daily-picks', element: <DailyPicks />, icon: LayoutDashboard },
-    "EvaluationPerformance": { section: SECTIONS[3], label: '성과 추적', path: '/trade/performance', element: <EvaluationPerformance />, icon: LineChart },
-    "TransactionOverview": { section: SECTIONS[3], label: '보유종목관리', path: '/transaction/overview', element: <TransactionOverview />, icon: Briefcase },
-    "SellRecordHistory": { section: SECTIONS[3], label: '매도현황기록', path: '/trade/sellrecord', element: <SellRecordHistory />, icon: Receipt },
+    /* 통합 전 경로 → 새 경로 (북마크 호환) */
+    "LegacyAbroadCompanyList": { section: 'None', show: false, label: '이동 중', path: '/complist/abroad', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.RECOMMEND} /> },
+    "LegacyRecommended": { section: 'None', show: false, label: '이동 중', path: '/recommended/abroad', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.RECOMMEND} /> },
+    "LegacyDailyPicks": { section: 'None', show: false, label: '이동 중', path: '/trade/daily-picks', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.DAILY_PICKS} /> },
+    "LegacyPerformance": { section: 'None', show: false, label: '이동 중', path: '/trade/performance', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.PERFORMANCE} /> },
+    "LegacyAbroadCompValue": { section: 'None', show: false, label: '이동 중', path: '/compvalue/abroad', element: <LegacyRedirect to={STOCK_ANALYSIS_PATH} subTab={SUB_TAB.SEARCH} /> },
+    "LegacyEvaluation": { section: 'None', show: false, label: '이동 중', path: '/trade/evaluation', element: <LegacyRedirect to={STOCK_ANALYSIS_PATH} subTab={SUB_TAB.EVALUATE} /> },
+    "LegacyTransaction": { section: 'None', show: false, label: '이동 중', path: '/transaction/overview', element: <LegacyRedirect to={PORTFOLIO_PATH} subTab={SUB_TAB.HOLDINGS} /> },
+    "LegacySellRecord": { section: 'None', show: false, label: '이동 중', path: '/trade/sellrecord', element: <LegacyRedirect to={PORTFOLIO_PATH} subTab={SUB_TAB.SELL_RECORD} /> },
 
     /* 게시판 */
     "FreeBoard": {
-        section: SECTIONS[4],
+        section: SECTIONS[2],
         label: '자유게시판',
         path: '/freeboard/',
         element: <FreeBoard />,
         icon: MessageSquare,
         children: [
-            { section: SECTIONS[4], show: false, label: '게시글목록', path: '', element: <FreeBoardList /> },
-            { section: SECTIONS[4], show: false, label: '게시글등록', path: 'regi', element: <Register /> },
-            { section: SECTIONS[4], show: false, label: '게시글삭제', path: 'delete' },
-            { section: SECTIONS[4], show: false, label: '게시글상세', path: 'view/:id', element: <FreeBoardView /> },
-            { section: SECTIONS[4], show: false, label: '게시글수정', path: 'modi/:id', element: <FreeBoardUpdate /> },
+            { section: SECTIONS[2], show: false, label: '게시글목록', path: '', element: <FreeBoardList /> },
+            { section: SECTIONS[2], show: false, label: '게시글등록', path: 'regi', element: <Register /> },
+            { section: SECTIONS[2], show: false, label: '게시글삭제', path: 'delete' },
+            { section: SECTIONS[2], show: false, label: '게시글상세', path: 'view/:id', element: <FreeBoardView /> },
+            { section: SECTIONS[2], show: false, label: '게시글수정', path: 'modi/:id', element: <FreeBoardUpdate /> },
         ]
     },
 
     /* 코인 */
     // v5.0: 대시보드+스케줄러 통합. 파라미터 설정·대상 종목·ML·페이퍼 트레이딩 페이지는 메뉴 제거 (파일 삭제는 docs/phase4_plan.md 정리 단계)
     "CointradeStrategy": {
-        section: SECTIONS[5],
+        section: SECTIONS[3],
         label: '자동매매 (BTC 추세)',
         path: '/cointrade/dashboard',
         element: <CointradeStrategy />,
@@ -100,7 +138,7 @@ const routes = {
         accessRoles: ['ROLE_SUPER_ADMIN']
     },
     "CointradeHistory": {
-        section: SECTIONS[5],
+        section: SECTIONS[3],
         label: '거래기록 조회',
         path: '/cointrade/history',
         element: <CointradeHistory />,
@@ -111,50 +149,51 @@ const routes = {
 
     /* 유틸 */
     "ExcelViewer": {
-        section: SECTIONS[6],
+        section: SECTIONS[4],
         label: '엑셀 보기',
         path: '/util/excel-viewer',
         element: <ExcelViewer />,
         icon: FileSpreadsheet
     },
     "ExchangeRate": {
-        section: SECTIONS[6],
+        section: SECTIONS[4],
         label: '환율 계산기',
         path: '/util/exchange-rate',
         element: <ExchangeRate />,
         icon: DollarSign
     },
     "JsonViewer": {
-        section: SECTIONS[6],
+        section: SECTIONS[4],
         label: 'JSON 뷰어',
         path: '/util/json-viewer',
         element: <JsonViewer />,
         icon: Braces
     },
     "Memo": {
-        section: SECTIONS[6],
+        section: SECTIONS[4],
         label: '메모',
         path: '/util/memo',
         element: <Memo />,
         icon: StickyNote
     },
     "Calculator": {
-        section: SECTIONS[6],
+        section: SECTIONS[4],
         label: '계산기',
         path: '/util/calculator',
         element: <Calculator />,
         icon: CalculatorIcon
     },
 
-    /* 모니터링 */
+    /* 관리 */
     "MonitoringDashboard": {
-        section: SECTIONS[7],
+        section: SECTIONS[5],
         label: '실시간 대시보드',
         path: '/monitoring',
         element: <MonitoringDashboard />,
         icon: Activity,
         accessRoles: ['ROLE_SUPER_ADMIN']
-    }
+    },
+    "MLRetrainManagement": { section: SECTIONS[5], label: 'AI 모델 관리', path: '/ml/retrain', element: <MLRetrainManagement />, icon: Brain },
 }
 
 export default routes

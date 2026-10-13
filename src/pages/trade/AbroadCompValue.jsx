@@ -1,7 +1,6 @@
 import Loading from '@/component/common/display/Loading';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
-import BulkQueryModal from '@/pages/trade/popup/BulkQueryModal';
 import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import PageTitle from '@/component/common/display/PageTitle';
@@ -29,7 +28,6 @@ const AbroadCompValue = () => {
     const [compNameData, setCompNameData] = useState(INITIAL_COMP_LIST);
     const [compValueData, setCompValueData] = useState({});
     const [showPopup, setShowPopup] = useState(false);
-    const [showBulk, setShowBulk] = useState(false);
     const [alertConfig, setAlertConfig] = useState({ open: false, message: '', onConfirm: null });
 
     const openAlert = (message, onConfirm) => {
@@ -190,15 +188,7 @@ const AbroadCompValue = () => {
                             검색
                         </button>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setShowBulk(true)}
-                            disabled={isLoading}
-                            className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600"
-                        >
-                            대량 조회
-                        </button>
+                    <div className="flex items-center justify-end gap-2">
                         {resultCount > 0 && (
                             <span className="inline-flex items-center px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-blue-50 text-blue-700 font-medium text-xs sm:text-sm whitespace-nowrap">
                                 {resultCount}건
@@ -262,7 +252,6 @@ const AbroadCompValue = () => {
                 data={compValueData}
             />
 
-            <BulkQueryModal open={showBulk} onClose={() => setShowBulk(false)} openAlert={openAlert} />
 
             <AlertModal
                 open={alertConfig.open}

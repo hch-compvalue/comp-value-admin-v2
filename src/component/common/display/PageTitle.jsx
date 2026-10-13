@@ -1,5 +1,7 @@
+import { useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import routes from '@/config/routes';
+import { EmbeddedPageContext } from '@/context/EmbeddedPageContext';
 
 /**
  * 페이지 타이틀 및 브레드크럼 컴포넌트
@@ -13,6 +15,8 @@ import routes from '@/config/routes';
  */
 function PageTitle() {
     const location = useLocation();
+    // 하위 탭으로 삽입된 페이지면 탭 정보를 우선 사용
+    const embedded = useContext(EmbeddedPageContext);
 
     // 현재 경로와 일치하는 라우트 찾기
     const findRoute = () => {
@@ -41,7 +45,7 @@ function PageTitle() {
         return null;
     };
 
-    const currentRoute = findRoute();
+    const currentRoute = embedded ?? findRoute();
 
     if (!currentRoute) {
         return null;

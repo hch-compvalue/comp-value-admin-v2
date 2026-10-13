@@ -154,8 +154,8 @@ export function TabProvider({ children }) {
         });
     }, [navigate]);
 
-    /** 특정 탭을 닫고 지정한 경로로 이동 (등록/수정/삭제 완료 후 사용) */
-    const closeTabAndNavigate = useCallback((tabKeyToClose, targetPath) => {
+    /** 특정 탭을 닫고 지정한 경로로 이동 (등록/수정/삭제 완료 후 사용, navigateOptions는 navigate에 그대로 전달) */
+    const closeTabAndNavigate = useCallback((tabKeyToClose, targetPath, navigateOptions) => {
         if (tabKeyToClose === '/') return;
 
         setTabs(prev => {
@@ -165,7 +165,7 @@ export function TabProvider({ children }) {
 
         setActiveKey(targetPath);
         isNavigatingRef.current = true;
-        navigate(targetPath);
+        navigate(targetPath, navigateOptions);
     }, [navigate]);
 
     const closeAllTabs = useCallback(() => {

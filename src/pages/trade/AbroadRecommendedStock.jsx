@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { send, API_ENDPOINTS } from '@/util/ClientUtil';
 import useModalAnimation from '@/hooks/useModalAnimation';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
@@ -6,7 +7,7 @@ import PageTitle from '@/component/common/display/PageTitle';
 import Loading from '@/component/common/display/Loading';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
-import BulkQueryModal from '@/pages/trade/popup/BulkQueryModal';
+import { STOCK_ANALYSIS_PATH, SUB_TAB } from '@/config/menuPaths';
 import MultiSelect from '@/component/common/select/MultiSelect';
 import DualRangeSlider from '@/component/common/input/DualRangeSlider';
 
@@ -297,6 +298,7 @@ const TABLE_COLUMNS = [
  */
 const AbroadRecommendedStock = () => {
     const [resultData, setResultData] = useState([]);
+    const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [alertConfig, setAlertConfig] = useState({ open: false, message: '', onConfirm: null });
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -307,7 +309,6 @@ const AbroadRecommendedStock = () => {
     const [openDropdown, setOpenDropdown] = useState(null);
     const [detailModal, setDetailModal] = useState({ open: false, data: null });
     const [selectedRows, setSelectedRows] = useState(new Set());
-    const [showBulkModal, setShowBulkModal] = useState(false);
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const { shouldRender: renderScheduleModal, isAnimatingOut: isScheduleModalClosing } = useModalAnimation(showScheduleModal, 250);
     const [maxCountInput, setMaxCountInput] = useState('');
@@ -666,14 +667,15 @@ const AbroadRecommendedStock = () => {
         return selectedRows.size > 0 && !isAllSelected;
     }, [selectedRows, isAllSelected]);
 
-    // 대량 분석 모달 열기
-    const handleOpenBulkModal = useCallback(() => {
+    // 선택 종목을 종목 분석 > 일괄 평가로 넘겨 바로 평가 실행
+    const handleEvaluateSelected = useCallback(() => {
         if (selectedSymbols.length === 0) {
             openAlert('분석할 기업을 선택해주세요.');
             return;
         }
-        setShowBulkModal(true);
-    }, [selectedSymbols]);
+        const query = new URLSearchParams({ symbol: selectedSymbols.join(',') });
+        navigate(`${STOCK_ANALYSIS_PATH}?${query}`, { state: { subTab: SUB_TAB.EVALUATE } });
+    }, [selectedSymbols, navigate]);
 
     // maxCount 입력값 유효성 검사
     const isMaxCountValid = useMemo(() => {
@@ -829,14 +831,14 @@ const AbroadRecommendedStock = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                         <button
                             type="button"
-                            onClick={handleOpenBulkModal}
+                            onClick={handleEvaluateSelected}
                             disabled={isLoading || selectedSymbols.length === 0}
                             className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
-                            기업 분석 {selectedSymbols.length > 0 && `(${selectedSymbols.length})`}
+                            일괄 평가 {selectedSymbols.length > 0 && `(${selectedSymbols.length})`}
                         </button>
                         {selectedRows.size > 0 && (
                             <button
@@ -1121,13 +1123,6 @@ const AbroadRecommendedStock = () => {
                 isOpen={showValueModal}
                 onClose={() => setShowValueModal(false)}
                 data={compValueData}
-            />
-
-            {/* 대량 분석 모달 */}
-            <BulkQueryModal
-                open={showBulkModal}
-                onClose={() => setShowBulkModal(false)}
-                initialSymbols={selectedSymbols}
             />
 
             {/* 추천기업 조회 스케줄 모달 (슈퍼관리자 전용) */}

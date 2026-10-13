@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import { STOCK_ANALYSIS_PATH } from '@/config/menuPaths';
 import { send } from '@/util/ClientUtil';
 import useSessionKeepAlive from '@/hooks/useSessionKeepAlive';
 import PageTitle from '@/component/common/display/PageTitle';
@@ -519,9 +520,10 @@ const TABLE_COLUMNS = [
  */
 const InvestmentEvaluation = () => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const location = useLocation();
 
-    // URL 파라미터에서 symbol 추출
-    const symbolFromUrl = searchParams.get('symbol');
+    // URL 파라미터에서 symbol 추출 (KeepAlive로 다른 화면 URL에도 반응하므로 자기 경로일 때만)
+    const symbolFromUrl = location.pathname === STOCK_ANALYSIS_PATH ? searchParams.get('symbol') : null;
 
     // 세션 스토리지에서 초기값 로드
     const getInitialData = () => {
@@ -711,8 +713,9 @@ const InvestmentEvaluation = () => {
     };
 
     // 분석 실행 (50개씩 분할)
-    const handleAnalyze = useCallback(async () => {
-        const allSymbols = parseSymbols(symbolInput);
+    // inputOverride: 다른 화면에서 넘겨받은 심볼 문자열 (버튼 클릭 시엔 이벤트 객체가 오므로 문자열일 때만 사용)
+    const handleAnalyze = useCallback(async (inputOverride) => {
+        const allSymbols = parseSymbols(typeof inputOverride === 'string' ? inputOverride : symbolInput);
         if (allSymbols.length === 0) {
             openAlert('분석할 티커를 입력해주세요.');
             return;
@@ -809,14 +812,16 @@ const InvestmentEvaluation = () => {
     }, []);
 
     // URL 파라미터에서 symbol이 있으면 자동 조회
+    // (화면이 이미 열려 있어 이전 결과가 있어도 넘겨받은 심볼로 새로 조회)
     useEffect(() => {
-        if (symbolFromUrl && !isLoading && resultData.length === 0) {
+        if (symbolFromUrl && !isLoading) {
             // URL 파라미터 제거
             setSearchParams({});
-            // 자동 조회 실행
-            handleAnalyze();
+            // 입력창에도 반영 후 자동 조회 실행
+            setSymbolInput(symbolFromUrl);
+            handleAnalyze(symbolFromUrl);
         }
-    }, [symbolFromUrl, isLoading, resultData.length, handleAnalyze, setSearchParams]);
+    }, [symbolFromUrl, isLoading, handleAnalyze, setSearchParams]);
 
     // 필터링된 데이터
     // 지원 문법:
