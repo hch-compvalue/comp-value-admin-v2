@@ -10,7 +10,7 @@ import CompValue from '@/pages/trade/CompValue'
 import CompValueCustom from '@/pages/trade/CompValueCustom'
 import TransactionOverview from '@/pages/transaction/TransactionOverview'
 import AbroadCompValue from '@/pages/trade/AbroadCompValue'
-import AbroadRecommendedStock from '@/pages/trade/AbroadRecommendedStock'
+import RecommendProfileSettings from '@/pages/trade/RecommendProfileSettings'
 import MLRetrainManagement from '@/pages/trade/MLRetrainManagement'
 import SellRecordHistory from '@/pages/trade/SellRecordHistory'
 import InvestmentEvaluation from '@/pages/trade/InvestmentEvaluation'
@@ -62,7 +62,7 @@ const routes = {
     "CompValue": { section: '기업분석(국내)', show: false, label: '기업분석', path: '/compvalue', element: <CompValue />, icon: BarChart3 },
     "CompValueCustom": { section: '기업분석(국내)', show: false, label: '기업분석(수동)', path: '/compvalue/custom', element: <CompValueCustom />, icon: Pencil },
 
-    /* 미국주식 — 발굴(추천·매수후보·성과) / 분석(단건·일괄) / 포트폴리오(보유·매도) */
+    /* 미국주식 — 발굴(매수후보·성과·프로파일 설정) / 분석(단건·일괄) / 포트폴리오(보유·매도) */
     "StockDiscover": {
         section: SECTIONS[1],
         label: '종목 발굴',
@@ -71,8 +71,8 @@ const routes = {
         element: (
             <SubTabPage basePath={STOCK_DISCOVER_PATH} section={SECTIONS[1]} label='종목 발굴' tabs={[
                 { key: SUB_TAB.DAILY_PICKS, label: '오늘의 매수후보', element: <DailyPicks /> },
-                { key: SUB_TAB.RECOMMEND, label: '프로파일별 추천', element: <AbroadRecommendedStock /> },
                 { key: SUB_TAB.PERFORMANCE, label: '성과 추적', element: <EvaluationPerformance /> },
+                { key: SUB_TAB.PROFILE_SETTINGS, label: '프로파일 설정', element: <RecommendProfileSettings />, accessRoles: ['ROLE_SUPER_ADMIN'] },
             ]} />
         ),
     },
@@ -102,8 +102,8 @@ const routes = {
     },
 
     /* 통합 전 경로 → 새 경로 (북마크 호환) */
-    "LegacyAbroadCompanyList": { section: 'None', show: false, label: '이동 중', path: '/complist/abroad', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.RECOMMEND} /> },
-    "LegacyRecommended": { section: 'None', show: false, label: '이동 중', path: '/recommended/abroad', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.RECOMMEND} /> },
+    "LegacyAbroadCompanyList": { section: 'None', show: false, label: '이동 중', path: '/complist/abroad', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.DAILY_PICKS} /> },
+    "LegacyRecommended": { section: 'None', show: false, label: '이동 중', path: '/recommended/abroad', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.DAILY_PICKS} /> },
     "LegacyDailyPicks": { section: 'None', show: false, label: '이동 중', path: '/trade/daily-picks', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.DAILY_PICKS} /> },
     "LegacyPerformance": { section: 'None', show: false, label: '이동 중', path: '/trade/performance', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.PERFORMANCE} /> },
     "LegacyAbroadCompValue": { section: 'None', show: false, label: '이동 중', path: '/compvalue/abroad', element: <LegacyRedirect to={STOCK_ANALYSIS_PATH} subTab={SUB_TAB.SEARCH} /> },

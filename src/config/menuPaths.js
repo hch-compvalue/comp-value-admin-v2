@@ -8,7 +8,7 @@ export const PORTFOLIO_PATH = '/portfolio';
 
 export const SUB_TAB = {
     DAILY_PICKS: 'daily',
-    RECOMMEND: 'recommend',
+    PROFILE_SETTINGS: 'profiles',
     PERFORMANCE: 'performance',
     SEARCH: 'search',
     EVALUATE: 'evaluate',

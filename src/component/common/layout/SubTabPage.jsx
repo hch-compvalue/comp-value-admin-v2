@@ -1,6 +1,8 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { TabActiveContext } from '@/context/TabContext';
+import { useAuth } from '@/context/AuthContext';
+import { hasAnyRole } from '@/util/RoleUtil';
 import { EmbeddedPageContext } from '@/context/EmbeddedPageContext';
 
 const STORAGE_PREFIX = 'subTab:';
@@ -27,10 +29,13 @@ const saveTab = (basePath, key) => {
  * @param {string} basePath - 이 페이지의 라우트 경로
  * @param {string} section - 브레드크럼 섹션명
  * @param {string} label - 메뉴명 (브레드크럼 상위)
- * @param {{key: string, label: string, element: JSX.Element}[]} tabs - 하위 탭 목록
+ * @param {{key: string, label: string, element: JSX.Element, accessRoles?: string[]}[]} tabs
+ *        - 하위 탭 목록 (accessRoles가 있으면 해당 권한 보유자에게만 탭 노출)
  */
-export default function SubTabPage({ basePath, section, label, tabs }) {
+export default function SubTabPage({ basePath, section, label, tabs: allTabs }) {
     const location = useLocation();
+    const { roles: userRoles } = useAuth();
+    const tabs = useMemo(() => allTabs.filter((t) => !t.accessRoles?.length || hasAnyRole(userRoles, t.accessRoles)), [allTabs, userRoles]);
     const isPageActive = useContext(TabActiveContext) ?? true;
     const isValidKey = (key) => tabs.some((t) => t.key === key);
 
@@ -47,6 +52,12 @@ export default function SubTabPage({ basePath, section, label, tabs }) {
         setMountedKeys((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
         saveTab(basePath, key);
     };
+
+    // 권한 변경 등으로 현재 탭이 목록에서 빠지면 첫 탭으로
+    useEffect(() => {
+        if (tabs.length > 0 && !isValidKey(activeKey)) selectTab(tabs[0].key);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tabs, activeKey]);
 
     // 외부에서 state.subTab을 지정해 이동해 온 경우 해당 탭으로 전환
     // (KeepAlive로 다른 탭의 이동에도 이 컴포넌트가 반응하므로 자기 경로일 때만 처리)

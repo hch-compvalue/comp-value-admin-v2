@@ -81,7 +81,7 @@ const SummaryTable = ({ title, data }) => (
 
 /**
  * 성과 추적 (2-4)
- * 기준일의 투자판정/가치등급별 이후 실제 수익률 집계 — "매수후보가 관망보다 실제 수익 높은가"
+ * 기준일의 투자판정/가치등급/추천프로파일별 이후 실제 수익률 집계 — "매수후보가 관망보다 실제 수익 높은가"
  */
 const EvaluationPerformance = () => {
     const [fromDate, setFromDate] = useState(defaultFrom());
@@ -165,6 +165,15 @@ const EvaluationPerformance = () => {
                     )}
                     <SummaryTable title="투자판정별 성과" data={result.bySignal} />
                     <SummaryTable title="가치등급별 성과" data={result.byGrade} />
+                    {/* 추천 프로파일별 — 한 종목을 여러 프로파일이 추천했으면 각 프로파일에 모두 집계 */}
+                    {result.profileTagged === true && (
+                        <SummaryTable title="추천 프로파일별 성과 (중복 추천 종목은 각 프로파일에 포함)" data={result.byProfile} />
+                    )}
+                    {result.profileTagged === false && (
+                        <div className="mb-6 text-sm text-slate-400">
+                            추천 프로파일별 성과: 기준일 스냅샷에 프로파일 정보가 없습니다. 2026-10-13 이후 날짜를 기준일로 선택하세요.
+                        </div>
+                    )}
                 </>
             )}
 

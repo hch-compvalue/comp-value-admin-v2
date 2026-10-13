@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { send, API_ENDPOINTS } from '@/util/ClientUtil';
+import { STOCK_ANALYSIS_PATH, SUB_TAB } from '@/config/menuPaths';
 import PageTitle from '@/component/common/display/PageTitle';
 import DailyPicksHelpModal from '@/component/common/display/DailyPicksHelpModal';
 import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
@@ -30,6 +32,8 @@ const TIMING_STYLE = {
 
 // 추천 프로파일 태그 (백엔드 EvaluationHistoryEntity.PROFILE_DELIMITER와 동일)
 const PROFILE_DELIMITER = '|';
+// 일괄 평가로 넘길 수 있는 최대 종목 수 (일괄 평가는 50건씩 15초 간격이라 200건 ≈ 1분 + FMP 호출량 고려)
+const MAX_HANDOFF_SYMBOLS = 200;
 const ALL_PROFILES = '전체';
 const parseProfiles = (value) => (value ? value.split(PROFILE_DELIMITER).filter(Boolean) : []);
 
@@ -40,6 +44,7 @@ const fmtPrice = (v) => (v == null ? '-' : `$${Number(v).toLocaleString('en-US',
  * 자동 전수평가 결과를 투자판정(매수후보>관심목록>관망) 순으로 표시
  */
 const DailyPicks = () => {
+    const navigate = useNavigate();
     const [rows, setRows] = useState([]);
     const [baseDate, setBaseDate] = useState('');
     const [loading, setLoading] = useState(false);
@@ -131,6 +136,13 @@ const DailyPicks = () => {
         return list;
     }, [profileRows, signalFilter, sortKey, sortDir]);
 
+    // 현재 표에 보이는 종목을 종목 분석 > 일괄 평가로 넘겨 실시간 재평가
+    const handleEvaluateVisible = () => {
+        const query = new URLSearchParams({ symbol: filtered.map((r) => r.symbol).join(',') });
+        navigate(`${STOCK_ANALYSIS_PATH}?${query}`, { state: { subTab: SUB_TAB.EVALUATE } });
+    };
+    const canHandoff = filtered.length > 0 && filtered.length <= MAX_HANDOFF_SYMBOLS;
+
     const handleSort = (key) => {
         if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
         else { setSortKey(key); setSortDir('desc'); }
@@ -221,13 +233,26 @@ const DailyPicks = () => {
                     {baseDate && `평가 기준일: ${baseDate}`} · 매일 오전 10시 자동 전수평가 결과 · 행 더블클릭 시 기업가치 계산
                     {valueLoadingSymbol && <span className="ml-2 text-blue-600 dark:text-blue-400">({valueLoadingSymbol} 계산 중…)</span>}
                 </div>
-                <button
-                    onClick={fetchData}
-                    className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                    disabled={loading}
-                >
-                    {loading ? '조회 중…' : '새로고침'}
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                    <button
+                        type="button"
+                        onClick={handleEvaluateVisible}
+                        disabled={!canHandoff}
+                        title={filtered.length > MAX_HANDOFF_SYMBOLS
+                            ? `한 번에 ${MAX_HANDOFF_SYMBOLS}종목까지 넘길 수 있습니다. 투자판정·프로파일로 범위를 좁혀주세요.`
+                            : '표에 보이는 종목을 종목 분석 > 일괄 평가에서 실시간으로 다시 평가합니다'}
+                        className="px-3 py-1.5 text-sm rounded-lg border border-blue-600 text-blue-700 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-blue-300 dark:border-blue-500 dark:hover:bg-slate-800"
+                    >
+                        표시 종목 일괄 평가 ({filtered.length})
+                    </button>
+                    <button
+                        onClick={fetchData}
+                        className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                        disabled={loading}
+                    >
+                        {loading ? '조회 중…' : '새로고침'}
+                    </button>
+                </div>
             </div>
 
             {error && (

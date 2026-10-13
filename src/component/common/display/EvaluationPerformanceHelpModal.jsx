@@ -168,6 +168,13 @@ export default function EvaluationPerformanceHelpModal({ isOpen, onClose }) {
                                     다만 <strong>기간이 짧거나 표본이 적으면 우연</strong>일 수 있으니 여러 기준일로 반복 확인하세요.
                                 </div>
                             </div>
+                            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700">
+                                <div className="font-semibold text-slate-800 dark:text-slate-200 mb-1">추천 프로파일별 성과</div>
+                                <div className="text-xs text-slate-600 dark:text-slate-400">
+                                    어느 프로파일(스크리닝 조건)이 뽑은 종목이 실제로 잘 올랐는지 비교합니다. 여러 프로파일이 같이 뽑은 종목은 각 프로파일에 모두 들어가므로 프로파일 행을 더하면 전체보다 많을 수 있습니다.
+                                    성과가 계속 낮은 프로파일은 조건을 고치거나 비활성화할 후보입니다. 2026-10-13 이후 기준일부터 표시됩니다.
+                                </div>
+                            </div>
                         </div>
                     </section>
 
