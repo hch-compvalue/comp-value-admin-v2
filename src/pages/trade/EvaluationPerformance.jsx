@@ -17,7 +17,15 @@ const defaultFrom = () => {
     return d.toISOString().slice(0, 10);
 };
 
-const COLUMNS = ['그룹', '종목수', '추적불가', '평균수익률', '중앙값', '승률', '최고', '최저'];
+const COLUMNS = ['그룹', '종목수', '추적불가', '평균수익률', '중앙값', '승률', 'SPY 대비(평균)', 'SPY 대비(중앙)', 'SPY 이긴 비율', '최고', '최저'];
+
+// 지수 대비 초과수익(%p) — 판정이 "그냥 SPY를 산 것"보다 나았는지
+const fmtExcess = (v) => {
+    if (v == null) return <span className="text-slate-400">-</span>;
+    const n = Number(v);
+    const cls = n > 0 ? 'text-blue-600 dark:text-blue-400' : n < 0 ? 'text-orange-600 dark:text-orange-400' : 'text-slate-500';
+    return <span className={`font-semibold ${cls}`}>{n > 0 ? '+' : ''}{n.toFixed(2)}%p</span>;
+};
 
 /**
  * 추적불가 = 기준일엔 있었지만 수익률을 산출하지 못한 종목 수
@@ -69,6 +77,9 @@ const SummaryTable = ({ title, data }) => (
                             <td className="px-4 py-2.5 text-right">{s.count > 0 ? fmtPct(s.avgReturnPct) : '-'}</td>
                             <td className="px-4 py-2.5 text-right">{s.count > 0 ? fmtPct(s.medianReturnPct) : '-'}</td>
                             <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-300">{s.count > 0 && s.winRatePct != null ? `${s.winRatePct.toFixed(0)}%` : '-'}</td>
+                            <td className="px-4 py-2.5 text-right">{s.count > 0 ? fmtExcess(s.excessAvgReturnPct) : '-'}</td>
+                            <td className="px-4 py-2.5 text-right">{s.count > 0 ? fmtExcess(s.excessMedianReturnPct) : '-'}</td>
+                            <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-300">{s.count > 0 && s.beatBenchmarkPct != null ? `${s.beatBenchmarkPct.toFixed(0)}%` : '-'}</td>
                             <td className="px-4 py-2.5 text-right">{s.count > 0 ? fmtPct(s.maxReturnPct) : '-'}</td>
                             <td className="px-4 py-2.5 text-right">{s.count > 0 ? fmtPct(s.minReturnPct) : '-'}</td>
                         </tr>
@@ -147,6 +158,19 @@ const EvaluationPerformance = () => {
                         )}
                         {result.note && <span className="ml-2 text-amber-600 dark:text-amber-400">· {result.note}</span>}
                     </div>
+
+                    {/* 비교 기준 — 판정이 지수 매수보다 나은지가 핵심 (SPY 대비 열이 + 여야 판정이 의미 있음) */}
+                    {!result.note && (
+                        <div className="mb-4 rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
+                            같은 기간 <strong>{result.benchmarkSymbol || 'SPY'}</strong> 수익률{' '}
+                            {result.benchmarkReturnPct != null
+                                ? <strong>{fmtPct(result.benchmarkReturnPct)}</strong>
+                                : <span className="text-amber-600 dark:text-amber-400">조회 실패 (SPY 대비 열은 비어 있음)</span>}
+                            <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                "SPY 대비"가 + 면 그 그룹을 산 것이 지수 ETF를 산 것보다 나았다는 뜻입니다. 각 스냅샷일 직전 미국 거래일 종가 기준.
+                            </div>
+                        </div>
+                    )}
 
                     {/* 표본 편향 경고 — 추천에서 빠진 종목은 집계에서 통째로 사라지므로 그 규모를 먼저 보여준다 */}
                     {result.baselineCount > 0 && (

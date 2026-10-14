@@ -114,6 +114,17 @@ export default function EvaluationPerformanceHelpModal({ isOpen, onClose }) {
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">수익률이 <strong>0%보다 큰</strong> 종목의 비율 (0%는 승으로 치지 않음)</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
+                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">SPY 대비 (평균/중앙)</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">
+                                            그룹 수익률 − 같은 기간 <strong>SPY(S&amp;P500 ETF)</strong> 수익률 (%p). <strong>+ 여야 지수를 사는 것보다 나았던 것</strong>입니다.
+                                            각 스냅샷일 직전 미국 거래일 종가로 계산하며, SPY 조회에 실패하면 비어 있습니다
+                                        </td>
+                                    </tr>
+                                    <tr className="bg-white dark:bg-slate-800">
+                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">SPY 이긴 비율</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">수익률이 같은 기간 SPY 수익률보다 <strong>높았던</strong> 종목의 비율</td>
+                                    </tr>
+                                    <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">최고 / 최저</td>
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">그룹 내 개별 종목의 최대·최소 수익률 (편차 확인용)</td>
                                     </tr>
@@ -159,6 +170,7 @@ export default function EvaluationPerformanceHelpModal({ isOpen, onClose }) {
                                 <div className="text-xs text-slate-600 dark:text-slate-400">
                                     <strong>매수 후보 &gt; 관심목록 &gt; 관망</strong> 순으로 평균수익률·승률이 높게 나오고,
                                     가치등급도 <strong>S/A가 D/F보다</strong> 높게 나옵니다. 순서가 이렇게 유지되면 선별 기준이 유효하다는 신호입니다.
+                                    여기에 더해 매수 후보의 <strong>SPY 대비가 꾸준히 +</strong> 여야 개별 종목을 고를 이유가 있습니다.
                                 </div>
                             </div>
                             <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
