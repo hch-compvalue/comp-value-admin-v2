@@ -52,9 +52,29 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                     <section className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4">
                         <div className="font-semibold text-slate-800 dark:text-slate-100 mb-1">이 페이지는?</div>
                         <div className="text-slate-700 dark:text-slate-300">
-                            매일 밤 자동으로 돌린 <strong>추천 종목 전수 평가 결과</strong>를 아침에 확인하는 화면입니다.
+                            매일 오전 자동으로 돌린 <strong>추천 종목 전수 평가 결과</strong>를 <strong>투자 순위</strong> 순으로 보는 화면입니다.
                             내가 직접 종목을 넣고 분석하는 게 아니라, <strong>이미 저장된 최신 평가 스냅샷을 그대로 읽어옵니다</strong>
                             (조회 시점에 재계산하지 않음).
+                        </div>
+                    </section>
+
+                    {/* 투자 순위 */}
+                    <section>
+                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">투자 순위 (기본 정렬)</h4>
+                        <div className="space-y-2 text-slate-600 dark:text-slate-400 text-xs">
+                            <p>
+                                그날 평가한 후보 안에서 세 가지의 <strong>상위 비율(백분위)</strong>을 구해 같은 비중으로 평균한 0~100점입니다.
+                            </p>
+                            <ul className="list-disc list-inside space-y-1">
+                                <li><strong>수익성</strong> — ROE(자기자본이익률)가 높을수록 높음</li>
+                                <li><strong>가치</strong> — 아래 가치등급의 가치점수가 높을수록 높음</li>
+                                <li><strong>단기 눌림</strong> — 최근 5거래일 수익률이 낮을수록 높음 (좋은 종목의 일시적 하락은 2~4주 뒤 되돌아오는 경향)</li>
+                            </ul>
+                            <p>
+                                과거 데이터(2018~2026, 약 1,500종목) 백테스트에서 <strong>2~4주 보유 기준</strong> 순위가 높을수록 성과가 나았던 요소만 썼습니다.
+                                효과는 크지 않으니 <strong>최종 판단은 근거 칩과 상세(더블클릭)를 함께 보고</strong> 하세요. 실제 운영 성과는 성과 추적의 "투자 순위별 성과"에서 확인할 수 있습니다.
+                            </p>
+                            <p>타이밍 신호는 같은 백테스트에서 효과가 확인되지 않아 <strong>참고용</strong>으로만 표시합니다(투자판정에는 아직 사용).</p>
                         </div>
                     </section>
 
@@ -293,6 +313,14 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                                     <tr className="bg-white dark:bg-slate-800">
+                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">순위 / 투자 순위 점수</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">위 "투자 순위" 점수와 그 순위. 추천 프로파일로 거르면 그 안에서 다시 순위를 매깁니다. 2026-10-15 평가분부터 표시</td>
+                                    </tr>
+                                    <tr className="bg-white dark:bg-slate-800">
+                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">근거</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">수익성 상위 N% · 가치 상위 N% · 최근 1주 수익률. 칩에 마우스를 올리면 ROE·가치점수 원값</td>
+                                    </tr>
+                                    <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">투자판정</td>
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">가치등급 × 타이밍 매트릭스 + 품질 게이트를 거친 최종 결론</td>
                                     </tr>
@@ -301,19 +329,19 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">등급 배지(S~F)와 오른쪽 작은 숫자는 100점 환산 가치점수</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">타이밍</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">기술적 분석 기반 진입 시점 판정 (양호/관망/대기/하락)</td>
+                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">타이밍(참고)</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">기술적 분석 기반 진입 시점 판정 (양호/관망/대기/하락). 백테스트상 효과 미확인이라 참고용</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">현재가</td>
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400"><strong>평가 시점(오전 10시 배치)의 주가</strong>. 실시간 가격이 아닙니다</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">적정가</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">주당가치 계산 로직이 산출한 내재가치</td>
+                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">적정가 (상세)</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">주당가치 계산 로직이 산출한 내재가치. 보수적 추정이라 대부분 종목이 이보다 비싸게 거래되므로 표에서는 빼고 상세(더블클릭)에서 보여줍니다</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">매수적정가</td>
+                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">매수적정가 (상세)</td>
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">
                                             적정가 × (1 − 안전마진율). <strong>현재가 &lt; 매수적정가</strong>면 안전마진을 확보한 가격대
                                         </td>

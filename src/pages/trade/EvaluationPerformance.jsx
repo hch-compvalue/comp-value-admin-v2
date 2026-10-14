@@ -189,6 +189,14 @@ const EvaluationPerformance = () => {
                     )}
                     <SummaryTable title="투자판정별 성과" data={result.bySignal} />
                     <SummaryTable title="가치등급별 성과" data={result.byGrade} />
+                    {/* 투자 순위별 — 기준일 순위 상위 20%가 하위 20%보다 실제로 나았는지 (순위의 실전 검증) */}
+                    {result.byRank && result.byRank.length > 0
+                        ? <SummaryTable title="투자 순위별 성과 (기준일 순위 상위 20% · 중간 · 하위 20%)" data={result.byRank} />
+                        : result.byRank && (
+                            <div className="mb-6 text-sm text-slate-400">
+                                투자 순위별 성과: 기준일 스냅샷에 투자 순위가 없습니다. 2026-10-15 이후 날짜를 기준일로 선택하세요.
+                            </div>
+                        )}
                     {/* 추천 프로파일별 — 한 종목을 여러 프로파일이 추천했으면 각 프로파일에 모두 집계 */}
                     {result.profileTagged === true && (
                         <SummaryTable title="추천 프로파일별 성과 (중복 추천 종목은 각 프로파일에 포함)" data={result.byProfile} />

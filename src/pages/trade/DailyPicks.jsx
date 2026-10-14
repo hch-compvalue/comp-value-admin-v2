@@ -15,6 +15,7 @@ const SIGNAL_STYLE = {
 };
 const SIGNAL_ICON = { '매수 후보': '🔵', '관심목록': '🟡', '관망': '⚪' };
 const SIGNAL_ORDER = ['매수 후보', '관심목록', '관망'];
+const ALL_SIGNALS = '전체';
 
 const TIMING_STYLE = {
     '양호': 'text-blue-600 dark:text-blue-400 font-semibold',
@@ -30,6 +31,41 @@ const MAX_HANDOFF_SYMBOLS = 200;
 const ALL_PROFILES = '전체';
 const parseProfiles = (value) => (value ? value.split(PROFILE_DELIMITER).filter(Boolean) : []);
 
+// 백분위(0~100, 높을수록 좋음) → "상위 N%" 표기 (최소 1%)
+const topPct = (pct) => Math.max(1, Math.round(100 - pct));
+
+/** 투자 순위 근거: 수익성·가치 상위 비율 + 최근 1주 수익률 (순위 점수가 없으면 null) */
+const RankReason = ({ row }) => {
+    if (row.rankScore == null) return <span className="text-slate-400">-</span>;
+    const ret = row.return1wPct;
+    return (
+        <div className="flex flex-wrap gap-1 text-xs">
+            <span className="px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300" title={`ROE ${row.roe != null ? (row.roe * 100).toFixed(1) + '%' : '-'}`}>
+                수익성 상위 {topPct(row.roePct)}%
+            </span>
+            <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" title={`가치점수 ${Number(row.valueScore).toFixed(0)}`}>
+                가치 상위 {topPct(row.valuePct)}%
+            </span>
+            <span className={`px-1.5 py-0.5 rounded ${ret < 0 ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}
+                  title="최근 5거래일 수익률 — 하락이 클수록 단기 눌림 점수가 높음">
+                1주 {ret > 0 ? '+' : ''}{Number(ret).toFixed(1)}%
+            </span>
+        </div>
+    );
+};
+
+/** 투자 순위 점수 막대 (0~100) */
+const RankBar = ({ score }) => (
+    score == null ? <span className="text-slate-400">-</span> : (
+        <div className="flex items-center justify-end gap-2">
+            <div className="w-16 h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                <div className="h-full bg-blue-500 dark:bg-blue-400" style={{ width: `${score}%` }} />
+            </div>
+            <span className="font-semibold text-slate-800 dark:text-slate-100 tabular-nums">{Number(score).toFixed(1)}</span>
+        </div>
+    )
+);
+
 const fmtPrice = (v) => (v == null ? '-' : `$${Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
 
 /**
@@ -43,9 +79,9 @@ const DailyPicks = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-    const [signalFilter, setSignalFilter] = useState('매수 후보');  // 기본: 매수후보만
+    const [signalFilter, setSignalFilter] = useState(ALL_SIGNALS);  // 기본: 전체 후보를 투자 순위순으로
     const [profileFilter, setProfileFilter] = useState(ALL_PROFILES);
-    const [sortKey, setSortKey] = useState('valueScore');
+    const [sortKey, setSortKey] = useState('rankScore');
     const [sortDir, setSortDir] = useState('desc');
     const [showValueModal, setShowValueModal] = useState(false);
     const [compValueData, setCompValueData] = useState({});
@@ -108,6 +144,16 @@ const DailyPicks = () => {
         profileFilter === ALL_PROFILES ? rows : rows.filter((r) => parseProfiles(r.sourceProfiles).includes(profileFilter))
     ), [rows, profileFilter]);
 
+    // 투자 순위 (선택한 프로파일 모집단 안에서 순위 점수 내림차순, 점수 없는 종목은 순위 없음)
+    const rankBySymbol = useMemo(() => {
+        const ranked = profileRows.filter((r) => r.rankScore != null).sort((a, b) => b.rankScore - a.rankScore);
+        return new Map(ranked.map((r, i) => [r.symbol, i + 1]));
+    }, [profileRows]);
+    const hasRank = rankBySymbol.size > 0;
+
+    // 순위 점수가 없는 옛 스냅샷이면 가치점수 정렬로 대체
+    const effectiveSortKey = sortKey === 'rankScore' && !hasRank ? 'valueScore' : sortKey;
+
     // 투자판정별 집계
     const counts = useMemo(() => {
         const c = { '매수 후보': 0, '관심목록': 0, '관망': 0 };
@@ -116,9 +162,9 @@ const DailyPicks = () => {
     }, [profileRows]);
 
     const filtered = useMemo(() => {
-        let list = signalFilter === '전체' ? profileRows : profileRows.filter((r) => r.investmentSignal === signalFilter);
+        let list = signalFilter === ALL_SIGNALS ? profileRows : profileRows.filter((r) => r.investmentSignal === signalFilter);
         list = [...list].sort((a, b) => {
-            const av = a[sortKey], bv = b[sortKey];
+            const av = a[effectiveSortKey], bv = b[effectiveSortKey];
             if (av == null) return 1;
             if (bv == null) return -1;
             const an = typeof av === 'string' ? parseFloat(av) : av;
@@ -127,7 +173,7 @@ const DailyPicks = () => {
             return sortDir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
         });
         return list;
-    }, [profileRows, signalFilter, sortKey, sortDir]);
+    }, [profileRows, signalFilter, effectiveSortKey, sortDir]);
 
     // 현재 표에 보이는 종목을 종목 분석 > 일괄 평가로 넘겨 실시간 재평가
     const handleEvaluateVisible = () => {
@@ -141,15 +187,17 @@ const DailyPicks = () => {
         else { setSortKey(key); setSortDir('desc'); }
     };
 
+    // 적정가·매수적정가는 상세(더블클릭)에서 확인 — V9 적정가는 보수적 추정이라 표에서 현재가와 바로 비교하면 오해 소지
     const COLUMNS = [
+        { key: 'rankScore', label: '순위', num: true },
         { key: 'symbol', label: '심볼' },
         { key: 'companyName', label: '기업명' },
+        { key: 'rankScore', label: '투자 순위 점수', num: true, id: 'rankScoreBar' },
+        { key: 'roePct', label: '근거' },
         { key: 'investmentSignal', label: '투자판정' },
         { key: 'valueScore', label: '가치등급', num: true },
-        { key: 'timingSignal', label: '타이밍' },
+        { key: 'timingSignal', label: '타이밍(참고)' },
         { key: 'currentPrice', label: '현재가', num: true },
-        { key: 'fairValue', label: '적정가', num: true },
-        { key: 'purchasePrice', label: '매수적정가', num: true },
         { key: 'sector', label: '섹터' },
         { key: 'sourceProfiles', label: '추천 프로파일' },
     ];
@@ -172,6 +220,15 @@ const DailyPicks = () => {
 
             {/* 요약 타일 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                <button
+                    onClick={() => setSignalFilter(ALL_SIGNALS)}
+                    className={`rounded-lg border px-4 py-3 text-left transition bg-white dark:bg-slate-800 ${
+                        signalFilter === ALL_SIGNALS ? 'border-blue-500 ring-2 ring-blue-400/40' : 'border-slate-200 dark:border-slate-700'
+                    }`}
+                >
+                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">전체 후보</div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-white">{profileRows.length}</div>
+                </button>
                 {SIGNAL_ORDER.map((sig) => (
                     <button
                         key={sig}
@@ -186,16 +243,16 @@ const DailyPicks = () => {
                         <div className="text-2xl font-bold">{counts[sig]}</div>
                     </button>
                 ))}
-                <button
-                    onClick={() => setSignalFilter('전체')}
-                    className={`rounded-lg border px-4 py-3 text-left transition bg-white dark:bg-slate-800 ${
-                        signalFilter === '전체' ? 'border-blue-500 ring-2 ring-blue-400/40' : 'border-slate-200 dark:border-slate-700'
-                    }`}
-                >
-                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">전체</div>
-                    <div className="text-2xl font-bold text-slate-900 dark:text-white">{profileRows.length}</div>
-                </button>
             </div>
+
+            {/* 투자 순위 안내 — 순위 점수 없는 옛 스냅샷이면 대체 정렬 안내 */}
+            {rows.length > 0 && (
+                <div className="mb-4 rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
+                    {hasRank
+                        ? <>투자 순위 = 후보 안에서 <strong>수익성(ROE) · 가치점수 · 최근 1주 눌림</strong>의 상위 비율을 같은 비중으로 합친 점수입니다. 2~4주 보유 기준 백테스트에서 순위가 높을수록 성과가 나았던 요소만 썼습니다. 타이밍은 효과가 확인되지 않아 참고용입니다.</>
+                        : <>이 스냅샷에는 투자 순위가 없어 가치점수 순으로 보여줍니다. 투자 순위는 2026-10-15 평가분부터 표시됩니다.</>}
+                </div>
+            )}
 
             {/* 추천 프로파일 필터 (태그가 있는 스냅샷만) */}
             {profileCounts.length > 0 ? (
@@ -260,12 +317,12 @@ const DailyPicks = () => {
                         <tr>
                             {COLUMNS.map((col) => (
                                 <th
-                                    key={col.key}
+                                    key={col.id || col.label}
                                     onClick={() => handleSort(col.key)}
                                     className={`px-4 py-3 font-semibold text-slate-600 dark:text-slate-300 cursor-pointer whitespace-nowrap ${col.num ? 'text-right' : 'text-left'}`}
                                 >
                                     {col.label}
-                                    {sortKey === col.key && (sortDir === 'asc' ? ' ▲' : ' ▼')}
+                                    {effectiveSortKey === col.key && col.id !== 'rankScoreBar' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
                                 </th>
                             ))}
                         </tr>
@@ -285,9 +342,12 @@ const DailyPicks = () => {
                                     valueLoadingSymbol === r.symbol ? 'opacity-60' : ''
                                 }`}
                             >
+                                <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400 tabular-nums">{rankBySymbol.get(r.symbol) ?? '-'}</td>
                                 <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-white">{r.symbol}</td>
                                 <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 max-w-[200px] truncate">{r.companyName || '-'}</td>
-                                <td className="px-4 py-2.5">
+                                <td className="px-4 py-2.5"><RankBar score={r.rankScore} /></td>
+                                <td className="px-4 py-2.5 min-w-[220px]"><RankReason row={r} /></td>
+                                <td className="px-4 py-2.5 whitespace-nowrap">
                                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold ${SIGNAL_STYLE[r.investmentSignal] || ''}`}>
                                         {SIGNAL_ICON[r.investmentSignal]} {r.investmentSignal || '-'}
                                     </span>
@@ -298,8 +358,6 @@ const DailyPicks = () => {
                                 </td>
                                 <td className={`px-4 py-2.5 text-center ${TIMING_STYLE[r.timingSignal] || ''}`}>{r.timingSignal || '-'}</td>
                                 <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-300">{fmtPrice(r.currentPrice)}</td>
-                                <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-300">{fmtPrice(r.fairValue)}</td>
-                                <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-300">{fmtPrice(r.purchasePrice)}</td>
                                 <td className="px-4 py-2.5 text-left text-slate-500 dark:text-slate-400 whitespace-nowrap">{r.sector || '-'}</td>
                                 <td className="px-4 py-2.5 text-left whitespace-nowrap">
                                     {parseProfiles(r.sourceProfiles).length === 0 ? <span className="text-slate-400">-</span> : (
