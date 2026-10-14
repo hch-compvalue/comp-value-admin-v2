@@ -118,9 +118,10 @@ export default function SideBar001({ isSidebarOpen, setSidebarOpen, setIsPinned,
                 if (route.show === false) return false;
                 // 섹션이 일치하지 않으면 숨김
                 if (route.section !== sectionLabel) return false;
-                // requiredRoles가 있으면 권한 체크
-                if (route.requiredRoles && route.requiredRoles.length > 0) {
-                    return hasAnyRole(userRoles, route.requiredRoles);
+                // 접근 권한(accessRoles, 페이지 접근 차단과 같은 기준)이 없으면 메뉴도 숨김
+                const roles = route.accessRoles || route.requiredRoles;
+                if (roles && roles.length > 0) {
+                    return hasAnyRole(userRoles, roles);
                 }
                 return true;
             }

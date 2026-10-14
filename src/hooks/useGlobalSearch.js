@@ -24,8 +24,10 @@ export function useGlobalSearch(query) {
         return Object.entries(routes)
             .filter(([, r]) => r.show !== false && SECTIONS.includes(r.section))
             .filter(([, r]) => {
-                if (r.requiredRoles && r.requiredRoles.length > 0) {
-                    return hasAnyRole(userRoles, r.requiredRoles);
+                // 사이드바와 같은 기준 — 접근 권한(accessRoles)이 없는 페이지는 검색 결과에서도 제외
+                const roles = r.accessRoles || r.requiredRoles;
+                if (roles && roles.length > 0) {
+                    return hasAnyRole(userRoles, roles);
                 }
                 return true;
             })

@@ -29,16 +29,17 @@ import JsonViewer from '@/pages/util/json-viewer'
 import Memo from '@/pages/util/memo'
 import Calculator from '@/pages/util/calculator'
 import MonitoringDashboard from '@/pages/monitoring/MonitoringDashboard'
+import ScheduleManagement from '@/pages/admin/ScheduleManagement'
 import SubTabPage from '@/component/common/layout/SubTabPage'
 import LegacyRedirect from '@/component/common/layout/LegacyRedirect'
-import { STOCK_DISCOVER_PATH, STOCK_ANALYSIS_PATH, PORTFOLIO_PATH, SUB_TAB } from '@/config/menuPaths'
+import { STOCK_DISCOVER_PATH, STOCK_ANALYSIS_PATH, PORTFOLIO_PATH, SCHEDULE_MANAGEMENT_PATH, SUB_TAB } from '@/config/menuPaths'
 
 import { SECTIONS } from '@/component/layouts/common/SideBar001';
 import {
     Home as HomeIcon, List, BarChart3, Pencil, Sparkles, Brain, Briefcase,
     MessageSquare, LayoutDashboard,
     History, LineChart, FileSpreadsheet, DollarSign, Braces,
-    StickyNote, Calculator as CalculatorIcon, Activity
+    StickyNote, Calculator as CalculatorIcon, Activity, CalendarClock
 } from 'lucide-react';
 
 const routes = {
@@ -193,7 +194,22 @@ const routes = {
         icon: Activity,
         accessRoles: ['ROLE_SUPER_ADMIN']
     },
-    "MLRetrainManagement": { section: SECTIONS[5], label: 'AI 모델 관리', path: '/ml/retrain', element: <MLRetrainManagement />, icon: Brain },
+    "ScheduleManagement": {
+        section: SECTIONS[5],
+        label: '스케줄 관리',
+        path: SCHEDULE_MANAGEMENT_PATH,
+        element: <ScheduleManagement />,
+        icon: CalendarClock,
+        accessRoles: ['ROLE_SUPER_ADMIN']
+    },
+    "MLRetrainManagement": {
+        section: SECTIONS[5],
+        label: 'AI 모델 관리',
+        path: '/ml/retrain',
+        element: <MLRetrainManagement />,
+        icon: Brain,
+        accessRoles: ['ROLE_SUPER_ADMIN']
+    },
 }
 
 export default routes
