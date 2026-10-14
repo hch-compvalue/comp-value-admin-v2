@@ -1,3 +1,4 @@
+import { GRADE_STYLE, GRADE_STYLE_DEFAULT } from '@/util/GradeStyleUtil';
 import { useState, useRef, useEffect } from 'react';
 import useModalAnimation from '@/hooks/useModalAnimation';
 import CompanyInfoModal from '@/pages/trade/popup/CompanyInfoModal';
@@ -16,15 +17,7 @@ const formatNumberWithComma = (value) => {
 
 // 등급별 색상
 const getGradeStyle = (grade) => {
-    const styles = {
-        'S': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
-        'A': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
-        'B': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-        'C': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-        'D': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-        'F': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    };
-    return styles[grade] || 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200';
+    return GRADE_STYLE[grade] || GRADE_STYLE_DEFAULT;
 };
 
 // 투자판정 아이콘 (색각이상 친화: 파랑/노랑/회색) — DailyPicks와 동일
@@ -264,9 +257,9 @@ const StepDetailCard = ({ step }) => {
  */
 const getSignalBadgeStyle = (color) => {
     const styles = {
-        green: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-200 dark:border-emerald-700',
+        green: 'bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-900/50 dark:text-sky-200 dark:border-sky-700',
         yellow: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/50 dark:text-amber-200 dark:border-amber-700',
-        red: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/50 dark:text-red-200 dark:border-red-700',
+        red: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-200 dark:border-orange-700',
         gray: 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600',
     };
     return styles[color] || styles.gray;
@@ -306,8 +299,8 @@ const EntryTimingSection = ({ entryTiming }) => {
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <span className="text-slate-500 dark:text-slate-400 whitespace-nowrap">단기추세:</span>
                         <span className={`font-medium whitespace-nowrap ${
-                            entryTiming.shortTermTrend === '상승' ? 'text-emerald-600 dark:text-emerald-400' :
-                            entryTiming.shortTermTrend === '하락' ? 'text-red-600 dark:text-red-400' :
+                            entryTiming.shortTermTrend === '상승' ? 'text-sky-600 dark:text-sky-400' :
+                            entryTiming.shortTermTrend === '하락' ? 'text-orange-600 dark:text-orange-400' :
                             'text-slate-600 dark:text-slate-300'
                         }`}>{entryTiming.shortTermTrend}</span>
                         {entryTiming.trendDetail && (
@@ -321,12 +314,12 @@ const EntryTimingSection = ({ entryTiming }) => {
                     <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 text-sm">
                         <div className="whitespace-nowrap">
                             <span className="text-slate-500 dark:text-slate-400">예상 지지선: </span>
-                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">${entryTiming.estimatedSupport?.toFixed(2)}</span>
+                            <span className="font-semibold text-sky-600 dark:text-sky-400">${entryTiming.estimatedSupport?.toFixed(2)}</span>
                         </div>
                         <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">|</span>
                         <div className="whitespace-nowrap">
                             <span className="text-slate-500 dark:text-slate-400">예상 저항선: </span>
-                            <span className="font-semibold text-red-600 dark:text-red-400">${entryTiming.estimatedResistance?.toFixed(2)}</span>
+                            <span className="font-semibold text-orange-600 dark:text-orange-400">${entryTiming.estimatedResistance?.toFixed(2)}</span>
                         </div>
                     </div>
                 )}
@@ -364,7 +357,7 @@ const EntryTimingSection = ({ entryTiming }) => {
                         </div>
                         <div className="text-xs">
                             <span className="text-slate-500 dark:text-slate-400">Histogram: </span>
-                            <span className={`font-medium ${entryTiming.macdHistogram >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                            <span className={`font-medium ${entryTiming.macdHistogram >= 0 ? 'text-sky-600 dark:text-sky-400' : 'text-orange-600 dark:text-orange-400'}`}>
                                 {entryTiming.macdHistogram?.toFixed(2)}
                             </span>
                         </div>
@@ -434,8 +427,8 @@ const TradingGuideSection = ({ data }) => {
     };
 
     const guideItems = [
-        { label: '손절매가', value: stopLoss, color: 'text-red-600 dark:text-red-400', dotColor: 'bg-red-500' },
-        { label: '매수적정가', value: purchasePrice, color: 'text-emerald-600 dark:text-emerald-400', dotColor: 'bg-emerald-500' },
+        { label: '손절매가', value: stopLoss, color: 'text-orange-600 dark:text-orange-400', dotColor: 'bg-orange-500' },
+        { label: '매수적정가', value: purchasePrice, color: 'text-sky-600 dark:text-sky-400', dotColor: 'bg-sky-500' },
         { label: '목표매도가', value: sellTarget, color: 'text-blue-600 dark:text-blue-400', dotColor: 'bg-blue-500' },
     ].filter(item => !isNaN(item.value));
 
@@ -485,7 +478,7 @@ const TradingGuideSection = ({ data }) => {
                                 <div className="flex items-center gap-2">
                                     <span className={`font-semibold ${color}`}>{formatUSD(value)}</span>
                                     {diff !== null && (
-                                        <span className={`text-xs ${Number(diff) >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                        <span className={`text-xs ${Number(diff) >= 0 ? 'text-sky-500' : 'text-orange-500'}`}>
                                             ({Number(diff) >= 0 ? '+' : ''}{diff}%)
                                         </span>
                                     )}
@@ -510,7 +503,7 @@ const TradingGuideSection = ({ data }) => {
                                     <div className="flex items-center gap-2">
                                         <span className={`font-semibold ${color}`}>{formatUSD(value)}</span>
                                         {diff !== null && (
-                                            <span className={`text-xs ${Number(diff) >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                            <span className={`text-xs ${Number(diff) >= 0 ? 'text-sky-500' : 'text-orange-500'}`}>
                                                 ({Number(diff) >= 0 ? '+' : ''}{diff}%)
                                             </span>
                                         )}
@@ -535,7 +528,7 @@ const TradingGuideSection = ({ data }) => {
                                     <div className="absolute inset-0.5 transition-all group-hover/s:scale-125 group-hover/s:opacity-100" style={{ background: '#2dd4bf', transform: 'rotate(45deg)', boxShadow: '0 0 5px rgba(45,212,191,0.6)', border: '1.5px solid rgba(255,255,255,0.5)', opacity: 0.85 }} />
                                     <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-teal-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/s:opacity-100 group-hover/s:visible transition-all whitespace-nowrap z-50 pointer-events-none">
                                         예상 지지선: {formatUSD(estimatedSupport)}{' '}
-                                        <span className={`${pctDiff(estimatedSupport) !== null && Number(pctDiff(estimatedSupport)) >= 0 ? 'text-teal-200' : 'text-red-200'}`}>
+                                        <span className={`${pctDiff(estimatedSupport) !== null && Number(pctDiff(estimatedSupport)) >= 0 ? 'text-teal-200' : 'text-orange-200'}`}>
                                             {pctDiff(estimatedSupport) !== null ? `(${Number(pctDiff(estimatedSupport)) >= 0 ? '+' : ''}${pctDiff(estimatedSupport)}%)` : ''}
                                         </span>
                                         <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-teal-700" />
@@ -548,7 +541,7 @@ const TradingGuideSection = ({ data }) => {
                                     <div className="absolute inset-0.5 transition-all group-hover/r:scale-125 group-hover/r:opacity-100" style={{ background: '#fb923c', transform: 'rotate(45deg)', boxShadow: '0 0 5px rgba(251,146,60,0.6)', border: '1.5px solid rgba(255,255,255,0.5)', opacity: 0.85 }} />
                                     <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-orange-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/r:opacity-100 group-hover/r:visible transition-all whitespace-nowrap z-50 pointer-events-none">
                                         예상 저항선: {formatUSD(estimatedResistance)}{' '}
-                                        <span className={`${pctDiff(estimatedResistance) !== null && Number(pctDiff(estimatedResistance)) >= 0 ? 'text-orange-200' : 'text-red-200'}`}>
+                                        <span className={`${pctDiff(estimatedResistance) !== null && Number(pctDiff(estimatedResistance)) >= 0 ? 'text-orange-200' : 'text-orange-200'}`}>
                                             {pctDiff(estimatedResistance) !== null ? `(${Number(pctDiff(estimatedResistance)) >= 0 ? '+' : ''}${pctDiff(estimatedResistance)}%)` : ''}
                                         </span>
                                         <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-orange-700" />
@@ -559,12 +552,12 @@ const TradingGuideSection = ({ data }) => {
                             {purchaseBarPct !== null && (
                                 <div className="group/m absolute cursor-pointer" style={{ left: `${purchaseBarPct}%`, top: '-5px', bottom: '-5px', width: '10px', transform: 'translateX(-50%)', zIndex: 14 }}>
                                     <div className="absolute rounded-sm transition-all group-hover/m:scale-x-150 group-hover/m:opacity-100" style={{ left: '3px', right: '3px', top: 0, bottom: 0, background: '#10b981', boxShadow: '0 0 4px rgba(16,185,129,0.6)', opacity: 0.85 }} />
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-emerald-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/m:opacity-100 group-hover/m:visible transition-all whitespace-nowrap z-50 pointer-events-none">
+                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-sky-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/m:opacity-100 group-hover/m:visible transition-all whitespace-nowrap z-50 pointer-events-none">
                                         매수적정가: {formatUSD(purchasePrice)}{' '}
-                                        <span className={`${pctDiff(purchasePrice) !== null && Number(pctDiff(purchasePrice)) >= 0 ? 'text-emerald-200' : 'text-red-200'}`}>
+                                        <span className={`${pctDiff(purchasePrice) !== null && Number(pctDiff(purchasePrice)) >= 0 ? 'text-sky-200' : 'text-orange-200'}`}>
                                             {pctDiff(purchasePrice) !== null ? `(${Number(pctDiff(purchasePrice)) >= 0 ? '+' : ''}${pctDiff(purchasePrice)}%)` : ''}
                                         </span>
-                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-emerald-700" />
+                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-sky-700" />
                                     </div>
                                 </div>
                             )}
@@ -574,7 +567,7 @@ const TradingGuideSection = ({ data }) => {
                                     <div className="absolute rounded-sm transition-all group-hover/m:scale-x-150 group-hover/m:opacity-100" style={{ left: '3px', right: '3px', top: 0, bottom: 0, background: '#3b82f6', boxShadow: '0 0 4px rgba(59,130,246,0.6)', opacity: 0.85 }} />
                                     <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-blue-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/m:opacity-100 group-hover/m:visible transition-all whitespace-nowrap z-50 pointer-events-none">
                                         목표매도가: {formatUSD(sellTarget)}{' '}
-                                        <span className={`${pctDiff(sellTarget) !== null && Number(pctDiff(sellTarget)) >= 0 ? 'text-blue-200' : 'text-red-200'}`}>
+                                        <span className={`${pctDiff(sellTarget) !== null && Number(pctDiff(sellTarget)) >= 0 ? 'text-blue-200' : 'text-orange-200'}`}>
                                             {pctDiff(sellTarget) !== null ? `(${Number(pctDiff(sellTarget)) >= 0 ? '+' : ''}${pctDiff(sellTarget)}%)` : ''}
                                         </span>
                                         <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-700" />
@@ -846,7 +839,7 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                             </span>
                             <button
                                 type="button"
-                                className="whitespace-nowrap px-2 sm:px-3 py-1.5 text-sm rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed dark:disabled:bg-slate-600 flex items-center gap-1.5"
+                                className="whitespace-nowrap px-2 sm:px-3 py-1.5 text-sm rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed dark:disabled:bg-slate-600 flex items-center gap-1.5"
                                 onClick={handleOpenCompanyValue}
                                 disabled={companyValueLoading || fromCompanyValue}
                                 title={fromCompanyValue ? "이미 기업가치 계산 결과 모달에서 열렸습니다" : "기업가치 계산 결과 보기"}
@@ -947,10 +940,10 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                         if (!isNaN(current) && !isNaN(fair) && fair > 0 && current > fair) {
                             const overPct = ((current - fair) / fair * 100).toFixed(1);
                             return (
-                                <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-300 dark:border-red-800 flex items-start gap-2">
+                                <div className="mb-4 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-800 flex items-start gap-2">
                                     <span className="text-xl leading-none flex-shrink-0">🔴</span>
-                                    <div className="text-sm text-red-800 dark:text-red-200 break-keep">
-                                        현재가(<span className="font-semibold">${data.currentPrice}</span>)가 적정가(<span className="font-semibold">${data.fairValue}</span>)보다 <span className="font-bold text-red-600 dark:text-red-300">{overPct}%</span> 높음 — <span className="font-bold">고평가 주의</span>
+                                    <div className="text-sm text-orange-800 dark:text-orange-200 break-keep">
+                                        현재가(<span className="font-semibold">${data.currentPrice}</span>)가 적정가(<span className="font-semibold">${data.fairValue}</span>)보다 <span className="font-bold text-orange-600 dark:text-orange-300">{overPct}%</span> 높음 — <span className="font-bold">고평가 주의</span>
                                     </div>
                                 </div>
                             );
@@ -1010,16 +1003,16 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                         const crPass = rd.그레이엄_유동비율통과 === true;
                         const profitPass = rd.그레이엄_연속흑자통과 === true;
                         const gradeColors = {
-                            '강력매수': 'text-emerald-700 bg-emerald-50 border-emerald-300 dark:text-emerald-400 dark:bg-emerald-900/30 dark:border-emerald-800',
+                            '강력매수': 'text-sky-700 bg-sky-50 border-sky-300 dark:text-sky-400 dark:bg-sky-900/30 dark:border-sky-800',
                             '매수': 'text-blue-700 bg-blue-50 border-blue-300 dark:text-blue-400 dark:bg-blue-900/30 dark:border-blue-800',
                             '관망': 'text-amber-700 bg-amber-50 border-amber-300 dark:text-amber-400 dark:bg-amber-900/30 dark:border-amber-800',
-                            '위험': 'text-red-700 bg-red-50 border-red-300 dark:text-red-400 dark:bg-red-900/30 dark:border-red-800',
+                            '위험': 'text-orange-700 bg-orange-50 border-orange-300 dark:text-orange-400 dark:bg-orange-900/30 dark:border-orange-800',
                         };
                         const FilterBadge = ({ label, pass }) => (
                             <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap ${
                                 pass
-                                    ? 'text-emerald-700 border-emerald-300 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:bg-emerald-900/30'
-                                    : 'text-red-700 border-red-300 bg-red-50 dark:text-red-400 dark:border-red-800 dark:bg-red-900/30'
+                                    ? 'text-sky-700 border-sky-300 bg-sky-50 dark:text-sky-400 dark:border-sky-800 dark:bg-sky-900/30'
+                                    : 'text-orange-700 border-orange-300 bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:bg-orange-900/30'
                             }`}>
                                 {pass ? '✅' : '❌'} {label}
                             </span>
@@ -1232,7 +1225,7 @@ export const FullDetailModal = ({ isOpen, data, onClose, zIndex = 70 }) => {
                     {/* 단계별 점수 */}
                     <div className="mb-6">
                         <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span className="w-2 h-2 bg-sky-500 rounded-full"></span>
                             단계별 점수
                         </h4>
                         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">

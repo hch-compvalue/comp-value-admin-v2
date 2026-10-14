@@ -1,3 +1,4 @@
+import { GRADE_STYLE } from '@/util/GradeStyleUtil';
 import useModalAnimation from '@/hooks/useModalAnimation';
 
 /**
@@ -200,12 +201,12 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                             </table>
                         </div>
                         <div className="flex flex-wrap gap-2 mt-3 text-xs">
-                            <span className="px-2 py-1 rounded font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">S ≥ 92</span>
-                            <span className="px-2 py-1 rounded font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">A ≥ 83</span>
-                            <span className="px-2 py-1 rounded font-bold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">B ≥ 73</span>
-                            <span className="px-2 py-1 rounded font-bold bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">C ≥ 63</span>
-                            <span className="px-2 py-1 rounded font-bold bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">D ≥ 50</span>
-                            <span className="px-2 py-1 rounded font-bold bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">F &lt; 50</span>
+                            <span className={`px-2 py-1 rounded font-bold ${GRADE_STYLE.S}`}>S ≥ 92</span>
+                            <span className={`px-2 py-1 rounded font-bold ${GRADE_STYLE.A}`}>A ≥ 83</span>
+                            <span className={`px-2 py-1 rounded font-bold ${GRADE_STYLE.B}`}>B ≥ 73</span>
+                            <span className={`px-2 py-1 rounded font-bold ${GRADE_STYLE.C}`}>C ≥ 63</span>
+                            <span className={`px-2 py-1 rounded font-bold ${GRADE_STYLE.D}`}>D ≥ 50</span>
+                            <span className={`px-2 py-1 rounded font-bold ${GRADE_STYLE.F}`}>F &lt; 50</span>
                             <span className="text-slate-500 dark:text-slate-400 self-center">— S/A/B만 "가치 양호"로 인정</span>
                         </div>
                     </section>

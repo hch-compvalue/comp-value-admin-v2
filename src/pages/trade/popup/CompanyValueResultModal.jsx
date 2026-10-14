@@ -471,7 +471,7 @@ const Badge = ({ children, title, highlighted = false }) => {
     const colorClass = highlighted === 'amber'
         ? 'text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-800 dark:bg-amber-900/30'
         : highlighted
-            ? 'text-emerald-700 border-emerald-300 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:bg-emerald-900/30'
+            ? 'text-sky-700 border-sky-300 bg-sky-50 dark:text-sky-400 dark:border-sky-800 dark:bg-sky-900/30'
             : 'text-slate-700 bg-slate-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600';
 
     return (
@@ -666,7 +666,7 @@ const HighlightCards = ({ data }) => {
     // 상승여력 색상
     const upsidePct = upside !== null ? (upside * 100).toFixed(1) : null;
     const upsideColor = upside !== null
-        ? (upside >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')
+        ? (upside >= 0 ? 'text-sky-600 dark:text-sky-400' : 'text-orange-600 dark:text-orange-400')
         : '';
 
     // 현재가 대비 % 차이
@@ -694,8 +694,8 @@ const HighlightCards = ({ data }) => {
 
     // 트레이딩 가이드 항목
     const guideItems = [
-        { label: '손절매가', value: stopLossPrice, color: 'text-red-600 dark:text-red-400', dotColor: 'bg-red-500' },
-        { label: '매수적정가', value: purchasePrice, color: 'text-emerald-600 dark:text-emerald-400', dotColor: 'bg-emerald-500' },
+        { label: '손절매가', value: stopLossPrice, color: 'text-orange-600 dark:text-orange-400', dotColor: 'bg-orange-500' },
+        { label: '매수적정가', value: purchasePrice, color: 'text-sky-600 dark:text-sky-400', dotColor: 'bg-sky-500' },
         { label: '목표매도가', value: sellTarget, color: 'text-blue-600 dark:text-blue-400', dotColor: 'bg-blue-500' },
     ];
 
@@ -747,7 +747,7 @@ const HighlightCards = ({ data }) => {
                                 <div className="flex items-center gap-2">
                                     <span className={`font-semibold ${color}`}>{formatUSD(value)}</span>
                                     {diff !== null && (
-                                        <span className={`text-xs ${Number(diff) >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                        <span className={`text-xs ${Number(diff) >= 0 ? 'text-sky-500' : 'text-orange-500'}`}>
                                             ({Number(diff) >= 0 ? '+' : ''}{diff}%)
                                         </span>
                                     )}
@@ -769,12 +769,12 @@ const HighlightCards = ({ data }) => {
                             {purchaseBarPct !== null && (
                                 <div className="group/m absolute cursor-pointer" style={{ left: `${purchaseBarPct}%`, top: '-5px', bottom: '-5px', width: '10px', transform: 'translateX(-50%)', zIndex: 14 }}>
                                     <div className="absolute rounded-sm transition-all group-hover/m:scale-x-150 group-hover/m:opacity-100" style={{ left: '3px', right: '3px', top: 0, bottom: 0, background: '#10b981', boxShadow: '0 0 4px rgba(16,185,129,0.6)', opacity: 0.85 }} />
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-emerald-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/m:opacity-100 group-hover/m:visible transition-all whitespace-nowrap z-50 pointer-events-none">
+                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-sky-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/m:opacity-100 group-hover/m:visible transition-all whitespace-nowrap z-50 pointer-events-none">
                                         매수적정가: {formatUSD(purchasePrice)}{' '}
-                                        <span className={`${pctDiff(purchasePrice) !== null && Number(pctDiff(purchasePrice)) >= 0 ? 'text-emerald-200' : 'text-red-200'}`}>
+                                        <span className={`${pctDiff(purchasePrice) !== null && Number(pctDiff(purchasePrice)) >= 0 ? 'text-sky-200' : 'text-orange-200'}`}>
                                             {pctDiff(purchasePrice) !== null ? `(${Number(pctDiff(purchasePrice)) >= 0 ? '+' : ''}${pctDiff(purchasePrice)}%)` : ''}
                                         </span>
-                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-emerald-700" />
+                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-sky-700" />
                                     </div>
                                 </div>
                             )}
@@ -784,7 +784,7 @@ const HighlightCards = ({ data }) => {
                                     <div className="absolute rounded-sm transition-all group-hover/m:scale-x-150 group-hover/m:opacity-100" style={{ left: '3px', right: '3px', top: 0, bottom: 0, background: '#3b82f6', boxShadow: '0 0 4px rgba(59,130,246,0.6)', opacity: 0.85 }} />
                                     <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-blue-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/m:opacity-100 group-hover/m:visible transition-all whitespace-nowrap z-50 pointer-events-none">
                                         목표매도가: {formatUSD(sellTarget)}{' '}
-                                        <span className={`${pctDiff(sellTarget) !== null && Number(pctDiff(sellTarget)) >= 0 ? 'text-blue-200' : 'text-red-200'}`}>
+                                        <span className={`${pctDiff(sellTarget) !== null && Number(pctDiff(sellTarget)) >= 0 ? 'text-blue-200' : 'text-orange-200'}`}>
                                             {pctDiff(sellTarget) !== null ? `(${Number(pctDiff(sellTarget)) >= 0 ? '+' : ''}${pctDiff(sellTarget)}%)` : ''}
                                         </span>
                                         <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-700" />
@@ -828,10 +828,10 @@ const HighlightCards = ({ data }) => {
                 const passCount = getVal(data, ['그레이엄_통과수']);
                 if (grade == null || grade === 'N/A') return null;
                 const colorClass =
-                    grade === '강력매수' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' :
+                    grade === '강력매수' ? 'bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200' :
                     grade === '매수' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
                     grade === '관망' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' :
-                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+                    'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
                 return (
                     <div className="flex items-center gap-2 mt-2">
                         <span className="text-xs text-slate-500 dark:text-slate-400">그레이엄:</span>
@@ -858,10 +858,10 @@ const OvervaluationBanner = ({ data }) => {
     const overPct = ((current - fair) / fair * 100).toFixed(1);
 
     return (
-        <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-300 dark:border-red-800 flex items-center gap-2">
+        <div className="mt-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-800 flex items-center gap-2">
             <span className="text-xl leading-none">🔴</span>
-            <div className="text-sm text-red-800 dark:text-red-200">
-                현재가(<span className="font-semibold">${formatNumber(current, 2)}</span>)가 적정가(<span className="font-semibold">${formatNumber(fair, 2)}</span>)보다 <span className="font-bold text-red-600 dark:text-red-300">{overPct}%</span> 높음 — <span className="font-bold">고평가 주의</span>
+            <div className="text-sm text-orange-800 dark:text-orange-200">
+                현재가(<span className="font-semibold">${formatNumber(current, 2)}</span>)가 적정가(<span className="font-semibold">${formatNumber(fair, 2)}</span>)보다 <span className="font-bold text-orange-600 dark:text-orange-300">{overPct}%</span> 높음 — <span className="font-bold">고평가 주의</span>
             </div>
         </div>
     );
@@ -987,7 +987,7 @@ const ActionButtons = ({ data, onCopy, onClose, onOpenChart, onOpenInvestmentDet
                 </button>
                 {symbol && (
                     <button
-                        className="flex-1 sm:flex-none px-3 py-2 rounded-md border text-sm hover:bg-emerald-50 transition-colors flex items-center justify-center gap-1.5 text-emerald-600 border-emerald-300 dark:text-emerald-400 dark:border-emerald-700 dark:hover:bg-emerald-900/30 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                        className="flex-1 sm:flex-none px-3 py-2 rounded-md border text-sm hover:bg-sky-50 transition-colors flex items-center justify-center gap-1.5 text-sky-600 border-sky-300 dark:text-sky-400 dark:border-sky-700 dark:hover:bg-sky-900/30 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                         onClick={handleInvestmentJudgment}
                         disabled={investmentLoading || fromInvestmentDetail}
                         title={fromInvestmentDetail ? "이미 투자 판단 상세 모달에서 열렸습니다" : "투자 판단 상세 보기"}
@@ -1201,23 +1201,23 @@ const GuideOverlay = ({ onClose, data }) => {
  */
 const GuideCard = ({ color, title, description }) => {
     const colorStyles = {
-        emerald: 'rounded-md border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-900/30',
+        emerald: 'rounded-md border border-sky-200 bg-sky-50 p-3 dark:border-sky-800 dark:bg-sky-900/30',
         amber: 'rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/30',
-        rose: 'rounded-md border border-rose-200 bg-rose-50 p-3 dark:border-rose-800 dark:bg-rose-900/30',
+        rose: 'rounded-md border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-900/30',
         slate: 'rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-700/30'
     };
 
     const titleStyles = {
-        emerald: 'mb-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400',
+        emerald: 'mb-1 text-[11px] font-semibold text-sky-700 dark:text-sky-400',
         amber: 'mb-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400',
-        rose: 'mb-1 text-[11px] font-semibold text-rose-700 dark:text-rose-400',
+        rose: 'mb-1 text-[11px] font-semibold text-orange-700 dark:text-orange-400',
         slate: 'mb-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300'
     };
 
     const descStyles = {
-        emerald: 'text-[12px] text-emerald-800 dark:text-emerald-300',
+        emerald: 'text-[12px] text-sky-800 dark:text-sky-300',
         amber: 'text-[12px] text-amber-800 dark:text-amber-300',
-        rose: 'text-[12px] text-rose-800 dark:text-rose-300',
+        rose: 'text-[12px] text-orange-800 dark:text-orange-300',
         slate: 'text-[12px] text-slate-800 dark:text-slate-200'
     };
 

@@ -5,6 +5,7 @@ import { STOCK_ANALYSIS_PATH, SUB_TAB } from '@/config/menuPaths';
 import PageTitle from '@/component/common/display/PageTitle';
 import DailyPicksHelpModal from '@/component/common/display/DailyPicksHelpModal';
 import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
+import { GRADE_STYLE } from '@/util/GradeStyleUtil';
 
 // 색각이상 친화 팔레트 (파랑/노랑/회색) — 초록 대신 파랑
 const SIGNAL_STYLE = {
@@ -15,14 +16,6 @@ const SIGNAL_STYLE = {
 const SIGNAL_ICON = { '매수 후보': '🔵', '관심목록': '🟡', '관망': '⚪' };
 const SIGNAL_ORDER = ['매수 후보', '관심목록', '관망'];
 
-const GRADE_STYLE = {
-    S: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
-    A: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
-    B: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    C: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-    D: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-    F: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-};
 const TIMING_STYLE = {
     '양호': 'text-blue-600 dark:text-blue-400 font-semibold',
     '대기': 'text-amber-600 dark:text-amber-400 font-medium',

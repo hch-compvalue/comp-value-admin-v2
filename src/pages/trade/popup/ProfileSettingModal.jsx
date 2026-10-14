@@ -324,13 +324,13 @@ const ProfileSettingModal = ({ isOpen, onClose, profiles, onRefresh, openAlert, 
                                         >
                                             <div className={`font-medium ${profile.isActive !== 'Y' ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'}`}>{profile.profileName}</div>
                                             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                                {profile.isActive === 'Y' ? '활성' : <span className="text-red-400">비활성</span>} | 정렬순서: {profile.sortOrder}
+                                                {profile.isActive === 'Y' ? '활성' : <span className="text-orange-400">비활성</span>} | 정렬순서: {profile.sortOrder}
                                             </div>
                                         </button>
                                         <button
                                             onClick={(e) => handleCopyProfile(profile, e)}
                                             disabled={isLoading}
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:bg-emerald-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md text-slate-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:text-sky-400 dark:hover:bg-sky-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             title="프로파일 복사"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -695,7 +695,7 @@ const ProfileForm = ({ formData, onChange, isCreating, onSave, onDelete, onCance
                         <button
                             onClick={onDelete}
                             disabled={isLoading}
-                            className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 rounded-lg bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             삭제
                         </button>
@@ -767,7 +767,7 @@ const FormInput = ({ label, value, onChange, type = 'text', placeholder, require
     return (
         <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                {label} {required && <span className="text-red-500">*</span>}
+                {label} {required && <span className="text-orange-500">*</span>}
             </label>
             <input
                 type={type === 'number' ? 'text' : type}
@@ -809,7 +809,7 @@ const FormInput = ({ label, value, onChange, type = 'text', placeholder, require
 const FormSelect = ({ label, value, onChange, options, required }) => (
     <div>
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            {label} {required && <span className="text-red-500">*</span>}
+            {label} {required && <span className="text-orange-500">*</span>}
         </label>
         <select
             value={value || ''}
@@ -831,7 +831,7 @@ const FormSelect = ({ label, value, onChange, options, required }) => (
 const FormMultiSelect = ({ label, value, onChange, options, loading, placeholder, required }) => (
     <div>
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            {label} {required && <span className="text-red-500">*</span>}
+            {label} {required && <span className="text-orange-500">*</span>}
         </label>
         <MultiSelect
             value={value || []}
@@ -885,7 +885,7 @@ const FormNumberStepper = ({ label, value, onChange, min = 1, max = 99, required
     return (
         <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                {label} {required && <span className="text-red-500">*</span>}
+                {label} {required && <span className="text-orange-500">*</span>}
             </label>
             <div className="inline-flex items-center rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
                 <button

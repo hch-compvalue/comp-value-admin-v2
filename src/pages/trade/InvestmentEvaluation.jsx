@@ -7,6 +7,7 @@ import PageTitle from '@/component/common/display/PageTitle';
 import Loading from '@/component/common/display/Loading';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import InvestmentDetailModal, { FullDetailModal } from '@/pages/trade/popup/InvestmentDetailModal';
+import { GRADE_STYLE, GRADE_STYLE_DEFAULT, GRADE_EXCEL_ARGB } from '@/util/GradeStyleUtil';
 import ExcelJS from 'exceljs';
 
 // 세션 스토리지 키
@@ -104,17 +105,7 @@ const getPriceGapWarning = (priceGapPercent, row) => {
 };
 
 // 등급별 색상
-const getGradeStyle = (grade) => {
-    const styles = {
-        'S': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
-        'A': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
-        'B': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-        'C': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-        'D': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-        'F': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    };
-    return styles[grade] || 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200';
-};
+const getGradeStyle = (grade) => GRADE_STYLE[grade] || GRADE_STYLE_DEFAULT;
 
 // [2-1] 투자판정 배지 스타일 (색각이상 친화: 파랑/노랑/회색)
 const getInvestmentSignalStyle = (signal) => {
@@ -1037,18 +1028,13 @@ const InvestmentEvaluation = () => {
             ];
 
             // 등급별 행 배경색 (적록색약 친화)
-            const gradeFills = {
-                S: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } }, // indigo-100
-                A: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } }, // emerald-100
-                B: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } }, // blue-100
-                C: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } }, // amber-100
-                D: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEDD5' } }, // orange-100
-                F: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } }, // red-100
-            };
+            const gradeFills = Object.fromEntries(Object.entries(GRADE_EXCEL_ARGB).map(([g, argb]) => [
+                g, { type: 'pattern', pattern: 'solid', fgColor: { argb } },
+            ]));
             const warningFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF7ED' } }; // orange-50
             const warningFont = { color: { argb: 'FFEA580C' } }; // orange-600
-            const extremeFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF2F2' } }; // red-50
-            const extremeFont = { color: { argb: 'FFDC2626' }, bold: true }; // red-600
+            const extremeFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFED7AA' } }; // orange-200 (경고 orange-50 보다 진하게)
+            const extremeFont = { color: { argb: 'FF9A3412' }, bold: true }; // orange-800
 
             // 데이터 행 추가
             sortedData.forEach((row) => {
@@ -1084,7 +1070,7 @@ const InvestmentEvaluation = () => {
 
                 const capRisk = getMarketCapRisk(row.marketCap);
                 const smallCapFont = { color: { argb: 'FFEA580C' } }; // orange-600
-                const microCapFont = { color: { argb: 'FFDC2626' }, bold: true }; // red-600
+                const microCapFont = { color: { argb: 'FF9A3412' }, bold: true }; // orange-800 (소형주 orange-600 보다 진하게)
                 const isChinaAdr = row.country === 'CN' || row.country === 'HK';
 
                 // 중국 ADR 국가 셀 강조
@@ -1150,7 +1136,7 @@ const InvestmentEvaluation = () => {
                 { category: '등급 F', fill: gradeFills.F, meaning: '50점 미만 — 투자 비추천 (높은 리스크)' },
                 { category: '', fill: null, meaning: '' },
                 { category: '이상치 경고', fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF7ED' } }, meaning: `가격차이율 ${PRICE_GAP_WARNING_THRESHOLD}% 이상 — 적정가치 신뢰 불가, 주황색 텍스트` },
-                { category: '극단적 이상치', fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF2F2' } }, meaning: `가격차이율 ${PRICE_GAP_EXTREME_THRESHOLD}% 이상 — 적정가치 완전 신뢰 불가, 빨간색 볼드 텍스트` },
+                { category: '극단적 이상치', fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFED7AA' } }, meaning: `가격차이율 ${PRICE_GAP_EXTREME_THRESHOLD}% 이상 — 적정가치 완전 신뢰 불가, 빨간색 볼드 텍스트` },
                 { category: '', fill: null, meaning: '' },
                 { category: '이상치 원인', fill: null, meaning: '' },
                 { category: '  소형주', fill: null, meaning: '시총이 낮아 BPS/EPS 기반 적정가 신뢰도가 낮음' },
@@ -1365,7 +1351,7 @@ const InvestmentEvaluation = () => {
                                         className={`px-3 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
                                             progress.status === '중지 중...'
                                                 ? 'bg-slate-400 text-white cursor-not-allowed'
-                                                : 'bg-red-600 text-white hover:bg-red-700'
+                                                : 'bg-orange-500 text-white hover:bg-orange-600'
                                         }`}
                                     >
                                         {progress.status === '중지 중...' ? (
@@ -1455,8 +1441,8 @@ const InvestmentEvaluation = () => {
                                         )}
                                     </div>
                                     <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                                        progress.status === '완료' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200' :
-                                        progress.status === '중지됨' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' :
+                                        progress.status === '완료' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-200' :
+                                        progress.status === '중지됨' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200' :
                                         'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
                                     }`}>
                                         {progress.waiting ? `대기 중... ${progress.remainingSeconds}초` : progress.status}
@@ -1492,7 +1478,7 @@ const InvestmentEvaluation = () => {
                                 type="button"
                                 onClick={handleExportToExcel}
                                 disabled={sortedData.length === 0}
-                                className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                                className="px-3 py-1.5 rounded-lg bg-sky-600 text-white text-xs font-medium hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
