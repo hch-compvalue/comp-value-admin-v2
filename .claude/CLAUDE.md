@@ -65,7 +65,7 @@ const [alertConfig, setAlertConfig] = useState({ open: false, message: '', onCon
 - 스크롤/리사이즈/외부 클릭/ESC 닫기, 뷰포트 경계 위치 보정, null 값 `(비어있음)` 라벨 처리 등이 이미 검증됨
 - 중복 구현 시 유지보수 비용↑, 페이지 간 일관성↓
 
-### 표준 사용 패턴 (`CointradeHistory`, `MlModelInfo` 참고)
+### 표준 사용 패턴 (`CointradeHistory` 참고)
 
 ```jsx
 import ExcelFilter from '@/component/common/table/ExcelFilter';

@@ -87,12 +87,12 @@ const getReasonColor = (reason) => {
         'MOMENTUM_SIGNAL': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
         'SIGNAL': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
         'PARTIAL_SIGNAL': 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400',
-        'TAKE_PROFIT': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-        'STOP_LOSS': 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
-        'PARTIAL_TAKE_PROFIT': 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400',
-        'PARTIAL_STOP_LOSS': 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400',
-        'TRAILING_STOP': 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300',
-        'PARTIAL_TRAILING_STOP': 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400',
+        'TAKE_PROFIT': 'bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-300',
+        'STOP_LOSS': 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300',
+        'PARTIAL_TAKE_PROFIT': 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400',
+        'PARTIAL_STOP_LOSS': 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400',
+        'TRAILING_STOP': 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',
+        'PARTIAL_TRAILING_STOP': 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400',
         'MANUAL': 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300',
         'PARTIAL_MANUAL': 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400',
         'MANUAL_CLEANUP': 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',
@@ -254,7 +254,7 @@ const TABLE_COLUMNS = [
         headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right',
         render: (value) => value != null ? (
-            <span className={value >= 0 ? 'text-red-600 dark:text-red-400 font-medium' : 'text-blue-600 dark:text-blue-400 font-medium'}>
+            <span className={value >= 0 ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-orange-600 dark:text-orange-400 font-medium'}>
                 {value >= 0 ? '+' : ''}{renderFormattedPrice(value, '원')}
             </span>
         ) : '-',
@@ -268,7 +268,7 @@ const TABLE_COLUMNS = [
         headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right',
         render: (value) => value != null ? (
-            <span className={value >= 0 ? 'text-red-600 dark:text-red-400 font-medium' : 'text-blue-600 dark:text-blue-400 font-medium'}>
+            <span className={value >= 0 ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-orange-600 dark:text-orange-400 font-medium'}>
                 {value >= 0 ? '+' : ''}{value.toFixed(2)}%
             </span>
         ) : '-',
@@ -377,14 +377,7 @@ export default function CointradeHistory() {
         trailingStopAmount: 0,
         expiredAmount: 0,
         maxHoldExpiredAmount: 0,
-        manualAmount: 0,
-        // 보유 종목 수익 정보
-        holdingsProfit: 0,
-        holdingsInvestment: 0,
-        holdingsProfitRate: 0,
-        holdingsCount: 0,
-        // 합산 수익률
-        combinedProfitRate: 0
+        manualAmount: 0
     });
 
     // Toast auto-hide
@@ -422,11 +415,10 @@ export default function CointradeHistory() {
     // 종목 목록 조회
     const fetchCoinList = async () => {
         try {
-            const { data, error } = await send('/dart/api/cointrade/coins', {}, 'GET');
-            if (!error && data?.success && data?.response) {
-                // 활성화된 종목만
-                const activeCoins = data.response.filter(coin => coin.isActive);
-                setCoinList(activeCoins);
+            // 거래기록에 존재하는 종목 코드 목록 (string[], 정렬됨)
+            const { data, error } = await send('/dart/api/cointrade/history/codes', {}, 'GET');
+            if (!error && data?.success && Array.isArray(data?.response)) {
+                setCoinList(data.response);
             }
         } catch (e) {
             console.error('종목 목록 조회 실패:', e);
@@ -497,7 +489,7 @@ export default function CointradeHistory() {
     };
 
     // 요약 정보 계산
-    const calculateSummary = async (data) => {
+    const calculateSummary = (data) => {
         const buyRecords = data.filter(r => r.tradeType === 'BUY');
         const sellRecords = data.filter(r => r.tradeType === 'SELL');
 
@@ -533,53 +525,6 @@ export default function CointradeHistory() {
         const maxHoldExpiredCount = maxHoldExpired.count;
         const manualCount = manual.count;
 
-        // 보유 종목 수익 정보 조회
-        let holdingsProfit = 0;
-        let holdingsInvestment = 0;
-        let holdingsProfitRate = 0;
-        let holdingsCount = 0;
-
-        try {
-            const holdingsResponse = await send('/dart/api/cointrade/holdings', {}, 'GET');
-            if (holdingsResponse.data?.success && holdingsResponse.data?.response) {
-                let holdingsData = holdingsResponse.data.response;
-                holdingsCount = holdingsData.length;
-
-                if (holdingsData.length > 0) {
-                    // 현재가 조회 (업비트 API)
-                    try {
-                        const marketCodes = holdingsData.map(h => h.coinCode).join(',');
-                        const tickerResponse = await fetch(`https://api.upbit.com/v1/ticker?markets=${marketCodes}`);
-                        if (tickerResponse.ok) {
-                            const tickerData = await tickerResponse.json();
-                            const tickerMap = {};
-                            tickerData.forEach(t => { tickerMap[t.market] = t.trade_price; });
-
-                            holdingsData = holdingsData.map(h => ({
-                                ...h,
-                                currentPrice: tickerMap[h.coinCode] || h.currentPrice
-                            }));
-                        }
-                    } catch (tickerError) {
-                        console.error('현재가 조회 실패:', tickerError);
-                    }
-
-                    holdingsInvestment = holdingsData.reduce((sum, h) => sum + (h.totalAmount || 0), 0);
-                    const holdingsValuation = holdingsData.reduce((sum, h) => {
-                        const valuation = h.currentPrice ? h.currentPrice * h.quantity : (h.totalAmount || 0);
-                        return sum + valuation;
-                    }, 0);
-                    holdingsProfit = holdingsValuation - holdingsInvestment;
-                    holdingsProfitRate = holdingsInvestment > 0 ? (holdingsProfit / holdingsInvestment * 100) : 0;
-                }
-            }
-        } catch (e) {
-            console.error('보유 종목 조회 실패:', e);
-        }
-
-        // 합산 수익률: 조회 기간 실현 손익 / 총 매수금액 * 100
-        const combinedProfitRate = buyAmount > 0 ? (totalProfit / buyAmount * 100) : 0;
-
         setSummary({
             buyCount: buyRecords.length,
             buyAmount,
@@ -600,12 +545,7 @@ export default function CointradeHistory() {
             trailingStopAmount: trailingStop.amount,
             expiredAmount: expired.amount,
             maxHoldExpiredAmount: maxHoldExpired.amount,
-            manualAmount: manual.amount,
-            holdingsProfit,
-            holdingsInvestment,
-            holdingsProfitRate,
-            holdingsCount,
-            combinedProfitRate
+            manualAmount: manual.amount
         });
     };
 
@@ -750,11 +690,6 @@ export default function CointradeHistory() {
             ['실현 손익', fmtAmount(summary.totalProfit)],
             ...reasonRows,
             ['실현 수익률', `${summary.realizedProfitRate >= 0 ? '+' : ''}${summary.realizedProfitRate.toFixed(2)}%`],
-            ['보유 종목 수', `${summary.holdingsCount}종목`],
-            ['보유 투자금', `${Math.floor(summary.holdingsInvestment).toLocaleString()}원`],
-            ['보유 평가손익', fmtAmount(summary.holdingsProfit)],
-            ['보유 수익률', `${summary.holdingsProfitRate >= 0 ? '+' : ''}${summary.holdingsProfitRate.toFixed(2)}%`],
-            ['합산 수익률', `${summary.combinedProfitRate >= 0 ? '+' : ''}${summary.combinedProfitRate.toFixed(2)}%`],
         ];
     };
 
@@ -1048,18 +983,18 @@ export default function CointradeHistory() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 {/* 손익금액 */}
                                 <div className={`rounded-lg p-4 sm:p-5 ${selectedRecord.profitLoss >= 0
-                                    ? 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800'
-                                    : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800'
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800'
+                                    : 'bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800'
                                     }`}>
                                     <div className={`text-xs mb-1 ${selectedRecord.profitLoss >= 0
-                                        ? 'text-red-700 dark:text-red-400'
-                                        : 'text-blue-700 dark:text-blue-400'
+                                        ? 'text-blue-700 dark:text-blue-400'
+                                        : 'text-orange-700 dark:text-orange-400'
                                         }`}>
                                         손익금액
                                     </div>
                                     <div className={`text-xl sm:text-2xl font-bold ${selectedRecord.profitLoss >= 0
-                                        ? 'text-red-600 dark:text-red-400'
-                                        : 'text-blue-600 dark:text-blue-400'
+                                        ? 'text-blue-600 dark:text-blue-400'
+                                        : 'text-orange-600 dark:text-orange-400'
                                         }`}>
                                         {selectedRecord.profitLoss >= 0 ? '+' : ''}{renderFormattedPrice(selectedRecord.profitLoss, '원')}
                                     </div>
@@ -1067,18 +1002,18 @@ export default function CointradeHistory() {
 
                                 {/* 손익률 */}
                                 <div className={`rounded-lg p-4 sm:p-5 ${selectedRecord.profitLossRate >= 0
-                                    ? 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800'
-                                    : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800'
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800'
+                                    : 'bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800'
                                     }`}>
                                     <div className={`text-xs mb-1 ${selectedRecord.profitLossRate >= 0
-                                        ? 'text-red-700 dark:text-red-400'
-                                        : 'text-blue-700 dark:text-blue-400'
+                                        ? 'text-blue-700 dark:text-blue-400'
+                                        : 'text-orange-700 dark:text-orange-400'
                                         }`}>
                                         손익률
                                     </div>
                                     <div className={`text-xl sm:text-2xl font-bold ${selectedRecord.profitLossRate >= 0
-                                        ? 'text-red-600 dark:text-red-400'
-                                        : 'text-blue-600 dark:text-blue-400'
+                                        ? 'text-blue-600 dark:text-blue-400'
+                                        : 'text-orange-600 dark:text-orange-400'
                                         }`}>
                                         {selectedRecord.profitLossRate >= 0 ? '+' : ''}{selectedRecord.profitLossRate.toFixed(2)}%
                                     </div>
@@ -1233,8 +1168,8 @@ export default function CointradeHistory() {
                                 {/* 에러 메시지 */}
                                 {selectedRecord.errorMessage && (
                                     <div className="sm:col-span-2">
-                                        <div className="text-xs text-red-600 dark:text-red-400 mb-1">에러 메시지</div>
-                                        <div className="text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                                        <div className="text-xs text-orange-600 dark:text-orange-400 mb-1">에러 메시지</div>
+                                        <div className="text-sm text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
                                             {selectedRecord.errorMessage}
                                         </div>
                                     </div>
@@ -1360,10 +1295,8 @@ export default function CointradeHistory() {
                                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="all">전체</option>
-                                    {coinList.map(coin => (
-                                        <option key={coin.coinCode} value={coin.coinCode}>
-                                            {coin.coinCode} {coin.coinName && `(${coin.coinName})`}
-                                        </option>
+                                    {coinList.map(code => (
+                                        <option key={code} value={code}>{code}</option>
                                     ))}
                                 </select>
                             </div>
@@ -1509,9 +1442,9 @@ export default function CointradeHistory() {
                                 </div>
 
                                 {/* 실현 손익 */}
-                                <div className={`p-4 rounded-lg ${summary.totalProfit >= 0 ? 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800'}`}>
-                                    <div className={`text-xs mb-1 ${summary.totalProfit >= 0 ? 'text-red-700 dark:text-red-400' : 'text-blue-700 dark:text-blue-400'}`}>실현 손익</div>
-                                    <div className={`text-lg font-bold ${summary.totalProfit >= 0 ? 'text-red-800 dark:text-red-300' : 'text-blue-800 dark:text-blue-300'}`}>
+                                <div className={`p-4 rounded-lg ${summary.totalProfit >= 0 ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800' : 'bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800'}`}>
+                                    <div className={`text-xs mb-1 ${summary.totalProfit >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>실현 손익</div>
+                                    <div className={`text-lg font-bold ${summary.totalProfit >= 0 ? 'text-blue-800 dark:text-blue-300' : 'text-orange-800 dark:text-orange-300'}`}>
                                         {summary.totalProfit >= 0 ? '+' : ''}{formatNumberWithComma(Math.floor(summary.totalProfit))}원
                                     </div>
                                 </div>
@@ -1528,14 +1461,14 @@ export default function CointradeHistory() {
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                                     {[
                                         { label: '익절', count: summary.takeProfitCount, amount: summary.takeProfitAmount,
-                                          bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-100 dark:border-green-800',
-                                          labelColor: 'text-green-700 dark:text-green-400', valueColor: 'text-green-800 dark:text-green-300' },
+                                          bg: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-100 dark:border-sky-800',
+                                          labelColor: 'text-sky-700 dark:text-sky-400', valueColor: 'text-sky-800 dark:text-sky-300' },
                                         { label: '손절', count: summary.stopLossCount, amount: summary.stopLossAmount,
-                                          bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-100 dark:border-red-800',
-                                          labelColor: 'text-red-700 dark:text-red-400', valueColor: 'text-red-800 dark:text-red-300' },
+                                          bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-100 dark:border-orange-800',
+                                          labelColor: 'text-orange-700 dark:text-orange-400', valueColor: 'text-orange-800 dark:text-orange-300' },
                                         { label: '트레일링스탑', count: summary.trailingStopCount, amount: summary.trailingStopAmount,
-                                          bg: 'bg-teal-50 dark:bg-teal-900/20', border: 'border-teal-100 dark:border-teal-800',
-                                          labelColor: 'text-teal-700 dark:text-teal-400', valueColor: 'text-teal-800 dark:text-teal-300' },
+                                          bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-100 dark:border-amber-800',
+                                          labelColor: 'text-amber-700 dark:text-amber-400', valueColor: 'text-amber-800 dark:text-amber-300' },
                                         { label: '강제청산', count: summary.maxHoldExpiredCount, amount: summary.maxHoldExpiredAmount,
                                           bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-100 dark:border-amber-800',
                                           labelColor: 'text-amber-700 dark:text-amber-400', valueColor: 'text-amber-800 dark:text-amber-300' },
@@ -1548,8 +1481,8 @@ export default function CointradeHistory() {
                                     ].map(({ label, count, amount, bg, border, labelColor, valueColor }) => {
                                         const pct = summary.sellCount > 0 ? (count / summary.sellCount * 100) : 0;
                                         const profitClass = amount >= 0
-                                            ? 'text-red-700 dark:text-red-400'
-                                            : 'text-blue-700 dark:text-blue-400';
+                                            ? 'text-blue-700 dark:text-blue-400'
+                                            : 'text-orange-700 dark:text-orange-400';
                                         return (
                                             <div key={label} className={`p-4 rounded-lg border ${bg} ${border}`}>
                                                 <div className="flex items-center justify-between mb-1">
@@ -1577,41 +1510,15 @@ export default function CointradeHistory() {
                             {/* 수익률 요약 */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                                 {/* 실현 수익률 */}
-                                <div className={`p-4 rounded-lg border ${summary.realizedProfitRate >= 0 ? 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800'}`}>
-                                    <div className={`text-xs mb-1 ${summary.realizedProfitRate >= 0 ? 'text-red-700 dark:text-red-400' : 'text-blue-700 dark:text-blue-400'}`}>
+                                <div className={`p-4 rounded-lg border ${summary.realizedProfitRate >= 0 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800'}`}>
+                                    <div className={`text-xs mb-1 ${summary.realizedProfitRate >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>
                                         실현 수익률
                                     </div>
-                                    <div className={`text-xl font-bold ${summary.realizedProfitRate >= 0 ? 'text-red-800 dark:text-red-300' : 'text-blue-800 dark:text-blue-300'}`}>
+                                    <div className={`text-xl font-bold ${summary.realizedProfitRate >= 0 ? 'text-blue-800 dark:text-blue-300' : 'text-orange-800 dark:text-orange-300'}`}>
                                         {summary.realizedProfitRate >= 0 ? '+' : ''}{summary.realizedProfitRate.toFixed(2)}%
                                     </div>
                                     <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
                                         매도 실현 손익 / 매도 원금
-                                    </div>
-                                </div>
-
-                                {/* 보유 종목 수익률 */}
-                                <div className={`p-4 rounded-lg border ${summary.holdingsProfitRate >= 0 ? 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800'}`}>
-                                    <div className={`text-xs mb-1 ${summary.holdingsProfitRate >= 0 ? 'text-red-700 dark:text-red-400' : 'text-blue-700 dark:text-blue-400'}`}>
-                                        보유 수익률 ({summary.holdingsCount}종목)
-                                    </div>
-                                    <div className={`text-xl font-bold ${summary.holdingsProfitRate >= 0 ? 'text-red-800 dark:text-red-300' : 'text-blue-800 dark:text-blue-300'}`}>
-                                        {summary.holdingsProfitRate >= 0 ? '+' : ''}{summary.holdingsProfitRate.toFixed(2)}%
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                                        평가손익: {summary.holdingsProfit >= 0 ? '+' : ''}{formatNumberWithComma(Math.floor(summary.holdingsProfit))}원
-                                    </div>
-                                </div>
-
-                                {/* 합산 수익률 */}
-                                <div className={`p-4 rounded-lg border-2 ${summary.combinedProfitRate >= 0 ? 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700' : 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'}`}>
-                                    <div className={`text-xs mb-1 font-semibold ${summary.combinedProfitRate >= 0 ? 'text-red-700 dark:text-red-400' : 'text-blue-700 dark:text-blue-400'}`}>
-                                        합산 수익률
-                                    </div>
-                                    <div className={`text-2xl font-bold ${summary.combinedProfitRate >= 0 ? 'text-red-800 dark:text-red-300' : 'text-blue-800 dark:text-blue-300'}`}>
-                                        {summary.combinedProfitRate >= 0 ? '+' : ''}{summary.combinedProfitRate.toFixed(2)}%
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                                        (실현 + 보유 평가) / 총 투자금
                                     </div>
                                 </div>
                             </div>

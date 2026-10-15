@@ -129,7 +129,7 @@ const routes = {
     },
 
     /* 코인 */
-    // v5.0: 대시보드+스케줄러 통합. 파라미터 설정·대상 종목·ML·페이퍼 트레이딩 페이지는 메뉴 제거 (파일 삭제는 docs/phase4_plan.md 정리 단계)
+    // v5.0: 대시보드+스케줄러 통합. 구 대시보드·파라미터 설정·대상 종목·ML·백테스트 레거시 페이지는 삭제됨
     "CointradeStrategy": {
         section: SECTIONS[3],
         label: '자동매매 (BTC 추세)',
