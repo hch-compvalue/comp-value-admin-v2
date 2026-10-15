@@ -129,10 +129,10 @@ const routes = {
     },
 
     /* 코인 */
-    // v5.0: 대시보드+스케줄러 통합. 구 대시보드·파라미터 설정·대상 종목·ML·백테스트 레거시 페이지는 삭제됨
+    // v5.0: 대시보드+스케줄러 통합, 코인/주식 전략 탭. 구 대시보드·파라미터 설정·대상 종목·ML·백테스트 레거시 페이지는 삭제됨
     "CointradeStrategy": {
         section: SECTIONS[3],
-        label: '자동매매 (BTC 추세)',
+        label: '자동매매',
         path: '/cointrade/dashboard',
         element: <CointradeStrategy />,
         icon: LayoutDashboard,
