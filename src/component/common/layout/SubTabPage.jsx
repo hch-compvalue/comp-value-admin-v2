@@ -70,7 +70,7 @@ export default function SubTabPage({ basePath, section, label, tabs: allTabs }) 
 
     return (
         <>
-            <div role="tablist" className="mb-4 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700">
+            <div role="tablist" className="mb-4 flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-slate-200 dark:border-slate-700">
                 {tabs.map((tab) => {
                     const isActive = tab.key === activeKey;
                     return (

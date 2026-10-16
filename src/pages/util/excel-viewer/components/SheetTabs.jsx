@@ -2,7 +2,7 @@ export default function SheetTabs({ sheetNames, activeSheet, onChangeSheet }) {
     if (!sheetNames || sheetNames.length <= 1) return null;
 
     return (
-        <div className="flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700">
+        <div className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-200 dark:border-slate-700">
             {sheetNames.map((name) => (
                 <button
                     key={name}
