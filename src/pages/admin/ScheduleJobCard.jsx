@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '@/component/common/button/Button';
 import {
     WEEKDAYS, ALL_DAYS, BUSINESS_DAYS,
     parseSimpleCron, buildSimpleCron, describeCron, isNightHour,
 } from '@/util/CronUtil';
+import { SCHEDULE_AFFECTED_SCREENS } from '@/config/scheduleAffectedScreens';
 
 // 실행 상태 표시 (적록색약 고려: 성공=하늘, 실패=주황, 실행중=파랑, 중단=노랑)
 const STATUS_STYLE = {
@@ -38,6 +40,42 @@ const StatusBadge = ({ status }) => {
             {status === 'RUNNING' && <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />}
             {style.label}
         </span>
+    );
+};
+
+const SCREEN_KIND_LABEL = { output: '결과 반영', input: '실행 기준' };
+
+/**
+ * 영향받는 화면 — 클릭 시 해당 메뉴(하위 탭)로 이동
+ */
+const AffectedScreens = ({ jobKey }) => {
+    const navigate = useNavigate();
+    const screens = SCHEDULE_AFFECTED_SCREENS[jobKey] || [];
+    if (screens.length === 0) return null;
+
+    return (
+        <div className="mt-4">
+            <h3 className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">영향받는 화면</h3>
+            <ul className="flex flex-wrap gap-2">
+                {screens.map((s) => (
+                    <li key={s.label}>
+                        <button
+                            type="button"
+                            title={s.note}
+                            onClick={() => navigate(s.path, { state: { subTab: s.subTab } })}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-sky-700 dark:hover:bg-sky-900/30 dark:hover:text-sky-300"
+                        >
+                            <span className={`rounded px-1 py-px text-[10px] font-semibold ${s.kind === 'output'
+                                ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300'
+                                : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'}`}>
+                                {SCREEN_KIND_LABEL[s.kind]}
+                            </span>
+                            {s.label}
+                        </button>
+                    </li>
+                ))}
+            </ul>
+        </div>
     );
 };
 
@@ -188,6 +226,8 @@ const ScheduleJobCard = ({ job, history, saving, onToggle, onSave, onRun }) => (
                 </dd>
             </div>
         </dl>
+
+        <AffectedScreens jobKey={job.jobKey} />
 
         <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-700">
             <h3 className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">실행 주기 변경</h3>

@@ -43,7 +43,7 @@ export default function CointradeStrategy() {
     };
 
     const tabBar = (
-        <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700">
+        <div role="tablist" className="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-slate-200 dark:border-slate-700">
             {TABS.map((tab) => {
                 const isActive = tab.key === activeKey;
                 return (
