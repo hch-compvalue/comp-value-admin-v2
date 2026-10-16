@@ -17,7 +17,7 @@ export default function useMonitoringSSE() {
     const [isConnected, setIsConnected] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [resourceHistory, setResourceHistory] = useState([]);
-    const [traffic, setTraffic] = useState({ http: 0, db: 0, redis: 0, cointrader: 0, ml: 0 });
+    const [traffic, setTraffic] = useState({ http: 0, db: 0, redis: 0, trader: 0, ml: 0 });
 
     const workerRef = useRef(null);
     const fallbackRef = useRef(null); // EventSource 폴백용

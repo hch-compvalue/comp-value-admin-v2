@@ -11,7 +11,6 @@ import CompValueCustom from '@/pages/trade/CompValueCustom'
 import TransactionOverview from '@/pages/transaction/TransactionOverview'
 import AbroadCompValue from '@/pages/trade/AbroadCompValue'
 import RecommendProfileSettings from '@/pages/trade/RecommendProfileSettings'
-import MLRetrainManagement from '@/pages/trade/MLRetrainManagement'
 import SellRecordHistory from '@/pages/trade/SellRecordHistory'
 import InvestmentEvaluation from '@/pages/trade/InvestmentEvaluation'
 import DailyPicks from '@/pages/trade/DailyPicks'
@@ -36,7 +35,7 @@ import { STOCK_DISCOVER_PATH, STOCK_ANALYSIS_PATH, PORTFOLIO_PATH, SCHEDULE_MANA
 
 import { SECTIONS } from '@/component/layouts/common/SideBar001';
 import {
-    Home as HomeIcon, List, BarChart3, Pencil, Sparkles, Brain, Briefcase,
+    Home as HomeIcon, List, BarChart3, Pencil, Sparkles, Briefcase,
     MessageSquare, LayoutDashboard,
     History, LineChart, FileSpreadsheet, DollarSign, Braces,
     StickyNote, Calculator as CalculatorIcon, Activity, CalendarClock
@@ -200,14 +199,6 @@ const routes = {
         path: SCHEDULE_MANAGEMENT_PATH,
         element: <ScheduleManagement />,
         icon: CalendarClock,
-        accessRoles: ['ROLE_SUPER_ADMIN']
-    },
-    "MLRetrainManagement": {
-        section: SECTIONS[5],
-        label: 'AI 모델 관리',
-        path: '/ml/retrain',
-        element: <MLRetrainManagement />,
-        icon: Brain,
         accessRoles: ['ROLE_SUPER_ADMIN']
     },
 }

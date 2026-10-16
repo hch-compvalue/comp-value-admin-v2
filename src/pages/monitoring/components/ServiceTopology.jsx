@@ -6,35 +6,31 @@ const R = 24;
 const NODES = [
     { id: 'comp-value-admin',   label: 'Web',         x: 200, y: 40 },
     { id: 'comp-value-service', label: 'Backend',      x: 200, y: 130 },
-    { id: 'cointrader',         label: 'Cointrader',   x: 60,  y: 240 },
-    { id: 'postgresql',         label: 'PostgreSQL',   x: 160, y: 240 },
-    { id: 'stock-predictor',    label: 'ML Predict',   x: 260, y: 240 },
-    { id: 'redis',              label: 'Redis',        x: 365, y: 240 },
+    { id: 'trader',             label: 'Trader',       x: 70,  y: 240 },
+    { id: 'postgresql',         label: 'PostgreSQL',   x: 200, y: 240 },
+    { id: 'redis',              label: 'Redis',        x: 330, y: 240 },
 ];
 
 const EDGES = [
     { from: 'comp-value-admin',   to: 'comp-value-service' },
-    { from: 'comp-value-service', to: 'cointrader' },
+    { from: 'comp-value-service', to: 'trader' },
     { from: 'comp-value-service', to: 'postgresql' },
-    { from: 'comp-value-service', to: 'stock-predictor' },
     { from: 'comp-value-service', to: 'redis' },
-    { from: 'cointrader',         to: 'postgresql' },
-    { from: 'stock-predictor',    to: 'postgresql' },
+    { from: 'trader',             to: 'postgresql' },
 ];
 
 const TRADE_EDGES = [
-    'cointrader->postgresql',
-    'comp-value-service->cointrader',
+    'trader->postgresql',
+    'comp-value-service->trader',
     'comp-value-service->postgresql',
 ];
-const TRADE_PULSE_NODES = ['cointrader', 'postgresql', 'comp-value-service'];
+const TRADE_PULSE_NODES = ['trader', 'postgresql', 'comp-value-service'];
 
 const TRAFFIC_EDGE_MAP = {
     http:       ['comp-value-admin->comp-value-service'],
     db:         ['comp-value-service->postgresql'],
     redis:      ['comp-value-service->redis'],
-    cointrader: ['comp-value-service->cointrader'],
-    ml:         ['comp-value-service->stock-predictor', 'stock-predictor->postgresql'],
+    trader: ['comp-value-service->trader'],
 };
 
 // 엣지 key → CSS animation name 매핑 + 각도
