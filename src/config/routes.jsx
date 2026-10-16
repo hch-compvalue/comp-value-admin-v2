@@ -31,7 +31,7 @@ import MonitoringDashboard from '@/pages/monitoring/MonitoringDashboard'
 import ScheduleManagement from '@/pages/admin/ScheduleManagement'
 import SubTabPage from '@/component/common/layout/SubTabPage'
 import LegacyRedirect from '@/component/common/layout/LegacyRedirect'
-import { STOCK_DISCOVER_PATH, STOCK_ANALYSIS_PATH, PORTFOLIO_PATH, SCHEDULE_MANAGEMENT_PATH, SUB_TAB } from '@/config/menuPaths'
+import { STOCK_DISCOVER_PATH, STOCK_ANALYSIS_PATH, PORTFOLIO_PATH, SCHEDULE_MANAGEMENT_PATH, TRADE_DASHBOARD_PATH, SUB_TAB } from '@/config/menuPaths'
 
 import { SECTIONS } from '@/component/layouts/common/SideBar001';
 import {
@@ -132,7 +132,7 @@ const routes = {
     "CointradeStrategy": {
         section: SECTIONS[3],
         label: '자동매매',
-        path: '/cointrade/dashboard',
+        path: TRADE_DASHBOARD_PATH,
         element: <CointradeStrategy />,
         icon: LayoutDashboard,
         accessRoles: ['ROLE_SUPER_ADMIN']

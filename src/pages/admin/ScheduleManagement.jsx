@@ -6,6 +6,7 @@ import Loading from '@/component/common/display/Loading';
 import Button from '@/component/common/button/Button';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import ScheduleJobCard from '@/pages/admin/ScheduleJobCard';
+import ExternalSchedules from '@/pages/admin/ExternalSchedules';
 
 const JOBS_URL = '/dart/schd/jobs';
 const HISTORY_LIMIT = 20;
@@ -14,6 +15,7 @@ const RUNNING_POLL_MS = 15 * 1000; // 실행 중일 때만 상태 자동 갱신
 /**
  * 스케줄 관리 (관리 > 스케줄 관리, 슈퍼관리자 전용)
  * - 백엔드 배치 작업의 실행 주기·자동 실행 여부 변경(재배포 없이 즉시 반영), 지금 실행, 실행 이력
+ * - 하단: 다른 곳에서 관리되는 스케줄(자동매매 전략·DB 백업) 조회 전용
  */
 const ScheduleManagement = () => {
     const [jobs, setJobs] = useState([]);
@@ -26,6 +28,7 @@ const ScheduleManagement = () => {
     const [maxCountInput, setMaxCountInput] = useState('0');
     const { shouldRender: renderRunModal, isAnimatingOut: isRunModalClosing } = useModalAnimation(isRunModalOpen, 250);
     const loadedOnce = useRef(false);
+    const externalRef = useRef(null);
 
     const openAlert = useCallback((message) => setAlertConfig({ open: true, message }), []);
 
@@ -105,7 +108,7 @@ const ScheduleManagement = () => {
                 <p className="text-sm text-slate-600 dark:text-slate-300">
                     서버에서 정해진 시각에 자동으로 도는 작업입니다. 주기를 바꾸면 <strong>재배포 없이 바로</strong> 적용됩니다.
                 </p>
-                <Button variant="secondary" size="sm" disabled={isLoading} onClick={() => fetchJobs()}>새로고침</Button>
+                <Button variant="secondary" size="sm" disabled={isLoading} onClick={() => { fetchJobs(); externalRef.current?.refresh(); }}>새로고침</Button>
             </div>
 
             <Loading show={isLoading} />
@@ -128,6 +131,8 @@ const ScheduleManagement = () => {
                     />
                 ))}
             </div>
+
+            <ExternalSchedules ref={externalRef} />
 
             <AlertModal open={alertConfig.open} message={alertConfig.message} onClose={() => setAlertConfig({ open: false, message: '' })} />
 

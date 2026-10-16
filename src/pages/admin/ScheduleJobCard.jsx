@@ -6,42 +6,10 @@ import {
     parseSimpleCron, buildSimpleCron, describeCron, isNightHour,
 } from '@/util/CronUtil';
 import { SCHEDULE_AFFECTED_SCREENS } from '@/config/scheduleAffectedScreens';
+import StatusBadge from '@/pages/admin/ScheduleStatusBadge';
+import { formatDateTime, formatDuration } from '@/pages/admin/scheduleFormat';
 
-// 실행 상태 표시 (적록색약 고려: 성공=하늘, 실패=주황, 실행중=파랑, 중단=노랑)
-const STATUS_STYLE = {
-    RUNNING: { label: '실행 중', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-    SUCCESS: { label: '성공', className: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300' },
-    FAILED: { label: '실패', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-    INTERRUPTED: { label: '중단됨', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
-};
 const TRIGGER_LABEL = { AUTO: '자동', MANUAL: '수동' };
-
-const MS_PER_MINUTE = 60 * 1000;
-const MINUTES_PER_HOUR = 60;
-const DATETIME_TEXT_LENGTH = 16; // "yyyy-MM-ddTHH:mm"
-
-/** 서버 LocalDateTime(ISO) → "yyyy-MM-dd HH:mm" */
-const formatDateTime = (iso) => (iso ? iso.slice(0, DATETIME_TEXT_LENGTH).replace('T', ' ') : '-');
-
-/** 실행 소요 시간 ("2시간 13분", 실행 중이면 현재까지) */
-const formatDuration = (startedAt, endedAt) => {
-    if (!startedAt) return '-';
-    const end = endedAt ? new Date(endedAt) : new Date();
-    const minutes = Math.max(0, Math.round((end - new Date(startedAt)) / MS_PER_MINUTE));
-    const h = Math.floor(minutes / MINUTES_PER_HOUR);
-    const m = minutes % MINUTES_PER_HOUR;
-    return h > 0 ? `${h}시간 ${m}분` : `${m}분`;
-};
-
-const StatusBadge = ({ status }) => {
-    const style = STATUS_STYLE[status] || { label: status, className: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300' };
-    return (
-        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${style.className}`}>
-            {status === 'RUNNING' && <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />}
-            {style.label}
-        </span>
-    );
-};
 
 const SCREEN_KIND_LABEL = { output: '결과 반영', input: '실행 기준' };
 

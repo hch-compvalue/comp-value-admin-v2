@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { TRADE_DASHBOARD_PATH } from '@/config/menuPaths';
 import PageTitle from '@/component/common/display/PageTitle';
 import CoinStrategyPanel from './strategy/CoinStrategyPanel';
 import StockStrategyPanel from './strategy/StockStrategyPanel';
@@ -6,7 +8,7 @@ import StockStrategyPanel from './strategy/StockStrategyPanel';
 /**
  * 자동매매 대시보드 — 전략별 탭 (코인: btc_trend / 주식: etf3_trend_v1)
  * 탭마다 상태·실행 기록·설정을 ?strategy=<id>로 따로 조회/변경한다.
- * 선택 탭은 URL ?tab= 또는 localStorage로 기억한다.
+ * 선택 탭은 URL ?tab= 또는 localStorage로 기억한다. 다른 화면에서 navigate(path, { state: { tab } })로 탭을 지정해 열 수 있다.
  */
 
 const TABS = [
@@ -37,10 +39,20 @@ const saveTab = (key) => {
 export default function CointradeStrategy() {
     const [activeKey, setActiveKey] = useState(loadInitialTab);
 
+    const location = useLocation();
+
     const selectTab = (key) => {
         setActiveKey(key);
         saveTab(key);
     };
+
+    // 외부에서 state.tab을 지정해 이동해 온 경우 해당 탭으로 전환 (KeepAlive로 마운트가 유지되므로 location.key로 감지)
+    useEffect(() => {
+        if (location.pathname !== TRADE_DASHBOARD_PATH) return;
+        const requested = location.state?.tab;
+        if (isValidTab(requested)) selectTab(requested);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.key]);
 
     const tabBar = (
         <div role="tablist" className="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-slate-200 dark:border-slate-700">

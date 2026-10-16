@@ -6,6 +6,7 @@ export const STOCK_DISCOVER_PATH = '/stock/discover';
 export const STOCK_ANALYSIS_PATH = '/stock/analysis';
 export const PORTFOLIO_PATH = '/portfolio';
 export const SCHEDULE_MANAGEMENT_PATH = '/admin/schedules';
+export const TRADE_DASHBOARD_PATH = '/cointrade/dashboard';
 
 export const SUB_TAB = {
     DAILY_PICKS: 'daily',
