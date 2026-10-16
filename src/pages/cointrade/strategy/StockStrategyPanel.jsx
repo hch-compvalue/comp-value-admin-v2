@@ -4,7 +4,7 @@ import { Lock, ChevronRight, ChevronDown } from 'lucide-react';
 import Toast from '@/component/common/display/Toast';
 import Button from '@/component/common/button/Button';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
-import { Card, Row, WeightBar, ModeSelector, ErrorBanner } from './StrategyUi';
+import { Card, Row, WeightBar, ModeSelector, ErrorBanner, RefreshButton } from './StrategyUi';
 import useStrategyData from './useStrategyData';
 import {
     RUN_LIMIT, MIN_CAPITAL_KRW, EMERGENCY_CONFIRM_WORD, COLOR_STRATEGY, STRATEGY_STOCK, MODES,
@@ -41,7 +41,7 @@ const HEAD_ROW_CLASS = 'text-left text-slate-500 dark:text-slate-400 bg-slate-50
 const fmtPrice = (v) => (v ? fmtKrw(v) : '-');
 
 export default function StockStrategyPanel({ header }) {
-    const { status, runs, toast, busy, capitalInput, setCapitalInput, showToast, refresh, call, updateSettings } = useStrategyData(STRATEGY_STOCK);
+    const { status, runs, toast, busy, refreshing, capitalInput, setCapitalInput, showToast, refresh, call, updateSettings } = useStrategyData(STRATEGY_STOCK);
     const [confirm, setConfirm] = useState({ open: false, message: '', onConfirm: null });
     const [notice, setNotice] = useState({ open: false, message: '' });
     const [emergencyOpen, setEmergencyOpen] = useState(false);
@@ -156,7 +156,7 @@ export default function StockStrategyPanel({ header }) {
     const headerRow = (
         <div className="flex items-center justify-between gap-2">
             {header}
-            <Button variant="secondary" size="sm" onClick={refresh} disabled={busy}>새로고침</Button>
+            <RefreshButton onClick={refresh} busy={busy} refreshing={refreshing} />
         </div>
     );
 
@@ -194,7 +194,7 @@ export default function StockStrategyPanel({ header }) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* 운영 설정 */}
                 <Card title="운영">
-                    <ModeSelector modes={STOCK_MODES} current={status.mode} onChange={changeMode} disabled={busy} />
+                    <ModeSelector modes={STOCK_MODES} current={status.mode} onChange={changeMode} disabled={busy} busy={busy} />
 
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">투자금 (원)</label>
                     <div className="flex gap-2 mb-3">

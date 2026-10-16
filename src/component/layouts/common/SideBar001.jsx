@@ -21,14 +21,14 @@ function useIsMobile(breakpoint = 768) {
     return isMobile;
 }
 
-export const SECTIONS = ['시작하기', '미국주식', '게시판', '코인자동매매', '유틸', '관리'];
+export const SECTIONS = ['시작하기', '미국주식', '게시판', '자동매매', '유틸', '관리'];
 
 // 섹션별 헤더 아이콘 (아코디언 헤더에 표시)
 const SECTION_ICONS = {
     '시작하기': HomeIcon,
     '미국주식': Globe,
     '게시판': MessageSquare,
-    '코인자동매매': Bot,
+    '자동매매': Bot,
     '유틸': Wrench,
     '관리': Activity,
 };

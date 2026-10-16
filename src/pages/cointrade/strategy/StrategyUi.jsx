@@ -1,6 +1,7 @@
 /**
  * 자동매매 대시보드 공통 표시 컴포넌트 (코인/주식 탭 공용)
  */
+import Button from '@/component/common/button/Button';
 
 export const Card = ({ title, children, right }) => (
     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
@@ -25,8 +26,23 @@ export const WeightBar = ({ weight }) => (
     </div>
 );
 
+/** 작은 회전 표시 (처리·조회 중) */
+export const Spinner = () => (
+    <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
+);
+
+/** 새로고침 버튼 + 조회 중 표시 */
+export const RefreshButton = ({ onClick, busy, refreshing }) => (
+    <div className="flex items-center gap-2">
+        {refreshing && (
+            <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400"><Spinner />불러오는 중</span>
+        )}
+        <Button variant="secondary" size="sm" onClick={onClick} disabled={busy || refreshing}>새로고침</Button>
+    </div>
+);
+
 /** 모드 선택 버튼 (중지/확인 실행/실전) + 현재 모드 설명 */
-export const ModeSelector = ({ modes, current, onChange, disabled }) => (
+export const ModeSelector = ({ modes, current, onChange, disabled, busy }) => (
     <>
         <div className="grid grid-cols-3 gap-2 mb-3">
             {modes.map((m) => (
@@ -47,7 +63,10 @@ export const ModeSelector = ({ modes, current, onChange, disabled }) => (
                 </button>
             ))}
         </div>
-        <p className="text-xs text-slate-400 mb-3">{modes.find((m) => m.key === current)?.desc}</p>
+        <p className="text-xs text-slate-400 mb-3">
+            {busy ? <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400"><Spinner />변경 중...</span>
+                : modes.find((m) => m.key === current)?.desc}
+        </p>
     </>
 );
 
