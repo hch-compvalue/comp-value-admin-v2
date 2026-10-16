@@ -31,12 +31,43 @@ const MAX_HANDOFF_SYMBOLS = 200;
 const ALL_PROFILES = '전체';
 const parseProfiles = (value) => (value ? value.split(PROFILE_DELIMITER).filter(Boolean) : []);
 
+// 적정가 경고 기준 — 백엔드 EvaluationConst 와 같은 값 (순위 점수에는 영향 없음, 표시만)
+// 고평가 구간 = Step3 가격괴리 0점 구간: 공통 STEP3_GAP_SLIGHT_OVERVALUED_PCT, 금융 FIN_STEP3_GAP_SLIGHT_OVERVALUED_PCT
+// (금융 기준은 PBR 경로 종목용 — 화면엔 경로 정보가 없어 섹터로 판단하므로 해외 공시 금융주는 조금 엄격하게 경고될 수 있음)
+const OVERVALUED_GAP_PCT = -36;
+const FIN_OVERVALUED_GAP_PCT = -11;
+const FINANCIAL_SECTOR = 'Financial Services';
+const EXTREME_GAP_PCT = 200;   // QUALITY_GATE_UNREALISTIC_GAP_PCT — 계산 신뢰도 낮은 괴리
+
+/** 적정가 대비 괴리율(%) — 적정가·현재가가 없으면 null */
+const gapPct = (row) => (row.fairValue == null || !row.currentPrice ? null : (row.fairValue / row.currentPrice - 1) * 100);
+
+/** 투자 판단 시 놓치면 안 되는 적정가 경고 (순위 점수와 별개) */
+const valuationWarnings = (row) => {
+    const gap = gapPct(row);
+    if (gap == null) return [];
+    if (Math.abs(gap) >= EXTREME_GAP_PCT) {
+        return [{ label: '적정가 극단값', title: `적정가 대비 ${gap > 0 ? '+' : ''}${gap.toFixed(0)}% — 적정가 계산을 믿기 어려운 수준` }];
+    }
+    const limit = row.sector === FINANCIAL_SECTOR ? FIN_OVERVALUED_GAP_PCT : OVERVALUED_GAP_PCT;
+    return gap < limit
+        ? [{ label: 'V9 고평가 구간', title: `현재가가 적정가보다 ${Math.abs(gap).toFixed(0)}% 높음 (가치 평가상 고평가 구간 ${limit}% 미만)` }]
+        : [];
+};
+
 // 백분위(0~100, 높을수록 좋음) → "상위 N%" 표기 (최소 1%)
 const topPct = (pct) => Math.max(1, Math.round(100 - pct));
 
 /** 투자 순위 근거: 수익성·가치 상위 비율 + 최근 1주 수익률 (순위 점수가 없으면 null) */
 const RankReason = ({ row }) => {
-    if (row.rankScore == null) return <span className="text-slate-400">-</span>;
+    const warnings = valuationWarnings(row).map((w) => (
+        <span key={w.label} className="px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 font-semibold dark:bg-orange-900/50 dark:text-orange-200" title={w.title}>
+            ⚠ {w.label}
+        </span>
+    ));
+    if (row.rankScore == null) {
+        return warnings.length > 0 ? <div className="flex flex-wrap gap-1 text-xs">{warnings}</div> : <span className="text-slate-400">-</span>;
+    }
     const ret = row.return1wPct;
     return (
         <div className="flex flex-wrap gap-1 text-xs">
@@ -50,6 +81,7 @@ const RankReason = ({ row }) => {
                   title="최근 5거래일 수익률 — 하락이 클수록 단기 눌림 점수가 높음">
                 1주 {ret > 0 ? '+' : ''}{Number(ret).toFixed(1)}%
             </span>
+            {warnings}
         </div>
     );
 };

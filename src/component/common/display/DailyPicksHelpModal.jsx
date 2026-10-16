@@ -318,7 +318,11 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">근거</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">수익성 상위 N% · 가치 상위 N% · 최근 1주 수익률. 칩에 마우스를 올리면 ROE·가치점수 원값</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">
+                                            수익성 상위 N% · 가치 상위 N% · 최근 1주 수익률. 칩에 마우스를 올리면 ROE·가치점수 원값.
+                                            주황 <strong>⚠ 경고 칩</strong>은 순위와 별개로 확인할 점입니다 — <strong>V9 고평가 구간</strong>(현재가가 적정가보다 36% 넘게 높음, 금융주는 11%),
+                                            <strong>적정가 극단값</strong>(괴리 ±200% 이상, 적정가 계산을 믿기 어려움). 순위 점수에는 반영하지 않습니다
+                                        </td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">투자판정</td>
