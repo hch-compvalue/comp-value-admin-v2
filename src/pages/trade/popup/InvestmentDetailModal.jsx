@@ -271,88 +271,78 @@ const getSignalIcon = (color) => {
 };
 
 // ── 20거래일 예상 변동 범위 (지지/저항선 대체, 2026-10-19 검증: test/backtest-sr-2026-10) ──
+const RANGE_TITLE = '한 달 예상 움직임';
 const RANGE_SOURCE_NOTE = '과거 미국 1,494종목(2018~2026) 통계';
 const PCT = 100;
 const hasPriceRange = (et) => !!et && et.rangeLow > 0 && et.rangeHigh > et.rangeLow;
 const fmtProb = (p) => (p == null || isNaN(p) ? '-' : `${Math.round(p * PCT)}%`);
 const fmtUsd2 = (v) => (v == null || isNaN(v) ? '-' : `$${Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
 
-/** ATR 거리 d에서 아래 이탈 확률 (확률표 선형 보간, 표 범위 밖은 끝값) */
-const interpBreakDown = (table, d) => {
-    if (!table?.length || isNaN(d)) return null;
-    const rows = [...table].sort((a, b) => a.atrMultiple - b.atrMultiple);
-    if (d <= rows[0].atrMultiple) return rows[0].down;
-    for (let i = 1; i < rows.length; i++) {
-        const lo = rows[i - 1], hi = rows[i];
-        if (d <= hi.atrMultiple) return lo.down + (hi.down - lo.down) * (d - lo.atrMultiple) / (hi.atrMultiple - lo.atrMultiple);
-    }
-    return rows[rows.length - 1].down;
-};
-
-/** 진입 타이밍 — 20거래일 예상 변동 범위 + 이탈/돌파 확률 */
-const PriceRangeBlock = ({ entryTiming: et, currentPrice }) => {
-    const [showTable, setShowTable] = useState(false);
+/** 진입 타이밍 — 한 달 예상 움직임 (평이한 표현, 확률·용어는 '자세히 보기' 안) */
+const PriceRangeBlock = ({ entryTiming: et, currentPrice, stopLoss }) => {
+    const [showDetail, setShowDetail] = useState(false);
     if (!hasPriceRange(et)) return null;
     const price = isNaN(currentPrice) ? (et.rangeLow + et.rangeHigh) / 2 : currentPrice;
     const pos = Math.max(0, Math.min(PCT, ((price - et.rangeLow) / (et.rangeHigh - et.rangeLow)) * PCT));
     const atrPct = price > 0 && et.atr ? (et.atr / price) * PCT : null;
+    const stopInRange = !isNaN(stopLoss) && stopLoss > et.rangeLow && stopLoss < price;
     return (
         <div className="mb-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-600 p-3">
-            <div className="flex flex-wrap items-baseline justify-between gap-1 text-xs">
-                <span className="font-medium text-slate-600 dark:text-slate-300">{et.rangeDays}거래일 예상 변동 범위</span>
-                <span className="text-slate-400 dark:text-slate-500">{RANGE_SOURCE_NOTE}</span>
-            </div>
-            <div className="relative h-2 mt-3 rounded-full" style={{ background: 'linear-gradient(to right, #fdba74, #e2e8f0 50%, #7dd3fc)' }}>
+            <div className="text-xs font-medium text-slate-600 dark:text-slate-300">{RANGE_TITLE}</div>
+            <div className="relative h-2 mt-3 rounded-full bg-slate-200 dark:bg-slate-600">
                 <div className="absolute w-3.5 h-3.5 rounded-full bg-white border-2 border-slate-700 dark:border-white dark:bg-slate-800 shadow"
                      style={{ left: `${pos}%`, top: '50%', transform: 'translate(-50%, -50%)' }} title={`현재가 ${fmtUsd2(price)}`} />
             </div>
             <div className="flex justify-between items-baseline mt-1.5 text-sm">
-                <span className="font-semibold text-orange-600 dark:text-orange-400">{fmtUsd2(et.rangeLow)}</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-200">{fmtUsd2(et.rangeLow)}</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">현재 {fmtUsd2(price)}</span>
-                <span className="font-semibold text-sky-600 dark:text-sky-400">{fmtUsd2(et.rangeHigh)}</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-200">{fmtUsd2(et.rangeHigh)}</span>
             </div>
-            <div className="flex justify-between text-xs mt-0.5">
-                <span className="text-orange-600 dark:text-orange-400">↓ 아래로 이탈 {fmtProb(et.rangeBreakDownProb)}</span>
-                <span className="text-sky-600 dark:text-sky-400">↑ 위로 돌파 {fmtProb(et.rangeBreakUpProb)}</span>
+            <div className="mt-1.5 text-xs text-slate-600 dark:text-slate-300">
+                이 종목은 한 달({et.rangeDays}거래일) 동안 보통 이 범위에서 움직입니다.
             </div>
-            <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-                하루 평균 변동폭(ATR) {fmtUsd2(et.atr)}{atrPct != null ? ` (${atrPct.toFixed(1)}%)` : ''} · 범위 = 현재가 ± {et.rangeAtrMultiple}×ATR · 기간 내 종가 기준 확률
-            </div>
-            {et.rangeProbTable?.length > 0 && (
-                <>
-                    <button type="button" onClick={() => setShowTable((v) => !v)}
-                            className="mt-1.5 text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                        거리별 확률표 {showTable ? '접기 ▲' : '보기 ▼'}
-                    </button>
-                    {showTable && (
-                        <table className="mt-1.5 w-full text-[11px] text-slate-600 dark:text-slate-300">
-                            <thead>
-                                <tr className="text-slate-400 dark:text-slate-500">
-                                    <th className="text-left font-normal py-0.5">현재가에서</th>
-                                    <th className="text-right font-normal">아래 가격</th>
-                                    <th className="text-right font-normal">이탈 확률</th>
-                                    <th className="text-right font-normal">위 가격</th>
-                                    <th className="text-right font-normal">돌파 확률</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {et.rangeProbTable.map((r) => (
-                                    <tr key={r.atrMultiple} className="border-t border-slate-100 dark:border-slate-700">
-                                        <td className="py-0.5">± {r.atrMultiple} ATR</td>
-                                        <td className="text-right">{fmtUsd2(Math.max(0, price - r.atrMultiple * et.atr))}</td>
-                                        <td className="text-right text-orange-600 dark:text-orange-400">{fmtProb(r.down)}</td>
-                                        <td className="text-right">{fmtUsd2(price + r.atrMultiple * et.atr)}</td>
-                                        <td className="text-right text-sky-600 dark:text-sky-400">{fmtProb(r.up)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </>
+            {stopInRange && (
+                <div className="mt-2 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded px-2 py-1">
+                    ⚠ 손절매가({fmtUsd2(stopLoss)})가 이 범위 안이에요 — 평소 흔들림에도 손절될 수 있습니다.
+                </div>
             )}
-            <div className="mt-1.5 text-[10px] text-slate-400 dark:text-slate-500">
-                지지·저항선은 과거 검증에서 '같은 거리의 아무 가격'보다 잘 버티지 않아 범위·확률로 표시합니다.
-            </div>
+            <button type="button" onClick={() => setShowDetail((v) => !v)}
+                    className="mt-1.5 text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                자세히 보기 {showDetail ? '▲' : '▼'}
+            </button>
+            {showDetail && (
+                <div className="mt-1.5 space-y-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                    <div>범위 = 현재가 ± 하루 평균 변동폭(ATR {fmtUsd2(et.atr)}{atrPct != null ? `, ${atrPct.toFixed(1)}%` : ''})의 {et.rangeAtrMultiple}배</div>
+                    {et.rangeProbTable?.length > 0 && (
+                        <>
+                            <div>한 달 안에 그 가격을 종가로 넘어설 확률 — <b>모든 종목 공통 평균</b>이며 오를지 내릴지 알려주는 신호가 아닙니다.</div>
+                            <table className="w-full text-slate-600 dark:text-slate-300">
+                                <thead>
+                                    <tr className="text-slate-400 dark:text-slate-500">
+                                        <th className="text-left font-normal py-0.5">현재가에서</th>
+                                        <th className="text-right font-normal">아래 가격</th>
+                                        <th className="text-right font-normal">내려갈 확률</th>
+                                        <th className="text-right font-normal">위 가격</th>
+                                        <th className="text-right font-normal">올라갈 확률</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {et.rangeProbTable.map((r) => (
+                                        <tr key={r.atrMultiple} className="border-t border-slate-100 dark:border-slate-700">
+                                            <td className="py-0.5">± ATR {r.atrMultiple}배</td>
+                                            <td className="text-right">{fmtUsd2(Math.max(0, price - r.atrMultiple * et.atr))}</td>
+                                            <td className="text-right">{fmtProb(r.down)}</td>
+                                            <td className="text-right">{fmtUsd2(price + r.atrMultiple * et.atr)}</td>
+                                            <td className="text-right">{fmtProb(r.up)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </>
+                    )}
+                    <div>{RANGE_SOURCE_NOTE}. 지지·저항선은 검증에서 근거가 없어 표시하지 않습니다.</div>
+                </div>
+            )}
         </div>
     );
 };
@@ -360,7 +350,7 @@ const PriceRangeBlock = ({ entryTiming: et, currentPrice }) => {
 /**
  * 진입 타이밍 분석 섹션
  */
-const EntryTimingSection = ({ entryTiming, currentPrice }) => {
+const EntryTimingSection = ({ entryTiming, currentPrice, stopLoss }) => {
     const [showDetail, setShowDetail] = useState(false);
 
     if (!entryTiming) return null;
@@ -396,8 +386,8 @@ const EntryTimingSection = ({ entryTiming, currentPrice }) => {
                     </div>
                 </div>
 
-                {/* 20거래일 예상 변동 범위 (구 지지/저항선 대체) */}
-                <PriceRangeBlock entryTiming={entryTiming} currentPrice={currentPrice} />
+                {/* 한 달 예상 움직임 (구 지지/저항선 대체) */}
+                <PriceRangeBlock entryTiming={entryTiming} currentPrice={currentPrice} stopLoss={stopLoss} />
 
                 {/* 상세 보기 토글 */}
                 <button
@@ -508,10 +498,6 @@ const TradingGuideSection = ({ data }) => {
         { label: '목표매도가', value: sellTarget, color: 'text-blue-600 dark:text-blue-400', dotColor: 'bg-blue-500' },
     ].filter(item => !isNaN(item.value));
 
-    // 손절매가가 20일 예상 범위 안이면: 평범한 흔들림에도 손절될 수 있음 (거리별 이탈 확률)
-    const stopInRange = !isNaN(rangeLow) && !isNaN(stopLoss) && stopLoss > rangeLow && stopLoss < currentPrice;
-    const stopBreakProb = stopInRange && et.atr > 0 ? interpBreakDown(et.rangeProbTable, (currentPrice - stopLoss) / et.atr) : null;
-
     // 프로그레스 바 계산 (예상 변동 범위도 포함)
     const barMinBase = isNaN(stopLoss) ? currentPrice * 0.85 : stopLoss;
     const fairValue = parseFloat(data.fairValue);
@@ -569,16 +555,10 @@ const TradingGuideSection = ({ data }) => {
                         <div className="flex items-center justify-between text-sm">
                             <div className="flex items-center gap-2">
                                 <span className="inline-block w-3 h-2 rounded-sm bg-slate-300 dark:bg-slate-500" />
-                                <span className="text-slate-600 dark:text-slate-300">{et.rangeDays}일 예상 변동 범위</span>
+                                <span className="text-slate-600 dark:text-slate-300">{RANGE_TITLE}</span>
                             </div>
                             <span className="font-semibold text-slate-700 dark:text-slate-200">{formatUSD(rangeLow)} ~ {formatUSD(rangeHigh)}</span>
                         </div>
-                        {stopInRange && (
-                            <div className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded px-2 py-1">
-                                ⚠ 손절매가가 {et.rangeDays}일 예상 범위 안에 있어요 — 평범한 흔들림에도 손절될 수 있습니다
-                                {stopBreakProb != null && ` (기간 내 종가 이탈 확률 약 ${fmtProb(stopBreakProb)})`}
-                            </div>
-                        )}
                     </div>
                 )}
 
@@ -595,7 +575,7 @@ const TradingGuideSection = ({ data }) => {
                                 <div className="group/rg absolute cursor-pointer rounded-sm border-2 border-slate-500/70 dark:border-slate-200/70 bg-white/35"
                                      style={{ left: `${rangeLowPct}%`, width: `${Math.max(0, rangeHighPct - rangeLowPct)}%`, top: '-4px', bottom: '-4px', zIndex: 11 }}>
                                     <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-slate-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/rg:opacity-100 group-hover/rg:visible transition-all whitespace-nowrap z-50 pointer-events-none">
-                                        {et.rangeDays}일 예상 변동 범위: {formatUSD(rangeLow)} ~ {formatUSD(rangeHigh)} (이탈 {fmtProb(et.rangeBreakDownProb)} · 돌파 {fmtProb(et.rangeBreakUpProb)})
+                                        {RANGE_TITLE}: {formatUSD(rangeLow)} ~ {formatUSD(rangeHigh)} (한 달 동안 보통 이 범위에서 움직임)
                                         <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-700" />
                                     </div>
                                 </div>
@@ -1087,7 +1067,8 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                     })()}
 
                     {/* 진입 타이밍 분석 */}
-                    <EntryTimingSection entryTiming={data.entryTiming} currentPrice={parseFloat(data.currentPrice)} />
+                    <EntryTimingSection entryTiming={data.entryTiming} currentPrice={parseFloat(data.currentPrice)}
+                        stopLoss={parseFloat(data.stopLossPrice ?? data.resultDetail?.stopLossPrice ?? data.resultDetail?.['손절매가'])} />
 
                     {/* 트레이딩 가이드 */}
                     <TradingGuideSection data={data} />
@@ -1340,10 +1321,10 @@ export const FullDetailModal = ({ isOpen, data, onClose, zIndex = 70 }) => {
                                         shortTermTrend: '단기 추세',
                                         trendDetail: '추세 상세',
                                         description: '설명',
-                                        rangeLow: '20일 예상 범위 하단',
-                                        rangeHigh: '20일 예상 범위 상단',
-                                        rangeBreakDownProb: '하단 이탈 확률',
-                                        rangeBreakUpProb: '상단 돌파 확률',
+                                        rangeLow: '한 달 예상 범위 하단',
+                                        rangeHigh: '한 달 예상 범위 상단',
+                                        rangeBreakDownProb: '하단 아래 확률(전 종목 평균)',
+                                        rangeBreakUpProb: '상단 위 확률(전 종목 평균)',
                                         sma5: 'SMA5',
                                         sma20: 'SMA20',
                                         macdLine: 'MACD Line',
