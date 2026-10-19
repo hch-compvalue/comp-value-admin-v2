@@ -126,3 +126,18 @@ export function CurPriceCell({ m, ctx }) {
         </span>
     );
 }
+
+/**
+ * 메모 — 종목 메모(합계·단일 행)와 매수 비고(단일·펼친 개별 행)를 구분해 표시
+ * - 합계 행: 종목 메모 / 단일 행: 종목 메모 + 매수 비고(보조) / 개별 매수 행: 매수 비고
+ */
+export function MemoCell({ m, ctx }) {
+    const symbolMemo = m.kind === 'lot' ? '' : ctx.getMemo(m.symbol);
+    const lotRmk = m.kind === 'group' ? '' : (m.rmk || '');
+    return (
+        <div className="leading-tight">
+            {symbolMemo && <div className="truncate text-xs text-slate-700 dark:text-slate-200" title={symbolMemo}>{symbolMemo}</div>}
+            {lotRmk && <div className="truncate text-xs text-slate-400 dark:text-slate-500" title={lotRmk}>{lotRmk}</div>}
+        </div>
+    );
+}

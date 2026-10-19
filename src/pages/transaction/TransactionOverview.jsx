@@ -7,6 +7,7 @@ import { SearchFilterBar } from './components/SearchFilterBar';
 import { useTransactions } from './hooks/useTransactions';
 import { useFxRate } from './hooks/useFxRate';
 import { useCurrencyPreference } from './hooks/useCurrencyPreference';
+import { useSymbolMemos } from './hooks/useSymbolMemos';
 import { groupRowsBySymbol, mapGroupRowForDetailModal } from './utils/grouping';
 import { calculateTotals, calculateDiffAndPercent } from './utils/calculations';
 import { sortTransactionRows } from './utils/sorting';
@@ -64,6 +65,13 @@ export default function TransactionOverview() {
     const [detailModalData, setDetailModalData] = useState({ open: false, row: null, isGroupRow: false });
     const [currency, setCurrency] = useCurrencyPreference();
     const [expandedSymbols, setExpandedSymbols] = useState(() => new Set()); // 펼친 종목 (기본: 전부 접힘)
+
+    // 종목 메모 — 보유 심볼 구성이 바뀌면 재조회 (마지막 매수 건 삭제·매도·티커 변경 시 백엔드가 정리)
+    const heldSymbolsKey = useMemo(
+        () => Array.from(new Set(rows.map((r) => String(r.symbol || '').toUpperCase()))).sort().join(','),
+        [rows]
+    );
+    const { getMemo, saveMemo } = useSymbolMemos(heldSymbolsKey);
 
     // 삭제 실행 (상세 모달에서 호출)
     const handleRemoveTransaction = async (id) => {
@@ -424,7 +432,7 @@ export default function TransactionOverview() {
 
                 <HoldingsTable
                     displayRows={displayRows}
-                    ctx={{ currency, fx: fxRate, expandedSymbols, onToggleGroup: handleToggleGroup }}
+                    ctx={{ currency, fx: fxRate, expandedSymbols, onToggleGroup: handleToggleGroup, getMemo }}
                     sortConfig={sortConfig}
                     onSort={handleSort}
                     onRowClick={handleRowClick}
@@ -474,6 +482,8 @@ export default function TransactionOverview() {
                 onGroupSave={handleGroupDetailSave}
                 onAnalyze={handleAnalyze}
                 onRefreshSyncTarget={refreshSyncTarget}
+                symbolMemo={detailModalData.row ? getMemo(detailModalData.row.symbol) : ''}
+                onSaveMemo={saveMemo}
                 onSell={handleSellFromDetail}
                 onRemove={handleRemoveTransaction}
                 onOpenAlert={openAlert}

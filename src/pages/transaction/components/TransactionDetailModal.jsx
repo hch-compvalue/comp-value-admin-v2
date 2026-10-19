@@ -121,6 +121,19 @@ function PriceComparisonChart({ buyPrice, currentPrice, targetPrice }) {
     );
 }
 
+/** 종목 메모 최대 길이 (백엔드 SymbolMemoEntity.MEMO_MAX_LENGTH 와 동일) */
+const SYMBOL_MEMO_MAX_LENGTH = 1000;
+
+/** 상세 보기의 메모 한 줄 (줄바꿈 유지, 없으면 -) */
+function MemoLine({ label, value }) {
+    return (
+        <div className="col-span-2 flex justify-between gap-4">
+            <span className="shrink-0 text-slate-500 dark:text-slate-400">{label}</span>
+            <span className="text-right whitespace-pre-line break-words text-slate-900 dark:text-white font-medium">{value || '-'}</span>
+        </div>
+    );
+}
+
 /**
  * 종목 상세정보 모달
  * - 더블클릭으로 열림
@@ -136,6 +149,8 @@ export default function TransactionDetailModal({
     onGroupSave,
     onAnalyze,
     onRefreshSyncTarget,
+    symbolMemo = '',
+    onSaveMemo,
     onSell,
     onRemove,
     onOpenAlert,
@@ -170,6 +185,7 @@ export default function TransactionDetailModal({
                     }
                     return row.rmk || '';
                 })(),
+                symbolMemo,
             });
             setIsEditing(false);
             setCompanyProfile(null);
@@ -216,6 +232,12 @@ export default function TransactionDetailModal({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, row, isGroupRow]);
 
+    // 종목 메모가 나중에 로드·저장되면 보기 모드 값만 갱신 (편집 중 입력은 보존)
+    useEffect(() => {
+        if (!isEditing) setFormData((prev) => ({ ...prev, symbolMemo }));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [symbolMemo]);
+
     const fetchCompanyProfile = async (symbol) => {
         if (!symbol) return;
         setLoadingProfile(true);
@@ -243,6 +265,19 @@ export default function TransactionDetailModal({
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
+    // 종목 메모 저장 (변경 없으면 통과) — 실패 시 알림 후 false
+    const saveMemoIfChanged = async () => {
+        const memo = (formData.symbolMemo || '').trim();
+        if (memo === (symbolMemo || '') || !onSaveMemo) return true;
+        try {
+            await onSaveMemo(row.symbol, memo);
+            return true;
+        } catch (e) {
+            onOpenAlert?.(e.message);
+            return false;
+        }
+    };
+
     const handleSave = async () => {
         // 변경된 필드만 저장
         const updates = {};
@@ -257,6 +292,8 @@ export default function TransactionDetailModal({
         if (String(formData.buyExchangeRateAtTrade) !== String(row.buyExchangeRateAtTrade)) updates.buyExchangeRateAtTrade = formData.buyExchangeRateAtTrade;
         if (formData.rmk !== row.rmk) updates.rmk = formData.rmk.trim();
 
+        // 메모 먼저 저장 (티커도 바꾸면 백엔드가 새 티커로 메모를 옮김)
+        if (!(await saveMemoIfChanged())) return;
         if (Object.keys(updates).length === 0) {
             setIsEditing(false);
             return;
@@ -272,7 +309,6 @@ export default function TransactionDetailModal({
         const updates = {};
         const newSymbol = formData.symbol.trim().toUpperCase();
         const newCompanyName = formData.companyName.trim();
-        const newRmk = formData.rmk.trim();
 
         if (newSymbol !== (row.symbol || '').toUpperCase()) updates.symbol = newSymbol;
         if (newCompanyName !== (row.companyName || '').trim()) updates.companyName = newCompanyName;
@@ -280,11 +316,8 @@ export default function TransactionDetailModal({
         // 동기화 ON이면 targetPrice는 백엔드(Redis)에서 관리하므로 전송하지 않음
         if (!formData.targetPriceSync && String(formData.targetPrice) !== String(row.targetPrice || '')) updates.targetPrice = formData.targetPrice;
 
-        const originalRmks = (row.groupRows || []).map(r => r.rmk || '');
-        const allSameRmk = originalRmks.every(r => r === originalRmks[0]);
-        const originalRmk = allSameRmk ? originalRmks[0] : '';
-        if (newRmk !== originalRmk) updates.rmk = newRmk;
-
+        // 그룹 메모는 종목 메모로 저장 (매수 건별 비고는 건드리지 않음)
+        if (!(await saveMemoIfChanged())) return;
         if (Object.keys(updates).length === 0) {
             setIsEditing(false);
             return;
@@ -568,26 +601,26 @@ export default function TransactionDetailModal({
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">비고</label>
+                                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">종목 메모</label>
                                         <textarea
-                                            value={formData.rmk}
-                                            onChange={(e) => handleChange('rmk', e.target.value)}
+                                            value={formData.symbolMemo}
+                                            onChange={(e) => handleChange('symbolMemo', e.target.value)}
                                             rows={2}
+                                            maxLength={SYMBOL_MEMO_MAX_LENGTH}
+                                            placeholder="이 종목 전체에 대한 메모 (매수 건별 비고는 펼친 행에서 수정)"
                                             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white resize-none"
                                         />
                                     </div>
                                     <div className="flex justify-end gap-2">
                                         <button
                                             onClick={() => {
-                                                const rmks = (row.groupRows || []).map(r => r.rmk || '');
-                                                const allSame = rmks.every(r => r === rmks[0]);
                                                 setFormData(prev => ({
                                                     ...prev,
                                                     symbol: row.symbol || '',
                                                     companyName: row.companyName || '',
                                                     targetPrice: row.targetPrice || '',
                                                     targetPriceSync: row.targetPriceSync || false,
-                                                    rmk: allSame ? rmks[0] : '',
+                                                    symbolMemo,
                                                 }));
                                                 setIsEditing(false);
                                             }}
@@ -634,12 +667,7 @@ export default function TransactionDetailModal({
                                             <span className="text-slate-500 dark:text-slate-400">포함 항목</span>
                                             <span className="text-slate-900 dark:text-white font-medium">{row.groupRows?.length || 0}건</span>
                                         </div>
-                                        <div className="flex justify-between col-span-2">
-                                            <span className="text-slate-500 dark:text-slate-400">비고</span>
-                                            <span className="text-slate-900 dark:text-white font-medium truncate max-w-[300px]" title={formData.rmk}>
-                                                {formData.rmk || '-'}
-                                            </span>
-                                        </div>
+                                        <MemoLine label="종목 메모" value={formData.symbolMemo} />
                                     </div>
                                 </div>
                             )}
@@ -740,11 +768,23 @@ export default function TransactionDetailModal({
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">비고</label>
+                                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">종목 메모</label>
+                                        <textarea
+                                            value={formData.symbolMemo}
+                                            onChange={(e) => handleChange('symbolMemo', e.target.value)}
+                                            rows={2}
+                                            maxLength={SYMBOL_MEMO_MAX_LENGTH}
+                                            placeholder="이 종목 전체에 대한 메모"
+                                            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white resize-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">매수 비고</label>
                                         <textarea
                                             value={formData.rmk}
                                             onChange={(e) => handleChange('rmk', e.target.value)}
                                             rows={2}
+                                            placeholder="이 매수 건에 대한 메모"
                                             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white resize-none"
                                         />
                                     </div>
@@ -762,6 +802,7 @@ export default function TransactionDetailModal({
                                                     targetPriceSync: row.targetPriceSync || false,
                                                     buyExchangeRateAtTrade: row.buyExchangeRateAtTrade || '',
                                                     rmk: row.rmk || '',
+                                                    symbolMemo,
                                                 });
                                                 setIsEditing(false);
                                             }}
@@ -803,12 +844,8 @@ export default function TransactionDetailModal({
                                                 {formData.buyExchangeRateAtTrade ? <BoldInt text={`₩${parseFloat(formData.buyExchangeRateAtTrade).toLocaleString('ko-KR', { maximumFractionDigits: 2 })}`} /> : '-'}
                                             </span>
                                         </div>
-                                        <div className="flex justify-between col-span-2">
-                                            <span className="text-slate-500 dark:text-slate-400">비고</span>
-                                            <span className="text-slate-900 dark:text-white font-medium truncate max-w-[300px]" title={formData.rmk}>
-                                                {formData.rmk || '-'}
-                                            </span>
-                                        </div>
+                                        <MemoLine label="종목 메모" value={formData.symbolMemo} />
+                                        <MemoLine label="매수 비고" value={formData.rmk} />
                                     </div>
                                 </div>
                             )}

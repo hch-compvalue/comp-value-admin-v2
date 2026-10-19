@@ -186,6 +186,20 @@ export async function fetchCurrentPriceBySymbol(symbol) {
     return list[0] || null;
 }
 
+// 종목 메모 목록 조회 → [{ symbol, memo, updatedAt }]
+export async function fetchSymbolMemos() {
+    const { data, error } = await send(`/dart/tranrecord/memo`, {}, "GET");
+    if (error == null && data && data.success) return data.response || [];
+    throw new Error(error || '종목 메모 조회 실패');
+}
+
+// 종목 메모 저장 (빈 메모 = 삭제) → { symbol, memo }
+export async function saveSymbolMemo(symbol, memo) {
+    const { data, error } = await send(`/dart/tranrecord/memo`, { symbol, memo }, "POST");
+    if (error == null && data && data.success) return data.response;
+    throw new Error(error || '종목 메모 저장 실패');
+}
+
 // 동기화 목표매도가 재계산 (캐시 만료 종목) → { symbol, targetPrice, targetPriceCached }
 export async function syncTargetPrice(symbol) {
     const sendUrl = `/dart/tranrecord/sync-target`;
