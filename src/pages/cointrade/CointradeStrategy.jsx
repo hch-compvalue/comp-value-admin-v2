@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { TRADE_DASHBOARD_PATH } from '@/config/menuPaths';
 import PageTitle from '@/component/common/display/PageTitle';
+import OverviewPanel from './strategy/OverviewPanel';
 import CoinStrategyPanel from './strategy/CoinStrategyPanel';
 import StockStrategyPanel from './strategy/StockStrategyPanel';
 
 /**
- * 자동매매 대시보드 — 전략별 탭 (코인: btc_trend / 주식: etf3_trend_v1)
- * 탭마다 상태·실행 기록·설정을 ?strategy=<id>로 따로 조회/변경한다.
+ * 자동매매 대시보드 — 전체(코인+주식 실전 합산) + 전략별 탭 (코인: btc_trend / 주식: etf3_trend_v1)
+ * 전략 탭마다 상태·실행 기록·설정을 ?strategy=<id>로 따로 조회/변경한다.
  * 선택 탭은 URL ?tab= 또는 localStorage로 기억한다. 다른 화면에서 navigate(path, { state: { tab } })로 탭을 지정해 열 수 있다.
  */
 
 const TABS = [
+    { key: 'overview', label: '전체', Panel: OverviewPanel },
     { key: 'coin', label: '코인', Panel: CoinStrategyPanel },
     { key: 'stock', label: '주식', Panel: StockStrategyPanel },
 ];
@@ -84,7 +86,7 @@ export default function CointradeStrategy() {
         <div className="p-2 md:p-4 space-y-4">
             <PageTitle />
             {/* 활성 탭만 마운트 — 비활성 탭의 60초 상태 폴링을 막는다 */}
-            <Panel key={activeKey} header={tabBar} />
+            <Panel key={activeKey} header={tabBar} onSelectTab={selectTab} />
         </div>
     );
 }
