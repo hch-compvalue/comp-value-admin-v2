@@ -4,6 +4,7 @@ import Toast from '@/component/common/display/Toast';
 import StockChartModal from './StockChartModal';
 import CompanyInfoModal from './CompanyInfoModal';
 import InvestmentDetailModal, { FullDetailModal } from './InvestmentDetailModal';
+import PriceRangeBlock from './PriceRangeBlock';
 import { send } from '@/util/ClientUtil';
 
 // 투자판정 배너 스타일 (색각이상 친화: 파랑/노랑/회색) — DailyPicks SIGNAL_STYLE과 동일 팔레트
@@ -323,6 +324,7 @@ const ModalContent = ({
             <MetricExplanation onOpenGuide={onOpenGuide} 매출기반평가={metrics.매출기반평가} />
             <RecommendationBanner data={compValueData} investmentData={investmentData} />
             <HighlightCards data={compValueData} />
+            <MonthRangeSection data={compValueData} investmentData={investmentData} />
             <OvervaluationBanner data={compValueData} />
             <DataGrid data={compValueData} onOpenDetail={onOpenDetail} />
             <ActionButtons
@@ -487,6 +489,16 @@ const RecommendationBanner = ({ data, investmentData }) => {
             {`📊 가치 ${metrics.valueGrade}등급${scoreText}${timingText} → `}
             <span className="font-semibold">{SIGNAL_ICON[metrics.investmentSignal]} {metrics.investmentSignal}</span>
         </div>
+    );
+};
+
+/**
+ * 한 달 예상 움직임 — 투자 판단 데이터(자동 조회)의 진입 타이밍 범위 재사용, 없으면 표시 안 함
+ */
+const MonthRangeSection = ({ data, investmentData }) => {
+    const { price, stopLossPrice } = usePriceMetrics(data);
+    return (
+        <PriceRangeBlock entryTiming={investmentData?.entryTiming} currentPrice={toNumber(price)} stopLoss={toNumber(stopLossPrice)} />
     );
 };
 
