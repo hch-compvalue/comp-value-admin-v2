@@ -109,6 +109,7 @@
 - 캔들: `<Bar dataKey={candleRange} shape={<CandleShape />} />`, 툴팁 `OhlcTooltip`, 격자선 `CHART_GRID`
 - 캔들·등락 색: 상승 rose / 하락 blue
 - Recharts 2 는 차트 안 `<>...</>` Fragment 를 인식 못함 → 시리즈는 개별 조건 렌더링
+- 지표 필요 봉 수는 `technicalIndicators.INDICATOR_LOOKBACK` 단일 출처. 받을 수 있는 데이터를 다 받아도 봉이 모자라면(년봉 ~20개, 신규 상장) 지표 버튼 비활성 + 사유 툴팁, 선택 상태는 유지
 
 ### 모달
 - 배경: `bg-white shadow-xl` / `dark:bg-slate-800`

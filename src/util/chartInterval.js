@@ -135,22 +135,31 @@ export function intervalLabelFormatter(key) {
 export const candleRange = (d) => [d.low, d.high];
 
 /**
- * 가격 축 범위 — 저가~고가(+ 표시 중인 지표 값)에 위아래 여백
+ * 가격 축 범위 — 저가~고가(+ 선으로 그려지는 지표 값)에 위아래 여백
+ * - 값이 1개뿐인 지표는 화면에 안 보이므로 제외 (보이지 않는 값이 축을 늘리지 않게)
+ * - 주가가 모두 0 이상이면 축 하한도 0 이상
  * @param {Array} data
  * @param {string[]} extraKeys - 함께 포함할 지표 키 (볼린저 밴드 등)
  */
 export function priceDomain(data, extraKeys = []) {
     const PAD_RATIO = 0.05;
+    const MIN_POINTS_FOR_LINE = 2;
+    const isNum = (v) => v != null && !Number.isNaN(v);
+    const lineKeys = extraKeys.filter((k) => data.filter((d) => isNum(d[k])).length >= MIN_POINTS_FOR_LINE);
+
     let min = Infinity;
     let max = -Infinity;
+    let minPrice = Infinity;
     for (const d of data) {
-        for (const v of [d.low, d.high, ...extraKeys.map((k) => d[k])]) {
-            if (v == null || Number.isNaN(v)) continue;
+        if (isNum(d.low) && d.low < minPrice) minPrice = d.low;
+        for (const v of [d.low, d.high, ...lineKeys.map((k) => d[k])]) {
+            if (!isNum(v)) continue;
             if (v < min) min = v;
             if (v > max) max = v;
         }
     }
     if (!Number.isFinite(min)) return ['auto', 'auto'];
     const pad = (max - min) * PAD_RATIO || max * PAD_RATIO;
-    return [min - pad, max + pad];
+    const lower = minPrice >= 0 ? Math.max(0, min - pad) : min - pad;
+    return [lower, max + pad];
 }

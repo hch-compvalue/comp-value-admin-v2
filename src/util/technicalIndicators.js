@@ -242,21 +242,27 @@ export const calcStochastic = (data, kPeriod = 14, dPeriod = 3) => {
 };
 
 /**
- * 활성화된 지표 중 가장 긴 lookback 기간 계산
- * API 데이터 요청 시 추가로 필요한 일수를 반환
- * @param {Object} indicators - 지표 활성화 상태
- * @returns {number} 추가로 필요한 거래일 수
+ * 지표별 계산에 필요한 봉 수 (첫 값이 나오기까지의 lookback)
  */
-export const getMaxLookback = (indicators) => {
-    let max = 0;
-    if (indicators.sma20) max = Math.max(max, 20);
-    if (indicators.sma50) max = Math.max(max, 50);
-    if (indicators.sma200) max = Math.max(max, 200);
-    if (indicators.ema12) max = Math.max(max, 12);
-    if (indicators.ema26) max = Math.max(max, 26);
-    if (indicators.bollinger) max = Math.max(max, 20);
-    if (indicators.rsi) max = Math.max(max, 15); // 14 + 1
-    if (indicators.macd) max = Math.max(max, 35); // 26 + 9
-    if (indicators.stochastic) max = Math.max(max, 17); // 14 + 3
-    return max;
-};
+export const INDICATOR_LOOKBACK = Object.freeze({
+    sma20: 20, sma50: 50, sma200: 200,
+    ema12: 12, ema26: 26,
+    bollinger: 20,
+    rsi: 15,        // 14 + 1
+    macd: 35,       // 26 + 9
+    stochastic: 17, // 14 + 3
+});
+
+/**
+ * 선으로 보이려면 값이 2개 이상 필요 → 필요한 최소 봉 수
+ */
+export const minBarsForLine = (key) => INDICATOR_LOOKBACK[key] + 1;
+
+/**
+ * 활성화된 지표 중 가장 긴 lookback 기간 계산
+ * API 데이터 요청 시 추가로 필요한 봉 수를 반환
+ * @param {Object} indicators - 지표 활성화 상태
+ * @returns {number} 추가로 필요한 봉 수
+ */
+export const getMaxLookback = (indicators) =>
+    Object.keys(INDICATOR_LOOKBACK).reduce((max, key) => (indicators[key] ? Math.max(max, INDICATOR_LOOKBACK[key]) : max), 0);

@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { fetchStockPriceVolume } from '@/util/ChartApi';
 import {
-    calcSMA, calcEMA, calcBollingerBands, calcRSI, calcMACD, calcStochastic, getMaxLookback,
+    calcSMA, calcEMA, calcBollingerBands, calcRSI, calcMACD, calcStochastic, getMaxLookback, minBarsForLine, INDICATOR_LOOKBACK,
 } from '@/util/technicalIndicators';
 import { SLATE, CHART_GRID } from '@/config/themeColors';
 import {
@@ -89,6 +89,17 @@ const OVERLAY_VALUE_KEYS = {
     bollinger: ['bbUpper', 'bbMiddle', 'bbLower'],
 };
 
+// 조회 시작일보다 이 일수 넘게 늦게 데이터가 시작하면 상장 이력이 거기까지뿐인 것으로 판단
+const HISTORY_START_TOLERANCE_DAYS = 10;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** 받을 수 있는 시세를 끝까지 받았는지 (조회 한도 도달 또는 상장 이력 부족) */
+const isHistoryLimited = (sortedData, from, fetchDays) => {
+    if (fetchDays >= calcFetchDays('year')) return true;
+    if (!sortedData.length) return true;
+    return new Date(sortedData[0].date) - new Date(from) > HISTORY_START_TOLERANCE_DAYS * DAY_MS;
+};
+
 // 가격 변동 색 (상승 빨강 / 하락 파랑 — 캔들과 동일, 적록색약 구분 가능)
 const changeColorCls = (v) => (v >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400');
 
@@ -110,10 +121,11 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { interval, style, setInterval: setChartInterval, setStyle } = useChartPreference('chart.stock');
-    const [indicators, setIndicators] = useState(DEFAULT_INDICATORS);
+    const [selectedIndicators, setSelectedIndicators] = useState(DEFAULT_INDICATORS);
+    const [historyLimited, setHistoryLimited] = useState(false); // 조회 한도(약 20년)·상장 이력 끝까지 받았는지
 
-    // 활성 지표 중 가장 긴 lookback (봉 단위)
-    const maxLookback = useMemo(() => getMaxLookback(indicators), [indicators]);
+    // 선택한 지표 중 가장 긴 lookback (봉 단위)
+    const maxLookback = useMemo(() => getMaxLookback(selectedIndicators), [selectedIndicators]);
 
     // 실제 API 요청 기간 (표시 봉 + 지표 lookback 봉 → 달력일, 최대 약 20년)
     const fetchDays = useMemo(() => calcFetchDays(interval, maxLookback), [interval, maxLookback]);
@@ -165,6 +177,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                     new Date(a.date) - new Date(b.date)
                 );
                 setRawData(sortedData);
+                setHistoryLimited(isHistoryLimited(sortedData, from, fetchDays));
                 fetchedDaysRef.current = fetchDays;
             } else {
                 setError('차트 데이터를 불러올 수 없습니다.');
@@ -177,11 +190,28 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
         }
     };
 
-    // 봉 단위 집계 → 지표 계산 → 최근 봉만 표시
-    const enrichedData = useMemo(() => {
-        if (rawData.length === 0) return [];
+    // 봉 단위 집계 (지표 계산 전 전체)
+    const allBars = useMemo(() => aggregateBars(rawData, interval), [rawData, interval]);
 
-        let result = aggregateBars(rawData, interval);
+    // 받을 수 있는 데이터를 다 받았는데도 봉이 모자라 선을 못 그리는 지표 → { key: 필요 봉 수 }
+    const unavailableIndicators = useMemo(() => {
+        if (!historyLimited) return {};
+        return Object.fromEntries(
+            Object.keys(INDICATOR_LOOKBACK).filter((k) => minBarsForLine(k) > allBars.length).map((k) => [k, minBarsForLine(k)])
+        );
+    }, [historyLimited, allBars.length]);
+
+    // 실제 계산·표시할 지표 (선택했어도 계산 불가면 제외, 선택 상태는 유지해 봉 단위를 바꾸면 다시 표시)
+    const indicators = useMemo(
+        () => Object.fromEntries(Object.keys(selectedIndicators).map((k) => [k, selectedIndicators[k] && !unavailableIndicators[k]])),
+        [selectedIndicators, unavailableIndicators]
+    );
+
+    // 지표 계산 → 최근 봉만 표시
+    const enrichedData = useMemo(() => {
+        if (allBars.length === 0) return [];
+
+        let result = allBars;
 
         // 오버레이 지표
         if (indicators.sma20) result = calcSMA(result, 20);
@@ -197,11 +227,11 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
         if (indicators.stochastic) result = calcStochastic(result, 14, 3);
 
         return takeRecentBars(result, interval);
-    }, [rawData, indicators, interval]);
+    }, [allBars, indicators, interval]);
 
     // 지표 토글
     const toggleIndicator = (key) => {
-        setIndicators(prev => ({ ...prev, [key]: !prev[key] }));
+        setSelectedIndicators(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
     // --- 드래그 줌 ---
@@ -339,7 +369,12 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                         disabled={loading}
                     />
                     {/* 지표 토글 */}
-                    <IndicatorToggle indicators={indicators} onToggle={toggleIndicator} />
+                    <IndicatorToggle
+                        indicators={indicators}
+                        unavailable={unavailableIndicators}
+                        unavailableReason={(key, label) => `${intervalInfo.label} ${allBars.length}개로는 ${label}(${unavailableIndicators[key]}봉 필요)을 그릴 수 없습니다`}
+                        onToggle={toggleIndicator}
+                    />
                 </div>
 
                 {/* 콘텐츠 */}
@@ -642,7 +677,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
 /**
  * 지표 토글 컴포넌트
  */
-const IndicatorToggle = ({ indicators, onToggle }) => {
+const IndicatorToggle = ({ indicators, unavailable, unavailableReason, onToggle }) => {
     const [showHelp, setShowHelp] = useState(false);
 
     return (
@@ -655,7 +690,9 @@ const IndicatorToggle = ({ indicators, onToggle }) => {
                         <button
                             key={ind.key}
                             onClick={() => onToggle(ind.key)}
-                            className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${
+                            disabled={!!unavailable[ind.key]}
+                            title={unavailable[ind.key] ? unavailableReason(ind.key, ind.label) : undefined}
+                            className={`px-2 py-1 rounded border text-xs font-medium transition-colors disabled:opacity-40 ${
                                 indicators[ind.key]
                                     ? 'text-white border-transparent'
                                     : 'text-slate-600 border-slate-300 hover:bg-slate-100 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700'
@@ -675,7 +712,9 @@ const IndicatorToggle = ({ indicators, onToggle }) => {
                         <button
                             key={ind.key}
                             onClick={() => onToggle(ind.key)}
-                            className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${
+                            disabled={!!unavailable[ind.key]}
+                            title={unavailable[ind.key] ? unavailableReason(ind.key, ind.label) : undefined}
+                            className={`px-2 py-1 rounded border text-xs font-medium transition-colors disabled:opacity-40 ${
                                 indicators[ind.key]
                                     ? 'bg-blue-600 text-white border-blue-600 dark:bg-blue-500 dark:border-blue-500'
                                     : 'text-slate-600 border-slate-300 hover:bg-slate-100 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700'
