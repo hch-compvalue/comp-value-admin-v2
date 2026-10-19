@@ -1,18 +1,18 @@
 import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { TransactionHeader } from './components/TransactionHeader';
-import { TransactionTableHeader } from './components/TransactionTableHeader';
-import { TransactionRow } from './components/TransactionRow';
-import { GroupTotalRow } from './components/GroupTotalRow';
+import { HoldingsTable } from './components/holdings/HoldingsTable';
 import { PortfolioDashboard } from './components/PortfolioDashboard';
 import { SearchFilterBar } from './components/SearchFilterBar';
 import { useTransactions } from './hooks/useTransactions';
 import { useFxRate } from './hooks/useFxRate';
+import { useCurrencyPreference } from './hooks/useCurrencyPreference';
 import { groupRowsBySymbol, mapGroupRowForDetailModal } from './utils/grouping';
 import { calculateTotals, calculateDiffAndPercent } from './utils/calculations';
 import { sortTransactionRows } from './utils/sorting';
 import { filterBySearch, filterByPnl } from './utils/filtering';
-import { COLUMN_WIDTHS, TABLE_HEADERS, FILTER_MODES } from './constants';
+import { toDisplayRows } from './utils/holdingModel';
+import { FILTER_MODES } from './constants';
 import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import SellModal from './components/SellModal';
@@ -62,6 +62,8 @@ export default function TransactionOverview() {
     const [sellModalData, setSellModalData] = useState({ open: false, data: null, targetRows: [] });
     const [transactionModalData, setTransactionModalData] = useState({ open: false, mode: 'add', data: null });
     const [detailModalData, setDetailModalData] = useState({ open: false, row: null, isGroupRow: false });
+    const [currency, setCurrency] = useCurrencyPreference();
+    const [expandedSymbols, setExpandedSymbols] = useState(() => new Set()); // 펼친 종목 (기본: 전부 접힘)
 
     // 삭제 실행 (상세 모달에서 호출)
     const handleRemoveTransaction = async (id) => {
@@ -101,9 +103,23 @@ export default function TransactionOverview() {
         }
     };
 
-    // 행 클릭 시 상세정보 모달 열기
-    const handleRowClick = (row) => {
-        setDetailModalData({ open: true, row, isGroupRow: false });
+    // 행 클릭 시 상세정보 모달 열기 (종목 합계 행은 그룹 상세)
+    const handleRowClick = (model) => {
+        if (model.kind === 'group') {
+            setDetailModalData({ open: true, row: mapGroupRowForDetailModal(model.source), isGroupRow: true });
+        } else {
+            setDetailModalData({ open: true, row: model.source, isGroupRow: false });
+        }
+    };
+
+    // 종목 합계 행 펼치기/접기
+    const handleToggleGroup = (symbol) => {
+        setExpandedSymbols((prev) => {
+            const next = new Set(prev);
+            if (next.has(symbol)) next.delete(symbol);
+            else next.add(symbol);
+            return next;
+        });
     };
 
     // 상세 모달 닫기
@@ -186,10 +202,10 @@ export default function TransactionOverview() {
     };
 
     // 정렬 핸들러
-    const handleSort = (columnIndex) => {
+    const handleSort = (sortKey) => {
         setSortConfig(prev => ({
-            column: columnIndex,
-            direction: prev.column === columnIndex && prev.direction === 'asc' ? 'desc' : 'asc'
+            column: sortKey,
+            direction: prev.column === sortKey && prev.direction === 'asc' ? 'desc' : 'asc'
         }));
     };
 
@@ -357,6 +373,9 @@ export default function TransactionOverview() {
     // 그룹화된 행 목록
     const groupedRows = useMemo(() => groupRowsBySymbol(filteredRows, fxRate), [filteredRows, fxRate]);
 
+    // 화면 표시 행 (같은 종목은 합계 행 + 펼친 경우만 개별 매수)
+    const displayRows = useMemo(() => toDisplayRows(groupedRows, expandedSymbols), [groupedRows, expandedSymbols]);
+
     // 전체 합계 계산 (필터 전 전체 데이터 기준)
     const totals = useMemo(() => calculateTotals(rows), [rows]);
     const { diff, diffPct } = useMemo(
@@ -398,89 +417,19 @@ export default function TransactionOverview() {
                     onFilterModeChange={setFilterMode}
                     uniqueSymbols={uniqueSymbols}
                     totalRows={rows.length}
+                    currency={currency}
+                    onCurrencyChange={setCurrency}
+                    fxAvailable={fxRate > 0}
                 />
 
-                <div className="mx-0">
-                    <div className="overflow-y-auto bg-white border border-slate-200 rounded-lg shadow-sm max-h-[70vh] dark:bg-slate-800 dark:border-slate-700">
-                        <table className="table-fixed w-full border-collapse">
-                            <colgroup>
-                                {COLUMN_WIDTHS.map((w, i) => (
-                                    <col key={i} className={w} />
-                                ))}
-                            </colgroup>
-
-                            <TransactionTableHeader sortConfig={sortConfig} onSort={handleSort} />
-
-                            <tbody className="text-sm whitespace-nowrap">
-                                {rows.length === 0 && !loading && (
-                                    <tr>
-                                        <td colSpan={TABLE_HEADERS.length} className="py-16 px-6 text-center bg-slate-50 dark:bg-slate-800/50">
-                                            <div className="flex flex-col items-center gap-4">
-                                                <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                                                    <svg className="w-8 h-8 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <p className="text-lg font-medium text-slate-700 mb-2 dark:text-slate-200">등록된 종목이 없습니다</p>
-                                                    <div className="text-sm text-slate-500 space-y-1 dark:text-slate-400">
-                                                        <p>상단의 <span className="font-semibold text-blue-600 dark:text-blue-400">종목 추가</span> 버튼을 눌러 종목을 추가하세요</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {filteredRows.length === 0 && rows.length > 0 && !loading && (
-                                    <tr>
-                                        <td colSpan={TABLE_HEADERS.length} className="py-12 px-6 text-center bg-slate-50 dark:bg-slate-800/50">
-                                            <p className="text-sm text-slate-500 dark:text-slate-400">검색 결과가 없습니다</p>
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {(() => {
-                                    let dataRowIndex = 0;
-                                    return groupedRows.map((r, i) => {
-                                        if (r.__type === 'groupStartDivider') {
-                                            return (
-                                                <tr key={`gs-${r.symbol}-${i}`}>
-                                                    <td colSpan={TABLE_HEADERS.length} className="p-0">
-                                                        <div className="h-2 bg-indigo-300 dark:bg-indigo-700" />
-                                                    </td>
-                                                </tr>
-                                            );
-                                        }
-
-                                        if (r.__type === 'groupTotal') {
-                                            return (
-                                                <GroupTotalRow
-                                                    key={`g-${r.symbol}-${i}`}
-                                                    data={r}
-                                                    fx={fxRate}
-                                                    onRowClick={(rowData) => setDetailModalData({ open: true, row: rowData, isGroupRow: true })}
-                                                />
-                                            );
-                                        }
-
-                                        const currentIndex = dataRowIndex;
-                                        dataRowIndex++;
-                                        return (
-                                            <TransactionRow
-                                                key={r.id}
-                                                row={r}
-                                                index={currentIndex}
-                                                fx={fxRate}
-                                                onRowClick={handleRowClick}
-                                            />
-                                        );
-                                    });
-                                })()}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <HoldingsTable
+                    displayRows={displayRows}
+                    ctx={{ currency, fx: fxRate, expandedSymbols, onToggleGroup: handleToggleGroup }}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                    onRowClick={handleRowClick}
+                    emptyMessage={loading ? null : rows.length === 0 ? '등록된 종목이 없습니다. 위의 종목 추가 버튼으로 시작하세요.' : '검색 결과가 없습니다'}
+                />
 
                 {loading && <div className="mt-3 text-sm text-slate-500 dark:text-slate-400">불러오는 중…</div>}
                 {saving && <div className="mt-3 text-sm text-blue-600 font-medium dark:text-blue-400">저장 중...</div>}

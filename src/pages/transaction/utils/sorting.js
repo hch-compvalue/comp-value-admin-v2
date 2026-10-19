@@ -1,4 +1,5 @@
 import { toNum } from './formatters';
+import { SORT_KEYS } from '../constants';
 
 /**
  * 심볼과 매수일 기준으로 행 정렬
@@ -21,11 +22,11 @@ export function sortRowsBySymbolAndDate(list) {
 /**
  * 거래 데이터를 정렬 (티커별 그룹 유지)
  * @param {Array} rows - 원본 데이터 행
- * @param {number} columnIndex - 정렬할 컬럼 인덱스
+ * @param {string} sortKey - 정렬 기준 (SORT_KEYS)
  * @param {string} direction - 정렬 방향 ('asc' | 'desc')
  * @returns {Array} 정렬된 행
  */
-export function sortTransactionRows(rows, columnIndex, direction) {
+export function sortTransactionRows(rows, sortKey, direction) {
     if (!rows || rows.length === 0) return rows;
 
     // 티커별로 그룹화
@@ -33,12 +34,12 @@ export function sortTransactionRows(rows, columnIndex, direction) {
 
     // 각 그룹 내부를 정렬
     const sortedGroups = grouped.map(group => {
-        return sortGroup(group, columnIndex, direction);
+        return sortGroup(group, sortKey, direction);
     });
 
     // 그룹 자체를 정렬 (그룹의 대표값 기준)
     sortedGroups.sort((a, b) => {
-        return compareGroupValues(a, b, columnIndex, direction);
+        return compareGroupValues(a, b, sortKey, direction);
     });
 
     // 평탄화
@@ -77,50 +78,50 @@ function groupBySymbol(rows) {
 /**
  * 그룹 내부 정렬
  */
-function sortGroup(group, columnIndex, direction) {
+function sortGroup(group, sortKey, direction) {
     if (group.length <= 1) return group;
 
     return [...group].sort((a, b) => {
-        return compareValues(a, b, columnIndex, direction);
+        return compareValues(a, b, sortKey, direction);
     });
 }
 
 /**
  * 그룹 간 비교 (그룹의 합계/평균값 사용)
  */
-function compareGroupValues(groupA, groupB, columnIndex, direction) {
+function compareGroupValues(groupA, groupB, sortKey, direction) {
     let aVal, bVal;
 
-    switch (columnIndex) {
-        case 0: // 종목 - 첫 번째 행 기준
+    switch (sortKey) {
+        case SORT_KEYS.SYMBOL: // 종목 - 첫 번째 행 기준
             aVal = String(groupA[0].symbol || '').toUpperCase();
             bVal = String(groupB[0].symbol || '').toUpperCase();
             break;
-        case 1: // 매수가($) - 평균
+        case SORT_KEYS.BUY_PRICE: // 매수가($) - 평균
             aVal = groupA.reduce((sum, row) => sum + toNum(row.buyPrice), 0) / groupA.length;
             bVal = groupB.reduce((sum, row) => sum + toNum(row.buyPrice), 0) / groupB.length;
             break;
-        case 2: // 현재가($) - 평균
+        case SORT_KEYS.CUR_PRICE: // 현재가($) - 평균
             aVal = groupA.reduce((sum, row) => sum + toNum(row.currentPrice), 0) / groupA.length;
             bVal = groupB.reduce((sum, row) => sum + toNum(row.currentPrice), 0) / groupB.length;
             break;
-        case 3: // 수량 - 합계
+        case SORT_KEYS.QTY: // 수량 - 합계
             aVal = groupA.reduce((sum, row) => sum + toNum(row.totalBuyAmount), 0);
             bVal = groupB.reduce((sum, row) => sum + toNum(row.totalBuyAmount), 0);
             break;
-        case 4: // 매수금액($) - 합계
+        case SORT_KEYS.BUY_AMOUNT: // 매수금액($) - 합계
             aVal = groupA.reduce((sum, row) => sum + toNum(row.buyPrice) * toNum(row.totalBuyAmount), 0);
             bVal = groupB.reduce((sum, row) => sum + toNum(row.buyPrice) * toNum(row.totalBuyAmount), 0);
             break;
-        case 5: // 평가금액($) - 합계
+        case SORT_KEYS.EVAL_AMOUNT: // 평가금액($) - 합계
             aVal = groupA.reduce((sum, row) => sum + toNum(row.currentPrice) * toNum(row.totalBuyAmount), 0);
             bVal = groupB.reduce((sum, row) => sum + toNum(row.currentPrice) * toNum(row.totalBuyAmount), 0);
             break;
-        case 6: // 손익 - 합계
+        case SORT_KEYS.PNL: // 손익 - 합계
             aVal = groupA.reduce((sum, row) => sum + (toNum(row.currentPrice) - toNum(row.buyPrice)) * toNum(row.totalBuyAmount), 0);
             bVal = groupB.reduce((sum, row) => sum + (toNum(row.currentPrice) - toNum(row.buyPrice)) * toNum(row.totalBuyAmount), 0);
             break;
-        case 7: // 매수일자 - 가장 빠른 날짜
+        case SORT_KEYS.BUY_DATE: // 매수일자 - 가장 빠른 날짜
             aVal = groupA.reduce((earliest, row) => {
                 const date = row.buyDate || '';
                 return !earliest || date < earliest ? date : earliest;
@@ -147,39 +148,39 @@ function compareGroupValues(groupA, groupB, columnIndex, direction) {
 /**
  * 두 행의 값을 비교
  */
-function compareValues(a, b, columnIndex, direction) {
+function compareValues(a, b, sortKey, direction) {
     let aVal, bVal;
 
-    switch (columnIndex) {
-        case 0: // 종목
+    switch (sortKey) {
+        case SORT_KEYS.SYMBOL: // 종목
             aVal = String(a.symbol || '').toUpperCase();
             bVal = String(b.symbol || '').toUpperCase();
             break;
-        case 1: // 매수가($)
+        case SORT_KEYS.BUY_PRICE: // 매수가($)
             aVal = toNum(a.buyPrice);
             bVal = toNum(b.buyPrice);
             break;
-        case 2: // 현재가($)
+        case SORT_KEYS.CUR_PRICE: // 현재가($)
             aVal = toNum(a.currentPrice);
             bVal = toNum(b.currentPrice);
             break;
-        case 3: // 수량
+        case SORT_KEYS.QTY: // 수량
             aVal = toNum(a.totalBuyAmount);
             bVal = toNum(b.totalBuyAmount);
             break;
-        case 4: // 매수금액($)
+        case SORT_KEYS.BUY_AMOUNT: // 매수금액($)
             aVal = toNum(a.buyPrice) * toNum(a.totalBuyAmount);
             bVal = toNum(b.buyPrice) * toNum(b.totalBuyAmount);
             break;
-        case 5: // 평가금액($)
+        case SORT_KEYS.EVAL_AMOUNT: // 평가금액($)
             aVal = toNum(a.currentPrice) * toNum(a.totalBuyAmount);
             bVal = toNum(b.currentPrice) * toNum(b.totalBuyAmount);
             break;
-        case 6: // 손익
+        case SORT_KEYS.PNL: // 손익
             aVal = (toNum(a.currentPrice) - toNum(a.buyPrice)) * toNum(a.totalBuyAmount);
             bVal = (toNum(b.currentPrice) - toNum(b.buyPrice)) * toNum(b.totalBuyAmount);
             break;
-        case 7: // 매수일자
+        case SORT_KEYS.BUY_DATE: // 매수일자
             aVal = a.buyDate || '';
             bVal = b.buyDate || '';
             break;

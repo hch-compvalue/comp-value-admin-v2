@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./styles/theme-dark.css";
+@import "./styles/surfaces.css";
 
 @variant dark (&:is(.dark *));
 

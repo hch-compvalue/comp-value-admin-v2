@@ -1,0 +1,28 @@
+/*
+ * 표 행 배경 토큰 — 클래스: bg-row-base / bg-row-hover / bg-row-nested / bg-row-hit
+ * - 다크 값을 토큰 안에서 처리하므로 dark: 변형 없이 한 클래스로 사용 (hover 우선순위 충돌 방지)
+ * - 전부 불투명색: 가로 스크롤 시 고정(sticky) 첫 열이 bg-inherit 로 행 배경을 그대로 받아도 뒤 내용이 비치지 않게
+ * - 다크 값은 slate 변수 기반이라 theme-dark.css 팔레트 변경이 자동 반영
+ */
+@theme inline {
+  --color-row-base: var(--row-base);
+  --color-row-hover: var(--row-hover);
+  --color-row-nested: var(--row-nested);
+  --color-row-hit: var(--row-hit);
+}
+
+@layer base {
+  :root {
+    --row-base: white;
+    --row-hover: var(--color-slate-50);
+    --row-nested: color-mix(in oklab, var(--color-slate-100) 45%, white);
+    --row-hit: var(--color-amber-50);
+  }
+
+  .dark {
+    --row-base: var(--color-slate-800);
+    --row-hover: color-mix(in oklab, var(--color-slate-700) 45%, var(--color-slate-800));
+    --row-nested: color-mix(in oklab, var(--color-slate-900) 55%, var(--color-slate-800));
+    --row-hit: color-mix(in oklab, var(--color-amber-500) 10%, var(--color-slate-800));
+  }
+}

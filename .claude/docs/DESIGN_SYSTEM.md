@@ -96,6 +96,12 @@
 - 헤더: `bg-slate-50` / `dark:bg-slate-900`, `border-b border-slate-200`
 - 행 hover: `hover:bg-slate-50` / `dark:hover:bg-slate-700/50`
 - 선택된 행: `bg-blue-50` / `dark:bg-blue-900/20`
+- 헤더 정렬 = 셀 정렬 (숫자 컬럼은 헤더도 오른쪽 정렬, 정렬 아이콘은 제목 왼쪽)
+- 금액·수량은 `tabular-nums`, 한 셀 1줄 원칙 (보조 정보는 `text-xs text-slate-400` 한 줄까지)
+- 행 배경 토큰 (`src/styles/surfaces.css`): `bg-row-base` / `bg-row-hover` / `bg-row-nested`(펼친 하위 행) / `bg-row-hit`(목표 도달 등 강조 행) — 불투명색이라 고정 첫 열은 `sticky left-0 bg-inherit` 로 행 배경을 그대로 받음, `dark:` 변형 불필요
+- 강조 행은 행 전체 원색 칠 대신 `bg-row-hit` + 첫 셀 왼쪽 3px 강조선
+- 손익 색: 상승 rose / 하락 blue (전일 대비 등락도 동일), 수익률은 연한 배경 배지
+- 참고 구현: 보유종목 `pages/transaction/components/holdings/` (컬럼 정의 `constants/index.js` TABLE_COLUMNS + 셀 렌더러 `cells.jsx`)
 
 ### 모달
 - 배경: `bg-white shadow-xl` / `dark:bg-slate-800`

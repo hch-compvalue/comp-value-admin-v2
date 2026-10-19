@@ -1,9 +1,10 @@
 import { FILTER_MODES } from '../constants';
+import { CurrencyToggle } from './holdings/CurrencyToggle';
 
 /**
- * 검색 + 필터 바
+ * 검색 + 필터 + 표시 통화 바
  */
-export function SearchFilterBar({ searchText, onSearchChange, filterMode, onFilterModeChange, uniqueSymbols, totalRows }) {
+export function SearchFilterBar({ searchText, onSearchChange, filterMode, onFilterModeChange, uniqueSymbols, totalRows, currency, onCurrencyChange, fxAvailable }) {
     const chips = [
         { mode: FILTER_MODES.ALL, label: '전체' },
         { mode: FILTER_MODES.PROFIT, label: '수익' },
@@ -46,14 +47,14 @@ export function SearchFilterBar({ searchText, onSearchChange, filterMode, onFilt
                 ))}
             </div>
 
-            {/* 통계 */}
-            <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 sm:ml-auto">
+            {/* 통계 + 표시 통화 */}
+            <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 sm:ml-auto">
                 <span>
-                    투자종목: <span className="font-medium text-blue-600 dark:text-blue-400">{uniqueSymbols}개</span>
+                    종목 <span className="font-semibold text-slate-800 dark:text-slate-100">{uniqueSymbols}</span>개
+                    <span className="mx-2 text-slate-300 dark:text-slate-600">|</span>
+                    매수 <span className="font-semibold text-slate-800 dark:text-slate-100">{totalRows}</span>건
                 </span>
-                <span>
-                    매수건수: <span className="font-medium text-green-600 dark:text-green-400">{totalRows}건</span>
-                </span>
+                <CurrencyToggle value={currency} onChange={onCurrencyChange} fxAvailable={fxAvailable} />
             </div>
         </div>
     );
