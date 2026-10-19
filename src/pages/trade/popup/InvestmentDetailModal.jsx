@@ -270,10 +270,97 @@ const getSignalIcon = (color) => {
     return icons[color] || icons.gray;
 };
 
+// ── 20거래일 예상 변동 범위 (지지/저항선 대체, 2026-10-19 검증: test/backtest-sr-2026-10) ──
+const RANGE_SOURCE_NOTE = '과거 미국 1,494종목(2018~2026) 통계';
+const PCT = 100;
+const hasPriceRange = (et) => !!et && et.rangeLow > 0 && et.rangeHigh > et.rangeLow;
+const fmtProb = (p) => (p == null || isNaN(p) ? '-' : `${Math.round(p * PCT)}%`);
+const fmtUsd2 = (v) => (v == null || isNaN(v) ? '-' : `$${Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+
+/** ATR 거리 d에서 아래 이탈 확률 (확률표 선형 보간, 표 범위 밖은 끝값) */
+const interpBreakDown = (table, d) => {
+    if (!table?.length || isNaN(d)) return null;
+    const rows = [...table].sort((a, b) => a.atrMultiple - b.atrMultiple);
+    if (d <= rows[0].atrMultiple) return rows[0].down;
+    for (let i = 1; i < rows.length; i++) {
+        const lo = rows[i - 1], hi = rows[i];
+        if (d <= hi.atrMultiple) return lo.down + (hi.down - lo.down) * (d - lo.atrMultiple) / (hi.atrMultiple - lo.atrMultiple);
+    }
+    return rows[rows.length - 1].down;
+};
+
+/** 진입 타이밍 — 20거래일 예상 변동 범위 + 이탈/돌파 확률 */
+const PriceRangeBlock = ({ entryTiming: et, currentPrice }) => {
+    const [showTable, setShowTable] = useState(false);
+    if (!hasPriceRange(et)) return null;
+    const price = isNaN(currentPrice) ? (et.rangeLow + et.rangeHigh) / 2 : currentPrice;
+    const pos = Math.max(0, Math.min(PCT, ((price - et.rangeLow) / (et.rangeHigh - et.rangeLow)) * PCT));
+    const atrPct = price > 0 && et.atr ? (et.atr / price) * PCT : null;
+    return (
+        <div className="mb-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-600 p-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-1 text-xs">
+                <span className="font-medium text-slate-600 dark:text-slate-300">{et.rangeDays}거래일 예상 변동 범위</span>
+                <span className="text-slate-400 dark:text-slate-500">{RANGE_SOURCE_NOTE}</span>
+            </div>
+            <div className="relative h-2 mt-3 rounded-full" style={{ background: 'linear-gradient(to right, #fdba74, #e2e8f0 50%, #7dd3fc)' }}>
+                <div className="absolute w-3.5 h-3.5 rounded-full bg-white border-2 border-slate-700 dark:border-white dark:bg-slate-800 shadow"
+                     style={{ left: `${pos}%`, top: '50%', transform: 'translate(-50%, -50%)' }} title={`현재가 ${fmtUsd2(price)}`} />
+            </div>
+            <div className="flex justify-between items-baseline mt-1.5 text-sm">
+                <span className="font-semibold text-orange-600 dark:text-orange-400">{fmtUsd2(et.rangeLow)}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">현재 {fmtUsd2(price)}</span>
+                <span className="font-semibold text-sky-600 dark:text-sky-400">{fmtUsd2(et.rangeHigh)}</span>
+            </div>
+            <div className="flex justify-between text-xs mt-0.5">
+                <span className="text-orange-600 dark:text-orange-400">↓ 아래로 이탈 {fmtProb(et.rangeBreakDownProb)}</span>
+                <span className="text-sky-600 dark:text-sky-400">↑ 위로 돌파 {fmtProb(et.rangeBreakUpProb)}</span>
+            </div>
+            <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                하루 평균 변동폭(ATR) {fmtUsd2(et.atr)}{atrPct != null ? ` (${atrPct.toFixed(1)}%)` : ''} · 범위 = 현재가 ± {et.rangeAtrMultiple}×ATR · 기간 내 종가 기준 확률
+            </div>
+            {et.rangeProbTable?.length > 0 && (
+                <>
+                    <button type="button" onClick={() => setShowTable((v) => !v)}
+                            className="mt-1.5 text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                        거리별 확률표 {showTable ? '접기 ▲' : '보기 ▼'}
+                    </button>
+                    {showTable && (
+                        <table className="mt-1.5 w-full text-[11px] text-slate-600 dark:text-slate-300">
+                            <thead>
+                                <tr className="text-slate-400 dark:text-slate-500">
+                                    <th className="text-left font-normal py-0.5">현재가에서</th>
+                                    <th className="text-right font-normal">아래 가격</th>
+                                    <th className="text-right font-normal">이탈 확률</th>
+                                    <th className="text-right font-normal">위 가격</th>
+                                    <th className="text-right font-normal">돌파 확률</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {et.rangeProbTable.map((r) => (
+                                    <tr key={r.atrMultiple} className="border-t border-slate-100 dark:border-slate-700">
+                                        <td className="py-0.5">± {r.atrMultiple} ATR</td>
+                                        <td className="text-right">{fmtUsd2(Math.max(0, price - r.atrMultiple * et.atr))}</td>
+                                        <td className="text-right text-orange-600 dark:text-orange-400">{fmtProb(r.down)}</td>
+                                        <td className="text-right">{fmtUsd2(price + r.atrMultiple * et.atr)}</td>
+                                        <td className="text-right text-sky-600 dark:text-sky-400">{fmtProb(r.up)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </>
+            )}
+            <div className="mt-1.5 text-[10px] text-slate-400 dark:text-slate-500">
+                지지·저항선은 과거 검증에서 '같은 거리의 아무 가격'보다 잘 버티지 않아 범위·확률로 표시합니다.
+            </div>
+        </div>
+    );
+};
+
 /**
  * 진입 타이밍 분석 섹션
  */
-const EntryTimingSection = ({ entryTiming }) => {
+const EntryTimingSection = ({ entryTiming, currentPrice }) => {
     const [showDetail, setShowDetail] = useState(false);
 
     if (!entryTiming) return null;
@@ -309,20 +396,8 @@ const EntryTimingSection = ({ entryTiming }) => {
                     </div>
                 </div>
 
-                {/* 예상 지지/저항 */}
-                {(entryTiming.estimatedSupport > 0 || entryTiming.estimatedResistance > 0) && (
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 text-sm">
-                        <div className="whitespace-nowrap">
-                            <span className="text-slate-500 dark:text-slate-400">예상 지지선: </span>
-                            <span className="font-semibold text-sky-600 dark:text-sky-400">${entryTiming.estimatedSupport?.toFixed(2)}</span>
-                        </div>
-                        <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">|</span>
-                        <div className="whitespace-nowrap">
-                            <span className="text-slate-500 dark:text-slate-400">예상 저항선: </span>
-                            <span className="font-semibold text-orange-600 dark:text-orange-400">${entryTiming.estimatedResistance?.toFixed(2)}</span>
-                        </div>
-                    </div>
-                )}
+                {/* 20거래일 예상 변동 범위 (구 지지/저항선 대체) */}
+                <PriceRangeBlock entryTiming={entryTiming} currentPrice={currentPrice} />
 
                 {/* 상세 보기 토글 */}
                 <button
@@ -413,9 +488,10 @@ const TradingGuideSection = ({ data }) => {
     const purchasePrice = getVal('purchasePrice', '매수적정가');
     const sellTarget = getVal('sellTarget', '목표매도가');
 
-    // 진입 타이밍에서 지지/저항선
-    const estimatedSupport = data.entryTiming?.estimatedSupport || NaN;
-    const estimatedResistance = data.entryTiming?.estimatedResistance || NaN;
+    // 진입 타이밍의 20거래일 예상 변동 범위 (구 지지/저항선 대체)
+    const et = data.entryTiming;
+    const rangeLow = hasPriceRange(et) ? et.rangeLow : NaN;
+    const rangeHigh = hasPriceRange(et) ? et.rangeHigh : NaN;
 
     // 유효한 가격이 하나도 없으면 표시하지 않음
     if (isNaN(currentPrice) || (isNaN(stopLoss) && isNaN(purchasePrice) && isNaN(sellTarget))) return null;
@@ -432,17 +508,16 @@ const TradingGuideSection = ({ data }) => {
         { label: '목표매도가', value: sellTarget, color: 'text-blue-600 dark:text-blue-400', dotColor: 'bg-blue-500' },
     ].filter(item => !isNaN(item.value));
 
-    const supportResistanceItems = [
-        { label: '예상 지지선', value: estimatedSupport, color: 'text-teal-600 dark:text-teal-400', dotColor: 'bg-teal-500' },
-        { label: '예상 저항선', value: estimatedResistance, color: 'text-orange-600 dark:text-orange-400', dotColor: 'bg-orange-500' },
-    ].filter(item => !isNaN(item.value) && item.value > 0);
+    // 손절매가가 20일 예상 범위 안이면: 평범한 흔들림에도 손절될 수 있음 (거리별 이탈 확률)
+    const stopInRange = !isNaN(rangeLow) && !isNaN(stopLoss) && stopLoss > rangeLow && stopLoss < currentPrice;
+    const stopBreakProb = stopInRange && et.atr > 0 ? interpBreakDown(et.rangeProbTable, (currentPrice - stopLoss) / et.atr) : null;
 
-    // 프로그레스 바 계산 (지지/저항선도 범위에 포함)
+    // 프로그레스 바 계산 (예상 변동 범위도 포함)
     const barMinBase = isNaN(stopLoss) ? currentPrice * 0.85 : stopLoss;
     const fairValue = parseFloat(data.fairValue);
     const barMaxBase = !isNaN(fairValue) ? fairValue : (!isNaN(sellTarget) ? sellTarget : currentPrice * 1.15);
-    const barMinRaw = Math.min(barMinBase, ...([estimatedSupport, estimatedResistance].filter(v => !isNaN(v) && v > 0)));
-    const barMaxRaw = Math.max(barMaxBase, ...([estimatedSupport, estimatedResistance].filter(v => !isNaN(v) && v > 0)));
+    const barMinRaw = Math.min(barMinBase, ...([rangeLow].filter(v => !isNaN(v))));
+    const barMaxRaw = Math.max(barMaxBase, ...([rangeHigh].filter(v => !isNaN(v))));
     const barPadding = (barMaxRaw - barMinRaw) * 0.03;
     const barMin = barMinRaw - barPadding;
     const barMax = barMaxRaw + barPadding;
@@ -454,8 +529,8 @@ const TradingGuideSection = ({ data }) => {
     const currentPct = toBarPct(currentPrice);
     const purchaseBarPct = toBarPct(purchasePrice);
     const sellBarPct = toBarPct(sellTarget);
-    const supportBarPct = toBarPct(estimatedSupport);
-    const resistanceBarPct = toBarPct(estimatedResistance);
+    const rangeLowPct = toBarPct(rangeLow);
+    const rangeHighPct = toBarPct(rangeHigh);
     const hasBar = currentPct !== null;
 
     // 마커는 반투명 처리하여 겹쳐도 양쪽 다 보이게 함
@@ -488,29 +563,22 @@ const TradingGuideSection = ({ data }) => {
                     })}
                 </div>
 
-                {/* 예상 지지/저항선 */}
-                {supportResistanceItems.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-600 space-y-2">
-                        {supportResistanceItems.map(({ label, value, color, dotColor }) => {
-                            const diff = pctDiff(value);
-                            return (
-                                <div key={label} className="flex items-center justify-between text-sm">
-                                    <div className="flex items-center gap-2">
-                                        <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
-                                        <span className="text-slate-600 dark:text-slate-300">{label}</span>
-                                        <span className="text-[10px] text-slate-400 dark:text-slate-500">(볼린저)</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className={`font-semibold ${color}`}>{formatUSD(value)}</span>
-                                        {diff !== null && (
-                                            <span className={`text-xs ${Number(diff) >= 0 ? 'text-sky-500' : 'text-orange-500'}`}>
-                                                ({Number(diff) >= 0 ? '+' : ''}{diff}%)
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                {/* 20거래일 예상 변동 범위 */}
+                {!isNaN(rangeLow) && (
+                    <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-600 space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                                <span className="inline-block w-3 h-2 rounded-sm bg-slate-300 dark:bg-slate-500" />
+                                <span className="text-slate-600 dark:text-slate-300">{et.rangeDays}일 예상 변동 범위</span>
+                            </div>
+                            <span className="font-semibold text-slate-700 dark:text-slate-200">{formatUSD(rangeLow)} ~ {formatUSD(rangeHigh)}</span>
+                        </div>
+                        {stopInRange && (
+                            <div className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded px-2 py-1">
+                                ⚠ 손절매가가 {et.rangeDays}일 예상 범위 안에 있어요 — 평범한 흔들림에도 손절될 수 있습니다
+                                {stopBreakProb != null && ` (기간 내 종가 이탈 확률 약 ${fmtProb(stopBreakProb)})`}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -520,38 +588,22 @@ const TradingGuideSection = ({ data }) => {
                         <div className="relative h-2.5 rounded-full bg-slate-200 dark:bg-slate-600">
                             <div
                                 className="absolute inset-0 rounded-full"
-                                style={{ background: 'linear-gradient(to right, #ef4444, #f59e0b, #22c55e)' }}
+                                style={{ background: 'linear-gradient(to right, #f97316, #f59e0b, #0ea5e9)' }}
                             />
-                            {/* 예상 지지선 마커 (◆ 다이아몬드) */}
-                            {supportBarPct !== null && (
-                                <div className="group/s absolute cursor-pointer" style={{ left: `${supportBarPct}%`, top: '50%', transform: 'translate(-50%, -50%)', width: '16px', height: '16px', zIndex: 12 }}>
-                                    <div className="absolute inset-0.5 transition-all group-hover/s:scale-125 group-hover/s:opacity-100" style={{ background: '#2dd4bf', transform: 'rotate(45deg)', boxShadow: '0 0 5px rgba(45,212,191,0.6)', border: '1.5px solid rgba(255,255,255,0.5)', opacity: 0.85 }} />
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-teal-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/s:opacity-100 group-hover/s:visible transition-all whitespace-nowrap z-50 pointer-events-none">
-                                        예상 지지선: {formatUSD(estimatedSupport)}{' '}
-                                        <span className={`${pctDiff(estimatedSupport) !== null && Number(pctDiff(estimatedSupport)) >= 0 ? 'text-teal-200' : 'text-orange-200'}`}>
-                                            {pctDiff(estimatedSupport) !== null ? `(${Number(pctDiff(estimatedSupport)) >= 0 ? '+' : ''}${pctDiff(estimatedSupport)}%)` : ''}
-                                        </span>
-                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-teal-700" />
-                                    </div>
-                                </div>
-                            )}
-                            {/* 예상 저항선 마커 (◆ 다이아몬드) */}
-                            {resistanceBarPct !== null && (
-                                <div className="group/r absolute cursor-pointer" style={{ left: `${resistanceBarPct}%`, top: '50%', transform: 'translate(-50%, -50%)', width: '16px', height: '16px', zIndex: 13 }}>
-                                    <div className="absolute inset-0.5 transition-all group-hover/r:scale-125 group-hover/r:opacity-100" style={{ background: '#fb923c', transform: 'rotate(45deg)', boxShadow: '0 0 5px rgba(251,146,60,0.6)', border: '1.5px solid rgba(255,255,255,0.5)', opacity: 0.85 }} />
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-orange-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/r:opacity-100 group-hover/r:visible transition-all whitespace-nowrap z-50 pointer-events-none">
-                                        예상 저항선: {formatUSD(estimatedResistance)}{' '}
-                                        <span className={`${pctDiff(estimatedResistance) !== null && Number(pctDiff(estimatedResistance)) >= 0 ? 'text-orange-200' : 'text-orange-200'}`}>
-                                            {pctDiff(estimatedResistance) !== null ? `(${Number(pctDiff(estimatedResistance)) >= 0 ? '+' : ''}${pctDiff(estimatedResistance)}%)` : ''}
-                                        </span>
-                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-orange-700" />
+                            {/* 20거래일 예상 변동 범위 띠 */}
+                            {rangeLowPct !== null && rangeHighPct !== null && (
+                                <div className="group/rg absolute cursor-pointer rounded-sm border-2 border-slate-500/70 dark:border-slate-200/70 bg-white/35"
+                                     style={{ left: `${rangeLowPct}%`, width: `${Math.max(0, rangeHighPct - rangeLowPct)}%`, top: '-4px', bottom: '-4px', zIndex: 11 }}>
+                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-slate-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/rg:opacity-100 group-hover/rg:visible transition-all whitespace-nowrap z-50 pointer-events-none">
+                                        {et.rangeDays}일 예상 변동 범위: {formatUSD(rangeLow)} ~ {formatUSD(rangeHigh)} (이탈 {fmtProb(et.rangeBreakDownProb)} · 돌파 {fmtProb(et.rangeBreakUpProb)})
+                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-700" />
                                     </div>
                                 </div>
                             )}
                             {/* 매수적정가 마커 */}
                             {purchaseBarPct !== null && (
                                 <div className="group/m absolute cursor-pointer" style={{ left: `${purchaseBarPct}%`, top: '-5px', bottom: '-5px', width: '10px', transform: 'translateX(-50%)', zIndex: 14 }}>
-                                    <div className="absolute rounded-sm transition-all group-hover/m:scale-x-150 group-hover/m:opacity-100" style={{ left: '3px', right: '3px', top: 0, bottom: 0, background: '#10b981', boxShadow: '0 0 4px rgba(16,185,129,0.6)', opacity: 0.85 }} />
+                                    <div className="absolute rounded-sm transition-all group-hover/m:scale-x-150 group-hover/m:opacity-100" style={{ left: '3px', right: '3px', top: 0, bottom: 0, background: '#0ea5e9', boxShadow: '0 0 4px rgba(14,165,233,0.6)', opacity: 0.85 }} />
                                     <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-sky-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/m:opacity-100 group-hover/m:visible transition-all whitespace-nowrap z-50 pointer-events-none">
                                         매수적정가: {formatUSD(purchasePrice)}{' '}
                                         <span className={`${pctDiff(purchasePrice) !== null && Number(pctDiff(purchasePrice)) >= 0 ? 'text-sky-200' : 'text-orange-200'}`}>
@@ -1035,7 +1087,7 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                     })()}
 
                     {/* 진입 타이밍 분석 */}
-                    <EntryTimingSection entryTiming={data.entryTiming} />
+                    <EntryTimingSection entryTiming={data.entryTiming} currentPrice={parseFloat(data.currentPrice)} />
 
                     {/* 트레이딩 가이드 */}
                     <TradingGuideSection data={data} />
@@ -1288,8 +1340,10 @@ export const FullDetailModal = ({ isOpen, data, onClose, zIndex = 70 }) => {
                                         shortTermTrend: '단기 추세',
                                         trendDetail: '추세 상세',
                                         description: '설명',
-                                        estimatedSupport: '예상 지지선',
-                                        estimatedResistance: '예상 저항선',
+                                        rangeLow: '20일 예상 범위 하단',
+                                        rangeHigh: '20일 예상 범위 상단',
+                                        rangeBreakDownProb: '하단 이탈 확률',
+                                        rangeBreakUpProb: '상단 돌파 확률',
                                         sma5: 'SMA5',
                                         sma20: 'SMA20',
                                         macdLine: 'MACD Line',
@@ -1304,7 +1358,8 @@ export const FullDetailModal = ({ isOpen, data, onClose, zIndex = 70 }) => {
                                     }).map(([key, label]) => {
                                         const value = data.entryTiming[key];
                                         if (value == null) return null;
-                                        const displayValue = typeof value === 'number' ? value.toFixed(2) : String(value);
+                                        const displayValue = key.endsWith('Prob') ? fmtProb(value)
+                                            : typeof value === 'number' ? value.toFixed(2) : String(value);
                                         return (
                                             <div
                                                 key={key}
