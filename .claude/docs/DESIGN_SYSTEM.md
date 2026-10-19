@@ -125,6 +125,13 @@
 
 - **과도한 애니메이션 금지, 목적 있는 모션만 사용**
 
+### 상호작용 요소 전역 처리 (`src/index.css` @layer base)
+- `button`, `[role="button"]`, `a[href]`, `select`, `summary`, `label[for]`, 체크박스/라디오/파일 입력 → `cursor: pointer` 자동 (Tailwind v4 preflight는 button 커서가 default라 보완)
+- 버튼·링크 hover 색/배경/테두리/그림자 전환 150ms ease-out 자동, 버튼 눌림 시 `scale: 0.97` (`w-full` 버튼·disabled 제외)
+- disabled / `aria-disabled="true"` → `cursor: not-allowed` 자동, `prefers-reduced-motion` 시 전환·눌림 끔
+- `:where()` 명시도 0 이라 컴포넌트에 붙인 `cursor-*`, `transition-*`, `scale-*` 유틸리티가 항상 우선 → 새 버튼에 `cursor-pointer` 따로 안 붙여도 됨
+- 버튼이 아닌 요소(div/tr 등)에 onClick을 걸면 `cursor-pointer`는 직접 붙일 것 (모달 백드롭은 제외)
+
 ## 반응형
 | Breakpoint | 너비 |
 |------------|------|

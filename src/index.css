@@ -37,6 +37,41 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  /*
+   * 상호작용 요소 공통: 손가락 커서 + 부드러운 hover 전환 + 눌림 효과
+   * - Tailwind v4 preflight는 button 커서를 브라우저 기본값(default)으로 둠 (v3는 pointer)
+   * - :where() 로 명시도 0 + base 레이어 → 컴포넌트에 붙은 cursor/transition/scale 유틸리티가 항상 우선
+   */
+  :where(button, [role="button"], a[href], summary, select, label[for],
+         input[type="checkbox"], input[type="radio"], input[type="file"], input[type="range"], input[type="color"]) {
+    cursor: pointer;
+  }
+
+  :where(button, [role="button"], a[href], summary) {
+    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, box-shadow, opacity, scale;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0, 0, 0.2, 1); /* ease-out */
+  }
+
+  /* 눌림 효과: 전체 폭(w-full) 버튼은 아코디언·목록 항목이라 출렁임이 커서 제외 */
+  :where(button, [role="button"]):not(:disabled, [aria-disabled="true"], .w-full):active {
+    scale: 0.97;
+  }
+
+  :where(button, [role="button"], a, select, input, textarea):is(:disabled, [aria-disabled="true"]) {
+    cursor: not-allowed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(button, [role="button"], a[href], summary) {
+      transition: none;
+    }
+
+    :where(button, [role="button"]):active {
+      scale: none;
+    }
+  }
 }
 
 
