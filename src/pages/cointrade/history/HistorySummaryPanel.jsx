@@ -41,13 +41,21 @@ export const MarketBadge = ({ market }) => (
 );
 
 /** 매수/매도/순매수 카드 묶음 */
-const FlowCards = ({ flow, cols = 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5' }) => (
+const FlowCards = ({ flow, cols = 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6' }) => (
     <div className={`grid ${cols} gap-3`}>
         <StatBox label="매수 건수" value={`${flow.buyCount}건`} tone="buy" />
         <StatBox label="매수 금액" value={fmtWon(flow.buyAmount)} tone="buy" />
         <StatBox label="매도 건수" value={`${flow.sellCount}건`} />
         <StatBox label="매도 금액" value={fmtWon(flow.sellAmount)} />
         <StatBox label="순매수 (매수-매도)" value={fmtSignedWon(flow.netBuy)} tone="note" />
+        <StatBox
+            label="실현 손익 (매도)"
+            value={flow.pnlSellCount ? fmtSignedWon(flow.realizedPnl) : '-'}
+            sub={flow.pnlSellCount
+                ? `${flow.realizedRate != null ? `${flow.realizedRate >= 0 ? '+' : ''}${flow.realizedRate.toFixed(2)}% · ` : ''}매도 ${flow.pnlSellCount}건 (수수료·세금 반영)`
+                : '매도 기록 없음'}
+            tone={!flow.pnlSellCount ? 'neutral' : flow.realizedPnl >= 0 ? 'profit' : 'loss'}
+        />
     </div>
 );
 
@@ -56,7 +64,7 @@ const StrategyReturnNote = ({ market }) => {
     const markets = market ? [market] : [MARKET.CRYPTO, MARKET.KRX];
     return (
         <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-            추세 전략은 건별 손익을 기록하지 않습니다. 전략 수익률은{' '}
+            실현 손익은 매도한 거래만 합산합니다(수수료·해외 ETF 세금 추정 반영). 보유 중인 평가손익을 포함한 전략 수익률은{' '}
             {markets.map((m, i) => (
                 <span key={m}>
                     {i > 0 && ' · '}

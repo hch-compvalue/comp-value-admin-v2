@@ -261,8 +261,7 @@ const TABLE_COLUMNS = [
         getFilterLabel: (v) => (v ? getReasonLabel(v) : '(비어있음)'),
     },
     {
-        key: 'profitLoss',
-        legacyOnly: true, // 구 전략(v4 단타) 기록 포함 시에만 표시
+        key: 'profitLoss',  // 매도 손익 (현재 전략: 2026-10-19부터 수수료·세금 추정 반영 기록)
         label: '손익',
         width: COL_WIDTHS.profitLoss,
         sortable: true,
@@ -276,8 +275,7 @@ const TABLE_COLUMNS = [
         getFilterLabel: (v) => (v == null ? '(비어있음)' : `${v >= 0 ? '+' : ''}${formatNumberWithComma(v)}원`),
     },
     {
-        key: 'profitLossRate',
-        legacyOnly: true, // 구 전략(v4 단타) 기록 포함 시에만 표시
+        key: 'profitLossRate',  // 매도 손익 (현재 전략: 2026-10-19부터 수수료·세금 추정 반영 기록)
         label: '손익률',
         width: COL_WIDTHS.profitLossRate,
         sortable: true,

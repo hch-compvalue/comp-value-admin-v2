@@ -108,13 +108,19 @@ export const fetchSymbolNames = async () => {
 // ===== 집계 =====
 const sumAmount = (rows) => rows.reduce((s, r) => s + (Number(r.totalAmount) || 0), 0);
 
-/** 매수/매도 흐름 집계 (현재 전략용 — 건별 손익이 없으므로 금액 흐름만) */
+/** 매수/매도 흐름 + 매도 실현 손익 집계 (현재 전략: 손익은 2026-10-19 이후 매도부터 기록) */
 export const computeFlow = (rows) => {
     const buys = rows.filter((r) => r.tradeType === 'BUY');
     const sells = rows.filter((r) => r.tradeType === 'SELL');
     const buyAmount = sumAmount(buys);
     const sellAmount = sumAmount(sells);
+    const pnlSells = sells.filter((r) => r.profitLoss != null);
+    const realizedPnl = pnlSells.reduce((s, r) => s + Number(r.profitLoss), 0);
+    const pnlBasis = pnlSells.reduce((s, r) => s + (Number(r.totalAmount) || 0) - Number(r.profitLoss), 0);
     return {
+        realizedPnl,
+        realizedRate: pnlBasis > 0 ? realizedPnl / pnlBasis * 100 : null,
+        pnlSellCount: pnlSells.length,
         count: rows.length,
         buyCount: buys.length,
         buyAmount,
