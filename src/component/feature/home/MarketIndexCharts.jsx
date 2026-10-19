@@ -1,7 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { fetchMultipleIndices } from '@/util/ChartApi';
-import { SLATE } from '@/config/themeColors';
+import { SLATE, CHART_GRID } from '@/config/themeColors';
+import {
+    calcFetchDays, fetchFromDate, aggregateBars, takeRecentBars,
+    intervalTickFormatter, intervalLabelFormatter, priceDomain, candleRange,
+} from '@/util/chartInterval';
+import { useChartPreference, CHART_STYLES } from '@/hooks/useChartPreference';
+import { ChartControls } from '@/component/common/chart/ChartControls';
+import { CandleShape } from '@/component/common/chart/CandleShape';
+import { OhlcTooltip } from '@/component/common/chart/OhlcTooltip';
 
 // 미국 3대 지수 정보
 const US_INDICES = [
@@ -10,35 +18,26 @@ const US_INDICES = [
     { symbol: '^IXIC', name: 'NASDAQ', color: '#10b981' }, // green
 ];
 
-// 기간 옵션
-const PERIOD_OPTIONS = [
-    { value: 7, label: '7일' },
-    { value: 30, label: '30일' },
-    { value: 90, label: '3개월' },
-    { value: 180, label: '6개월' },
-    { value: 365, label: '1년' },
-    { value: 1095, label: '3년' },
-    { value: 1825, label: '5년' },
-    { value: 3650, label: '10년' },
-];
-
 export default function MarketIndexCharts() {
     const [chartsData, setChartsData] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [period, setPeriod] = useState(30); // 기본값 30일
+    const { interval, style, setInterval: setChartInterval, setStyle } = useChartPreference('chart.index');
+    const fetchDays = calcFetchDays(interval);
+    const fetchedDaysRef = useRef(0); // 이미 받은 일수 — 봉 단위 변경 시 충분하면 재집계만
 
     useEffect(() => {
+        if (fetchedDaysRef.current >= fetchDays) return;
         loadChartData();
-    }, [period]);
+    }, [fetchDays]);
 
     const loadChartData = async () => {
         setLoading(true);
         setError(null);
 
-        // 선택된 기간에 따라 데이터 조회
+        // 봉 단위별 조회 기간 (일별 시세)
         const to = new Date().toISOString().split('T')[0];
-        const from = new Date(Date.now() - period * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const from = fetchFromDate(fetchDays);
 
         const queries = US_INDICES.map(index => ({
             symbol: index.symbol,
@@ -69,6 +68,8 @@ export default function MarketIndexCharts() {
 
             if (!hasAnyData) {
                 setError('차트 데이터를 불러올 수 없습니다.');
+            } else {
+                fetchedDaysRef.current = fetchDays;
             }
 
             setChartsData(dataMap);
@@ -85,7 +86,7 @@ export default function MarketIndexCharts() {
             <div className="w-full">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-white">미국 주요 지수</h2>
-                    <PeriodSelector period={period} onChange={setPeriod} disabled={loading} />
+                    <ChartControls interval={interval} onIntervalChange={setChartInterval} style={style} onStyleChange={setStyle} disabled={loading} />
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {US_INDICES.map(index => (
@@ -106,7 +107,7 @@ export default function MarketIndexCharts() {
             <div className="w-full">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-white">미국 주요 지수</h2>
-                    <PeriodSelector period={period} onChange={setPeriod} disabled={loading} />
+                    <ChartControls interval={interval} onIntervalChange={setChartInterval} style={style} onStyleChange={setStyle} disabled={loading} />
                 </div>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm dark:bg-red-900/30 dark:border-red-800 dark:text-red-300">
                     {error}
@@ -120,14 +121,15 @@ export default function MarketIndexCharts() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <h2 className="text-xl font-bold text-slate-800 flex-shrink-0 dark:text-white">미국 주요 지수</h2>
                 <div className="overflow-x-auto scrollbar-always min-w-0">
-                    <PeriodSelector period={period} onChange={setPeriod} disabled={loading} />
+                    <ChartControls interval={interval} onIntervalChange={setChartInterval} style={style} onStyleChange={setStyle} disabled={loading} />
                 </div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {US_INDICES.map(index => {
-                    const data = chartsData[index.symbol] || [];
-                    const latestData = data[data.length - 1];
-                    const previousData = data[data.length - 2];
+                    // 헤더(현재값·등락)는 마지막 거래일 기준, 차트는 봉 단위 집계
+                    const daily = chartsData[index.symbol] || [];
+                    const latestData = daily[daily.length - 1];
+                    const previousData = daily[daily.length - 2];
 
                     const change = latestData && previousData
                         ? latestData.close - previousData.close
@@ -139,7 +141,9 @@ export default function MarketIndexCharts() {
                         <IndexCard
                             key={index.symbol}
                             index={index}
-                            data={data}
+                            daily={daily}
+                            interval={interval}
+                            isCandle={style === CHART_STYLES.CANDLE}
                             latestData={latestData}
                             change={change}
                             changePercent={changePercent}
@@ -152,45 +156,9 @@ export default function MarketIndexCharts() {
     );
 }
 
-/**
- * 기간 선택 컴포넌트
- */
-function PeriodSelector({ period, onChange, disabled }) {
-    const buttonRefs = useRef({});
+function IndexCard({ index, daily, interval, isCandle, latestData, change, changePercent, isPositive }) {
+    const data = useMemo(() => takeRecentBars(aggregateBars(daily, interval), interval), [daily, interval]);
 
-    useEffect(() => {
-        if (buttonRefs.current[period]) {
-            buttonRefs.current[period].scrollIntoView({
-                behavior: 'smooth',
-                inline: 'center',
-                block: 'nearest',
-            });
-        }
-    }, [period]);
-
-    return (
-        <div className="inline-flex whitespace-nowrap gap-1 min-w-0 pl-2 pr-2">
-            {PERIOD_OPTIONS.map(option => (
-                <button
-                    key={option.value}
-                    ref={el => (buttonRefs.current[option.value] = el)}
-                    onClick={() => onChange(option.value)}
-                    disabled={disabled}
-                    className={`flex-shrink-0 md:px-3 px-2 py-1.5 text-xs font-medium rounded transition-colors ${
-                        period === option.value
-                            ? 'bg-blue-600 text-white'
-                            : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
-                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    style={{ minWidth: 48 }}
-                >
-                    {option.label}
-                </button>
-            ))}
-        </div>
-    );
-}
-
-function IndexCard({ index, data, latestData, change, changePercent, isPositive }) {
     // 데이터가 없는 경우 처리
     if (!data || data.length === 0) {
         return (
@@ -228,7 +196,7 @@ function IndexCard({ index, data, latestData, change, changePercent, isPositive 
                                 })}
                             </span>
                             <div className={`flex items-center gap-1 text-sm font-medium ${
-                                isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                                isPositive ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'
                             }`}>
                                 <span>{isPositive ? '▲' : '▼'}</span>
                                 <span>{Math.abs(change).toFixed(2)}</span>
@@ -250,54 +218,33 @@ function IndexCard({ index, data, latestData, change, changePercent, isPositive 
 
             <div className="p-4" style={{ width: '100%', height: '200px' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
+                    <ComposedChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
                         <XAxis
                             dataKey="date"
                             tick={{ fontSize: 10, fill: SLATE[500] }}
-                            tickFormatter={(date) => {
-                                const d = new Date(date);
-                                return `${d.getMonth() + 1}/${d.getDate()}`;
-                            }}
+                            tickFormatter={intervalTickFormatter(interval)}
                             interval="preserveStartEnd"
                         />
                         <YAxis
                             tick={{ fontSize: 10, fill: SLATE[500] }}
-                            domain={['dataMin - 50', 'dataMax + 50']}
+                            domain={priceDomain(data)}
                             tickFormatter={(value) => value.toFixed(0)}
                         />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: 'white',
-                                border: '1px solid var(--color-slate-200)',
-                                borderRadius: '8px',
-                                fontSize: '12px',
-                                padding: '8px 12px',
-                            }}
-                            formatter={(value) => [
-                                value.toLocaleString('en-US', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                }),
-                                'Close'
-                            ]}
-                            labelFormatter={(date) =>
-                                new Date(date).toLocaleDateString('ko-KR', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                })
-                            }
-                        />
-                        <Line
-                            type="monotone"
-                            dataKey="close"
-                            stroke={index.color}
-                            strokeWidth={2}
-                            dot={false}
-                            activeDot={{ r: 4 }}
-                        />
-                    </LineChart>
+                        <Tooltip content={<OhlcTooltip labelFmt={intervalLabelFormatter(interval)} />} />
+                        {isCandle ? (
+                            <Bar dataKey={candleRange} shape={<CandleShape />} isAnimationActive={false} />
+                        ) : (
+                            <Line
+                                type="monotone"
+                                dataKey="close"
+                                stroke={index.color}
+                                strokeWidth={2}
+                                dot={false}
+                                activeDot={{ r: 4 }}
+                            />
+                        )}
+                    </ComposedChart>
                 </ResponsiveContainer>
             </div>
         </div>

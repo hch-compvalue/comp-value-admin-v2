@@ -8,45 +8,41 @@ import { fetchStockPriceVolume } from '@/util/ChartApi';
 import {
     calcSMA, calcEMA, calcBollingerBands, calcRSI, calcMACD, calcStochastic, getMaxLookback,
 } from '@/util/technicalIndicators';
-import { SLATE } from '@/config/themeColors';
-
-// 기간 옵션
-const PERIOD_OPTIONS = [
-    { value: 7, label: '7일' },
-    { value: 30, label: '30일' },
-    { value: 90, label: '3개월' },
-    { value: 180, label: '6개월' },
-    { value: 365, label: '1년' },
-    { value: 1095, label: '3년' },
-    { value: 1825, label: '5년' },
-    { value: 3650, label: '10년' },
-];
+import { SLATE, CHART_GRID } from '@/config/themeColors';
+import {
+    getInterval, calcFetchDays, fetchFromDate, aggregateBars, takeRecentBars,
+    intervalTickFormatter, intervalLabelFormatter, priceDomain, candleRange,
+} from '@/util/chartInterval';
+import { useChartPreference, CHART_STYLES } from '@/hooks/useChartPreference';
+import { ChartControls } from '@/component/common/chart/ChartControls';
+import { CandleShape } from '@/component/common/chart/CandleShape';
+import { OhlcTooltip } from '@/component/common/chart/OhlcTooltip';
 
 // 지표 정의
 const OVERLAY_INDICATORS = [
     {
         key: 'sma20', label: 'SMA 20', color: '#f59e0b',
-        desc: '최근 20일 종가의 평균선 (단기)',
+        desc: '최근 20봉 종가의 평균선 (단기, 일봉이면 20일·주봉이면 20주)',
         tip: '주가가 이 선 위에 있으면 단기 상승 추세, 아래면 하락 추세. 이 선이 지지선/저항선 역할을 자주 함',
     },
     {
         key: 'sma50', label: 'SMA 50', color: '#10b981',
-        desc: '최근 50일 종가의 평균선 (중기)',
+        desc: '최근 50봉 종가의 평균선 (중기)',
         tip: 'SMA 20이 SMA 50을 위로 뚫으면 "골든크로스"(매수 신호), 아래로 뚫으면 "데드크로스"(매도 신호)',
     },
     {
         key: 'sma200', label: 'SMA 200', color: '#ef4444',
-        desc: '최근 200일 종가의 평균선 (장기)',
+        desc: '최근 200봉 종가의 평균선 (장기)',
         tip: '투자자들이 가장 많이 보는 장기 지표. 주가가 이 선 위면 장기 상승장, 아래면 장기 하락장으로 판단',
     },
     {
         key: 'ema12', label: 'EMA 12', color: '#8b5cf6',
-        desc: '12일 지수이동평균 (최근 가격에 가중치)',
+        desc: '12봉 지수이동평균 (최근 가격에 가중치)',
         tip: 'SMA보다 최근 움직임에 민감하게 반응. EMA 12가 EMA 26 위에 있으면 상승세',
     },
     {
         key: 'ema26', label: 'EMA 26', color: '#ec4899',
-        desc: '26일 지수이동평균',
+        desc: '26봉 지수이동평균',
         tip: 'EMA 12와 함께 사용. 두 선의 간격이 벌어지면 추세가 강하고, 좁아지면 추세 전환 가능성',
     },
     {
@@ -81,15 +77,20 @@ const DEFAULT_INDICATORS = {
     rsi: false, macd: false, stochastic: false,
 };
 
-// 공통 XAxis 날짜 포매터
-const dateTickFormatter = (date) => {
-    const d = new Date(date);
-    return `${d.getMonth() + 1}/${d.getDate()}`;
+// 가격 툴팁에 함께 보여줄 오버레이 지표 키 → 라벨
+const OVERLAY_LABELS = {
+    sma20: 'SMA 20', sma50: 'SMA 50', sma200: 'SMA 200',
+    ema12: 'EMA 12', ema26: 'EMA 26',
+    bbUpper: 'BB 상단', bbMiddle: 'BB 중간', bbLower: 'BB 하단',
+};
+const OVERLAY_VALUE_KEYS = {
+    sma20: ['sma20'], sma50: ['sma50'], sma200: ['sma200'],
+    ema12: ['ema12'], ema26: ['ema26'],
+    bollinger: ['bbUpper', 'bbMiddle', 'bbLower'],
 };
 
-// 공통 Tooltip 날짜 포매터
-const dateLabelFormatter = (date) =>
-    new Date(date).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+// 가격 변동 색 (상승 빨강 / 하락 파랑 — 캔들과 동일, 적록색약 구분 가능)
+const changeColorCls = (v) => (v >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400');
 
 // 공통 Tooltip 스타일
 const tooltipStyle = {
@@ -108,33 +109,28 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
     const [rawData, setRawData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [period, setPeriod] = useState(30);
+    const { interval, style, setInterval: setChartInterval, setStyle } = useChartPreference('chart.stock');
     const [indicators, setIndicators] = useState(DEFAULT_INDICATORS);
 
-    // 활성 지표 중 가장 긴 lookback
+    // 활성 지표 중 가장 긴 lookback (봉 단위)
     const maxLookback = useMemo(() => getMaxLookback(indicators), [indicators]);
 
-    // 실제 API 요청 기간 (표시 기간 + lookback 여유분)
-    const fetchDays = useMemo(() => {
-        // 주말/공휴일 보정: 거래일 기준 약 1.5배
-        return period + Math.ceil(maxLookback * 1.5);
-    }, [period, maxLookback]);
+    // 실제 API 요청 기간 (표시 봉 + 지표 lookback 봉 → 달력일, 최대 약 20년)
+    const fetchDays = useMemo(() => calcFetchDays(interval, maxLookback), [interval, maxLookback]);
 
-    // 이미 fetch한 일수 추적 — 지표 토글 시 불필요한 재요청 방지
+    // 이미 fetch한 일수 추적 — 지표 토글·봉 단위 변경 시 이미 충분하면 재요청 안 함 (일별 데이터 재집계만)
     const fetchedDaysRef = useRef(0);
-    const prevPeriodRef = useRef(period);
+    const prevIntervalRef = useRef(interval);
     const prevSymbolRef = useRef(symbol);
 
     useEffect(() => {
         if (!isOpen || !symbol) return;
 
-        // 모달 열림, 심볼 변경, 기간 변경 → 전체 로딩
-        const needFullReload =
-            prevSymbolRef.current !== symbol ||
-            prevPeriodRef.current !== period ||
-            rawData.length === 0;
+        // 모달 열림, 심볼 변경 → 전체 로딩
+        const needFullReload = prevSymbolRef.current !== symbol || rawData.length === 0;
+        const intervalChanged = prevIntervalRef.current !== interval;
 
-        prevPeriodRef.current = period;
+        prevIntervalRef.current = interval;
         prevSymbolRef.current = symbol;
 
         if (needFullReload) {
@@ -143,11 +139,10 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
             return;
         }
 
-        // 지표 토글로 인한 fetchDays 증가 → 이미 충분하면 skip
         if (fetchedDaysRef.current >= fetchDays) return;
 
-        // 추가 데이터 필요 → 기존 차트 유지한 채 백그라운드 fetch
-        loadChartData(false);
+        // 더 긴 데이터 필요: 봉 단위 변경은 로딩 표시, 지표 토글은 기존 차트 유지한 채 백그라운드 fetch
+        loadChartData(intervalChanged);
     }, [isOpen, symbol, fetchDays]);
 
     const loadChartData = async (showLoading = true) => {
@@ -155,7 +150,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
         setError(null);
 
         const to = new Date().toISOString().split('T')[0];
-        const from = new Date(Date.now() - fetchDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const from = fetchFromDate(fetchDays);
 
         try {
             const result = await fetchStockPriceVolume(symbol, from, to);
@@ -182,11 +177,11 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
         }
     };
 
-    // 지표 계산 + 표시 기간으로 slice
+    // 봉 단위 집계 → 지표 계산 → 최근 봉만 표시
     const enrichedData = useMemo(() => {
         if (rawData.length === 0) return [];
 
-        let result = rawData;
+        let result = aggregateBars(rawData, interval);
 
         // 오버레이 지표
         if (indicators.sma20) result = calcSMA(result, 20);
@@ -201,12 +196,8 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
         if (indicators.macd) result = calcMACD(result, 12, 26, 9);
         if (indicators.stochastic) result = calcStochastic(result, 14, 3);
 
-        // 항상 표시 기간의 시작 날짜 기준으로 필터 (달력 일수 기준)
-        const displayFrom = new Date(Date.now() - period * 24 * 60 * 60 * 1000);
-        result = result.filter(d => new Date(d.date) >= displayFrom);
-
-        return result;
-    }, [rawData, indicators, period, maxLookback]);
+        return takeRecentBars(result, interval);
+    }, [rawData, indicators, interval]);
 
     // 지표 토글
     const toggleIndicator = (key) => {
@@ -259,9 +250,9 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
     };
     const resetZoom = () => setZoomDates(null);
 
-    // 기간 변경 시 줌 리셋
-    const handlePeriodChange = (newPeriod) => {
-        setPeriod(newPeriod);
+    // 봉 단위 변경 시 줌 리셋
+    const handleIntervalChange = (next) => {
+        setChartInterval(next);
         setZoomDates(null);
     };
 
@@ -280,15 +271,20 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
     if (!shouldRender) return null;
 
     const chartData = enrichedData;
-    const latestData = chartData[chartData.length - 1];
-    const previousData = chartData[chartData.length - 2];
+    // 헤더·최근 데이터 요약은 봉 단위와 무관하게 마지막 거래일(일별) 기준
+    const latestData = rawData[rawData.length - 1];
+    const previousData = rawData[rawData.length - 2];
     const change = latestData && previousData ? latestData.close - previousData.close : 0;
     const changePercent = latestData && previousData && previousData.close !== 0
         ? ((change / previousData.close) * 100)
         : 0;
     const isPositive = change >= 0;
 
-    const periodLabel = PERIOD_OPTIONS.find(o => o.value === period)?.label || `${period}일`;
+    const intervalInfo = getInterval(interval);
+    const tickFmt = intervalTickFormatter(interval);
+    const labelFmt = intervalLabelFormatter(interval);
+    const isCandle = style === CHART_STYLES.CANDLE;
+    const overlayKeys = Object.keys(OVERLAY_VALUE_KEYS).filter((k) => indicators[k]).flatMap((k) => OVERLAY_VALUE_KEYS[k]);
 
     return (
         <>
@@ -319,8 +315,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                             maximumFractionDigits: 2
                                         })}
                                     </span>
-                                    <div className={`flex items-center gap-1 text-sm font-medium ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
-                                        }`}>
+                                    <div className={`flex items-center gap-1 text-sm font-medium ${changeColorCls(change)}`}>
                                         <span>{isPositive ? '▲' : '▼'}</span>
                                         <span>{isPositive ? '+' : '-'}{Math.abs(change).toFixed(2)}</span>
                                         <span>({isPositive ? '+' : '-'}{Math.abs(changePercent).toFixed(2)}%)</span>
@@ -335,10 +330,14 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                             닫기 (Esc)
                         </button>
                     </div>
-                    {/* 기간 선택 */}
-                    <div className="w-full sm:w-auto overflow-x-auto scrollbar-always min-w-0 p-0 m-0 border-none">
-                        <PeriodSelector period={period} onChange={handlePeriodChange} disabled={loading} />
-                    </div>
+                    {/* 봉 단위 + 선/캔들 */}
+                    <ChartControls
+                        interval={interval}
+                        onIntervalChange={handleIntervalChange}
+                        style={style}
+                        onStyleChange={setStyle}
+                        disabled={loading}
+                    />
                     {/* 지표 토글 */}
                     <IndicatorToggle indicators={indicators} onToggle={toggleIndicator} />
                 </div>
@@ -363,7 +362,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                             <div className="bg-white rounded-lg border p-4 dark:bg-slate-700 dark:border-slate-600">
                                 <div className="flex items-center justify-between mb-3">
                                     <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                        주식 가격 (최근 {periodLabel})
+                                        주식 가격 ({intervalInfo.label} · 최근 {chartData.length}{intervalInfo.unit === '일' ? '거래일' : intervalInfo.unit})
                                         {zoomDates && <span className="ml-2 text-xs font-normal text-blue-500">줌 적용중</span>}
                                     </h3>
                                     {zoomDates && (
@@ -388,40 +387,25 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                         onDoubleClick={resetZoom}
                                         style={{ cursor: 'crosshair', userSelect: 'none' }}
                                     >
-                                        <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
                                         <XAxis
                                             dataKey="date"
                                             tick={{ fontSize: 11, fill: SLATE[500] }}
-                                            tickFormatter={dateTickFormatter}
+                                            tickFormatter={tickFmt}
                                             interval="preserveStartEnd"
                                         />
                                         <YAxis
                                             tick={{ fontSize: 11, fill: SLATE[500] }}
-                                            domain={['dataMin - 5', 'dataMax + 5']}
-                                            tickFormatter={(value) => `$${value.toFixed(0)}`}
+                                            domain={priceDomain(zoomedData, overlayKeys)}
+                                            tickFormatter={(value) => `$${value.toFixed(value < 10 ? 2 : 0)}`}
                                         />
-                                        <Tooltip
-                                            contentStyle={tooltipStyle}
-                                            formatter={(value, name) => {
-                                                if (value === null || value === undefined) return ['-', name];
-                                                const fmt = `$${Number(value).toFixed(2)}`;
-                                                const labels = {
-                                                    close: '종가', high: '고가', low: '저가', open: '시가',
-                                                    sma20: 'SMA 20', sma50: 'SMA 50', sma200: 'SMA 200',
-                                                    ema12: 'EMA 12', ema26: 'EMA 26',
-                                                    bbUpper: 'BB 상단', bbMiddle: 'BB 중간', bbLower: 'BB 하단',
-                                                };
-                                                return [fmt, labels[name] || name];
-                                            }}
-                                            labelFormatter={dateLabelFormatter}
-                                        />
+                                        <Tooltip content={<OhlcTooltip labelFmt={labelFmt} prefix="$" extraRows={overlayKeys.map((k) => ({ key: k, label: OVERLAY_LABELS[k] }))} />} />
 
-                                        {/* 고가/저가 */}
-                                        <Line type="monotone" dataKey="high" stroke={SLATE[400]} strokeWidth={1} dot={false} strokeDasharray="3 3" />
-                                        <Line type="monotone" dataKey="low" stroke={SLATE[400]} strokeWidth={1} dot={false} strokeDasharray="3 3" />
-
-                                        {/* 종가 */}
-                                        <Line type="monotone" dataKey="close" stroke="#3b82f6" strokeWidth={2.5} dot={false} activeDot={{ r: 5 }} />
+                                        {/* 캔들 / 선(고가·저가 점선 + 종가) — Recharts 2 는 Fragment 안 요소를 못 찾으므로 개별 조건 렌더링 */}
+                                        {isCandle && <Bar dataKey={candleRange} shape={<CandleShape />} isAnimationActive={false} />}
+                                        {!isCandle && <Line type="monotone" dataKey="high" stroke={SLATE[400]} strokeWidth={1} dot={false} strokeDasharray="3 3" />}
+                                        {!isCandle && <Line type="monotone" dataKey="low" stroke={SLATE[400]} strokeWidth={1} dot={false} strokeDasharray="3 3" />}
+                                        {!isCandle && <Line type="monotone" dataKey="close" stroke="#3b82f6" strokeWidth={2.5} dot={false} activeDot={{ r: 5 }} />}
 
                                         {/* SMA */}
                                         {indicators.sma20 && (
@@ -454,7 +438,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                     </ComposedChart>
                                 </ResponsiveContainer>
                                 {/* 범례 */}
-                                <PriceChartLegend indicators={indicators} />
+                                <PriceChartLegend indicators={indicators} isCandle={isCandle} />
                             </div>
 
                             {/* 거래량 차트 */}
@@ -462,11 +446,11 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                 <h3 className="text-sm font-semibold text-slate-700 mb-3 dark:text-slate-200">거래량</h3>
                                 <ResponsiveContainer width="100%" height={180}>
                                     <BarChart data={zoomedData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
                                         <XAxis
                                             dataKey="date"
                                             tick={{ fontSize: 11, fill: SLATE[500] }}
-                                            tickFormatter={dateTickFormatter}
+                                            tickFormatter={tickFmt}
                                             interval="preserveStartEnd"
                                         />
                                         <YAxis
@@ -481,7 +465,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                         <Tooltip
                                             contentStyle={tooltipStyle}
                                             formatter={(value) => [value.toLocaleString(), '거래량']}
-                                            labelFormatter={dateLabelFormatter}
+                                            labelFormatter={labelFmt}
                                         />
                                         <Bar dataKey="volume" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                                     </BarChart>
@@ -494,11 +478,11 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                     <h3 className="text-sm font-semibold text-slate-700 mb-3 dark:text-slate-200">RSI (14)</h3>
                                     <ResponsiveContainer width="100%" height={120}>
                                         <ComposedChart data={zoomedData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
                                             <XAxis
                                                 dataKey="date"
                                                 tick={{ fontSize: 11, fill: SLATE[500] }}
-                                                tickFormatter={dateTickFormatter}
+                                                tickFormatter={tickFmt}
                                                 interval="preserveStartEnd"
                                             />
                                             <YAxis
@@ -509,7 +493,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                             <Tooltip
                                                 contentStyle={tooltipStyle}
                                                 formatter={(value) => [value !== null ? value.toFixed(2) : '-', 'RSI']}
-                                                labelFormatter={dateLabelFormatter}
+                                                labelFormatter={labelFmt}
                                             />
                                             <ReferenceLine y={70} stroke="#ef4444" strokeDasharray="3 3" strokeOpacity={0.7} />
                                             <ReferenceLine y={30} stroke="#10b981" strokeDasharray="3 3" strokeOpacity={0.7} />
@@ -529,11 +513,11 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                     <h3 className="text-sm font-semibold text-slate-700 mb-3 dark:text-slate-200">MACD (12, 26, 9)</h3>
                                     <ResponsiveContainer width="100%" height={150}>
                                         <ComposedChart data={zoomedData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
                                             <XAxis
                                                 dataKey="date"
                                                 tick={{ fontSize: 11, fill: SLATE[500] }}
-                                                tickFormatter={dateTickFormatter}
+                                                tickFormatter={tickFmt}
                                                 interval="preserveStartEnd"
                                             />
                                             <YAxis tick={{ fontSize: 11, fill: SLATE[500] }} />
@@ -544,7 +528,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                                     const labels = { macd: 'MACD', macdSignal: '시그널', macdHist: '히스토그램' };
                                                     return [Number(value).toFixed(4), labels[name] || name];
                                                 }}
-                                                labelFormatter={dateLabelFormatter}
+                                                labelFormatter={labelFmt}
                                             />
                                             <ReferenceLine y={0} stroke={SLATE[400]} strokeWidth={1} />
                                             <Bar dataKey="macdHist" isAnimationActive={false}>
@@ -579,11 +563,11 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                     <h3 className="text-sm font-semibold text-slate-700 mb-3 dark:text-slate-200">스토캐스틱 (14, 3)</h3>
                                     <ResponsiveContainer width="100%" height={120}>
                                         <ComposedChart data={zoomedData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
                                             <XAxis
                                                 dataKey="date"
                                                 tick={{ fontSize: 11, fill: SLATE[500] }}
-                                                tickFormatter={dateTickFormatter}
+                                                tickFormatter={tickFmt}
                                                 interval="preserveStartEnd"
                                             />
                                             <YAxis
@@ -598,7 +582,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                                     const labels = { stochK: '%K', stochD: '%D' };
                                                     return [Number(value).toFixed(2), labels[name] || name];
                                                 }}
-                                                labelFormatter={dateLabelFormatter}
+                                                labelFormatter={labelFmt}
                                             />
                                             <ReferenceLine y={80} stroke="#ef4444" strokeDasharray="3 3" strokeOpacity={0.7} />
                                             <ReferenceLine y={20} stroke="#10b981" strokeDasharray="3 3" strokeOpacity={0.7} />
@@ -625,7 +609,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                             {latestData && (
                                 <div className="bg-slate-50 rounded-lg border p-4 dark:bg-slate-700/50 dark:border-slate-600">
                                     <h3 className="text-sm font-semibold text-slate-700 mb-3 dark:text-slate-200">
-                                        최근 데이터 ({new Date(latestData.date).toLocaleDateString('ko-KR')})
+                                        최근 거래일 ({new Date(latestData.date).toLocaleDateString('ko-KR')})
                                     </h3>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                                         <DataItem label="시가" value={`$${latestData.open.toFixed(2)}`} />
@@ -637,12 +621,12 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                         <DataItem
                                             label="변동"
                                             value={`${latestData.change >= 0 ? '+' : ''}${latestData.change.toFixed(2)}`}
-                                            valueClassName={latestData.change >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
+                                            valueClassName={changeColorCls(latestData.change)}
                                         />
                                         <DataItem
                                             label="변동률"
                                             value={`${latestData.changePercent >= 0 ? '+' : ''}${latestData.changePercent.toFixed(2)}%`}
-                                            valueClassName={latestData.changePercent >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
+                                            valueClassName={changeColorCls(latestData.changePercent)}
                                         />
                                     </div>
                                 </div>
@@ -782,11 +766,16 @@ const HelpSection = ({ title, subtitle, items, columns = 1, defaultColor }) => {
 /**
  * 가격 차트 범례
  */
-const PriceChartLegend = ({ indicators }) => {
-    const items = [
-        { color: '#3b82f6', label: '종가', show: true },
-        { color: SLATE[400], label: '고가/저가', show: true, dashed: true },
-    ];
+const PriceChartLegend = ({ indicators, isCandle }) => {
+    const items = isCandle
+        ? [
+            { color: 'var(--color-rose-500)', label: '상승 캔들', show: true },
+            { color: 'var(--color-blue-500)', label: '하락 캔들', show: true },
+        ]
+        : [
+            { color: '#3b82f6', label: '종가', show: true },
+            { color: SLATE[400], label: '고가/저가', show: true, dashed: true },
+        ];
 
     OVERLAY_INDICATORS.forEach(ind => {
         if (indicators[ind.key]) {
@@ -812,43 +801,6 @@ const PriceChartLegend = ({ indicators }) => {
                     />
                     <span>{item.label}</span>
                 </div>
-            ))}
-        </div>
-    );
-};
-
-/**
- * 기간 선택 컴포넌트
- */
-const PeriodSelector = ({ period, onChange, disabled }) => {
-    const buttonRefs = useRef({});
-
-    useEffect(() => {
-        if (buttonRefs.current[period]) {
-            buttonRefs.current[period].scrollIntoView({
-                behavior: 'smooth',
-                inline: 'center',
-                block: 'nearest',
-            });
-        }
-    }, [period]);
-
-    return (
-        <div className="inline-flex whitespace-nowrap gap-1 min-w-0 pl-2 pr-2">
-            {PERIOD_OPTIONS.map(option => (
-                <button
-                    key={option.value}
-                    ref={el => (buttonRefs.current[option.value] = el)}
-                    onClick={() => onChange(option.value)}
-                    disabled={disabled}
-                    className={`flex-shrink-0 md:px-3 px-2 py-1.5 text-xs font-medium rounded transition-colors ${period === option.value
-                        ? 'bg-blue-600 text-white dark:bg-blue-500'
-                        : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
-                        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    style={{ minWidth: 48 }}
-                >
-                    {option.label}
-                </button>
             ))}
         </div>
     );

@@ -12,3 +12,6 @@ export const SLATE = Object.freeze(
 
 /** 투명도 적용 (예: withAlpha(SLATE[400], 20) → 20% 불투명) */
 export const withAlpha = (color, percent) => `color-mix(in oklab, ${color} ${percent}%, transparent)`;
+
+/** 차트 격자선 — 라이트 slate-100 / 다크 slate-600 (src/styles/surfaces.css --chart-grid) */
+export const CHART_GRID = 'var(--chart-grid)';

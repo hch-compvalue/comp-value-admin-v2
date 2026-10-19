@@ -103,6 +103,13 @@
 - 손익 색: 상승 rose / 하락 blue (전일 대비 등락도 동일), 수익률은 연한 배경 배지
 - 참고 구현: 보유종목 `pages/transaction/components/holdings/` (컬럼 정의 `constants/index.js` TABLE_COLUMNS + 셀 렌더러 `cells.jsx`)
 
+### 주가 차트
+- 봉 단위(일·주·월·년봉) + 선/캔들 전환: `@/component/common/chart/ChartControls`, 설정 저장 `@/hooks/useChartPreference(차트별 키)`
+- 일별 시세 → 봉 집계·표시 개수·조회 기간·축/툴팁 포맷: `@/util/chartInterval` (FMP 일별 1회 최대 5,000행 ≈ 20년)
+- 캔들: `<Bar dataKey={candleRange} shape={<CandleShape />} />`, 툴팁 `OhlcTooltip`, 격자선 `CHART_GRID`
+- 캔들·등락 색: 상승 rose / 하락 blue
+- Recharts 2 는 차트 안 `<>...</>` Fragment 를 인식 못함 → 시리즈는 개별 조건 렌더링
+
 ### 모달
 - 배경: `bg-white shadow-xl` / `dark:bg-slate-800`
 - 모서리: `rounded-2xl`
