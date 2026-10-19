@@ -4,7 +4,7 @@ import Toast from '@/component/common/display/Toast';
 import StockChartModal from './StockChartModal';
 import CompanyInfoModal from './CompanyInfoModal';
 import InvestmentDetailModal, { FullDetailModal } from './InvestmentDetailModal';
-import PriceRangeBlock from './PriceRangeBlock';
+import { RANGE_TITLE, hasPriceRange } from './priceRangeUtil';
 import { send } from '@/util/ClientUtil';
 
 // 투자판정 배너 스타일 (색각이상 친화: 파랑/노랑/회색) — DailyPicks SIGNAL_STYLE과 동일 팔레트
@@ -323,8 +323,7 @@ const ModalContent = ({
             <CompanySummary data={compValueData} investmentData={investmentData} />
             <MetricExplanation onOpenGuide={onOpenGuide} 매출기반평가={metrics.매출기반평가} />
             <RecommendationBanner data={compValueData} investmentData={investmentData} />
-            <HighlightCards data={compValueData} />
-            <MonthRangeSection data={compValueData} investmentData={investmentData} />
+            <HighlightCards data={compValueData} investmentData={investmentData} />
             <OvervaluationBanner data={compValueData} />
             <DataGrid data={compValueData} onOpenDetail={onOpenDetail} />
             <ActionButtons
@@ -493,19 +492,9 @@ const RecommendationBanner = ({ data, investmentData }) => {
 };
 
 /**
- * 한 달 예상 움직임 — 투자 판단 데이터(자동 조회)의 진입 타이밍 범위 재사용, 없으면 표시 안 함
- */
-const MonthRangeSection = ({ data, investmentData }) => {
-    const { price, stopLossPrice } = usePriceMetrics(data);
-    return (
-        <PriceRangeBlock entryTiming={investmentData?.entryTiming} currentPrice={toNumber(price)} stopLoss={toNumber(stopLossPrice)} />
-    );
-};
-
-/**
  * 하이라이트 카드들
  */
-const HighlightCards = ({ data }) => {
+const HighlightCards = ({ data, investmentData }) => {
     const { price, target, calculatedTarget, purchasePrice, sellTarget, stopLossPrice, upside } = usePriceMetrics(data);
 
     const priceNum = toNumber(price);
@@ -544,6 +533,10 @@ const HighlightCards = ({ data }) => {
     };
 
     const currentPct = toBarPct(priceNum);
+    // 한 달 예상 움직임 (투자 판단 자동 조회 데이터) — 막대 위 반투명 띠, 막대 범위 밖은 잘라서 표시
+    const et = investmentData?.entryTiming;
+    const rangeLowPct = hasPriceRange(et) ? toBarPct(et.rangeLow) : null;
+    const rangeHighPct = hasPriceRange(et) ? toBarPct(et.rangeHigh) : null;
     const purchaseBarPct = toBarPct(purchaseNum);
     const sellBarPct = toBarPct(sellNum);
     const hasBar = currentPct !== null;
@@ -621,12 +614,22 @@ const HighlightCards = ({ data }) => {
                             {/* 바 배경 그라데이션 */}
                             <div
                                 className="absolute inset-0 rounded-full"
-                                style={{ background: 'linear-gradient(to right, #ef4444, #f59e0b, #22c55e)' }}
+                                style={{ background: 'linear-gradient(to right, #f97316, #f59e0b, #0ea5e9)' }}
                             />
+                            {/* 한 달 예상 움직임 띠 */}
+                            {rangeLowPct !== null && rangeHighPct !== null && rangeHighPct > rangeLowPct && (
+                                <div className="group/rg absolute cursor-pointer rounded-sm border-2 border-slate-500/70 dark:border-slate-200/70 bg-white/35"
+                                     style={{ left: `${rangeLowPct}%`, width: `${rangeHighPct - rangeLowPct}%`, top: '-4px', bottom: '-4px', zIndex: 11 }}>
+                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-slate-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/rg:opacity-100 group-hover/rg:visible transition-all whitespace-nowrap z-50 pointer-events-none">
+                                        {RANGE_TITLE}: {formatUSD(et.rangeLow)} ~ {formatUSD(et.rangeHigh)} (한 달 동안 보통 이 범위에서 움직임)
+                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-700" />
+                                    </div>
+                                </div>
+                            )}
                             {/* 매수적정가 마커 */}
                             {purchaseBarPct !== null && (
                                 <div className="group/m absolute cursor-pointer" style={{ left: `${purchaseBarPct}%`, top: '-5px', bottom: '-5px', width: '10px', transform: 'translateX(-50%)', zIndex: 14 }}>
-                                    <div className="absolute rounded-sm transition-all group-hover/m:scale-x-150 group-hover/m:opacity-100" style={{ left: '3px', right: '3px', top: 0, bottom: 0, background: '#10b981', boxShadow: '0 0 4px rgba(16,185,129,0.6)', opacity: 0.85 }} />
+                                    <div className="absolute rounded-sm transition-all group-hover/m:scale-x-150 group-hover/m:opacity-100" style={{ left: '3px', right: '3px', top: 0, bottom: 0, background: '#0ea5e9', boxShadow: '0 0 4px rgba(14,165,233,0.6)', opacity: 0.85 }} />
                                     <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-sky-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/m:opacity-100 group-hover/m:visible transition-all whitespace-nowrap z-50 pointer-events-none">
                                         매수적정가: {formatUSD(purchasePrice)}{' '}
                                         <span className={`${pctDiff(purchasePrice) !== null && Number(pctDiff(purchasePrice)) >= 0 ? 'text-sky-200' : 'text-orange-200'}`}>
