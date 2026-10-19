@@ -135,6 +135,7 @@ export default function TransactionDetailModal({
     onSave,
     onGroupSave,
     onAnalyze,
+    onRefreshSyncTarget,
     onSell,
     onRemove,
     onOpenAlert,
@@ -147,6 +148,7 @@ export default function TransactionDetailModal({
     const [companyProfile, setCompanyProfile] = useState(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [copiedName, setCopiedName] = useState(false);
+    const [syncingTarget, setSyncingTarget] = useState(false);
 
     // row 데이터로 폼 초기화
     useEffect(() => {
@@ -183,6 +185,36 @@ export default function TransactionDetailModal({
             }
         }
     }, [isOpen, row]);
+
+    // 동기화 목표가 캐시 만료 종목이면 해당 종목만 재계산 (목록은 DB의 마지막 동기화 값 표시)
+    useEffect(() => {
+        if (!isOpen || !row?.symbol || !onRefreshSyncTarget) return;
+        const targetRows = isGroupRow ? row.groupRows || [] : [row];
+        if (!targetRows.some((r) => r.targetPriceSync && r.targetPriceCached === false)) return;
+
+        let cancelled = false;
+        setSyncingTarget(true);
+        onRefreshSyncTarget(row.symbol)
+            .then((target) => {
+                if (cancelled || !target) return;
+                // 그룹은 동기화 행만 새 목표가로 바꿔 평균 재계산 (grouping.js 와 동일 기준)
+                const tgtList = targetRows
+                    .map((r) => (r.targetPriceSync ? target : Number(r.targetPrice) || 0))
+                    .filter((v) => v > 0);
+                const next = tgtList.reduce((a, b) => a + b, 0) / tgtList.length;
+                setFormData((prev) => (prev.targetPriceSync ? { ...prev, targetPrice: next } : prev));
+            })
+            .catch((e) => console.error('목표가 갱신 실패:', e))
+            .finally(() => {
+                if (!cancelled) setSyncingTarget(false);
+            });
+        return () => {
+            cancelled = true;
+            setSyncingTarget(false);
+        };
+        // onRefreshSyncTarget 은 부모에서 매 렌더 새로 생성되므로 제외 (포함 시 반복 호출)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, row, isGroupRow]);
 
     const fetchCompanyProfile = async (symbol) => {
         if (!symbol) return;
@@ -443,7 +475,7 @@ export default function TransactionDetailModal({
                             <div className="flex items-center gap-1.5 mb-1">
                                 <span className="text-xs text-slate-500 dark:text-slate-400">목표가</span>
                                 {formData.targetPriceSync && (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">동기화</span>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 ${syncingTarget ? 'animate-pulse' : ''}`}>{syncingTarget ? '갱신 중' : '동기화'}</span>
                                 )}
                             </div>
                             <div className={`${isTargetHit ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}>
@@ -591,7 +623,7 @@ export default function TransactionDetailModal({
                                             <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
                                                 목표가
                                                 {formData.targetPriceSync && (
-                                                    <span className="text-[9px] px-1 py-0.5 rounded bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">동기화</span>
+                                                    <span className={`text-[9px] px-1 py-0.5 rounded bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 ${syncingTarget ? 'animate-pulse' : ''}`}>{syncingTarget ? '갱신 중' : '동기화'}</span>
                                                 )}
                                             </span>
                                             <span className="text-slate-900 dark:text-white font-medium">

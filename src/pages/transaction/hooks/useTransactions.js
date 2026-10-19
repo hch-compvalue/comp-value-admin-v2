@@ -7,6 +7,7 @@ import {
     fetchFxRate,
     fetchCurrentPricesBySymbols,
     createSellRecord,
+    syncTargetPrice,
 } from '../services/TransactionService';
 import { sortRowsBySymbolAndDate } from '../utils/sorting';
 import { INITIAL_NEW_ROW } from '../constants';
@@ -209,6 +210,23 @@ export function useTransactions(openAlert = (msg) => alert(msg)) {
         setLastUpdated(new Date());
     };
 
+    // 동기화 목표가 재계산 후 같은 심볼의 동기화 ON 행에 반영 (상세 모달 진입 시 캐시 만료 종목)
+    const refreshSyncTarget = async (symbol) => {
+        const res = await syncTargetPrice(symbol);
+        const target = res?.targetPrice;
+        if (!(target > 0)) return null;
+
+        const sym = String(symbol).toUpperCase();
+        setRows((prev) =>
+            prev.map((r) =>
+                r.targetPriceSync && String(r.symbol || '').toUpperCase() === sym
+                    ? { ...r, targetPrice: target, targetPriceCached: true }
+                    : r
+            )
+        );
+        return target;
+    };
+
     /**
      * 매도 처리 (FIFO 방식)
      * @param {Object} sellData - 매도 정보 { symbol, companyName, sellPrice, sellQty, buyExchangeRateAtTrade, sellExchangeRateAtTrade }
@@ -323,5 +341,6 @@ export function useTransactions(openAlert = (msg) => alert(msg)) {
         mergePricesBySymbols,
         processSell,
         refetchTransactions,
+        refreshSyncTarget,
     };
 }

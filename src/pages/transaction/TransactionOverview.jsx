@@ -51,6 +51,7 @@ export default function TransactionOverview() {
         mergePricesBySymbols,
         processSell,
         refetchTransactions,
+        refreshSyncTarget,
     } = useTransactions(openAlert);
 
     const { fxRate, fxUpdatedAt, refreshFxRate } = useFxRate();
@@ -523,6 +524,7 @@ export default function TransactionOverview() {
                 onSave={handleDetailSave}
                 onGroupSave={handleGroupDetailSave}
                 onAnalyze={handleAnalyze}
+                onRefreshSyncTarget={refreshSyncTarget}
                 onSell={handleSellFromDetail}
                 onRemove={handleRemoveTransaction}
                 onOpenAlert={openAlert}

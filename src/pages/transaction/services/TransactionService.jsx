@@ -186,6 +186,18 @@ export async function fetchCurrentPriceBySymbol(symbol) {
     return list[0] || null;
 }
 
+// 동기화 목표매도가 재계산 (캐시 만료 종목) → { symbol, targetPrice, targetPriceCached }
+export async function syncTargetPrice(symbol) {
+    const sendUrl = `/dart/tranrecord/sync-target`;
+    const { data, error } = await send(sendUrl, { symbol }, "POST");
+
+    if (error == null && data && data.success) {
+        return data.response;
+    } else {
+        throw new Error(data?.message || '목표가 갱신 실패');
+    }
+}
+
 // 매도 기록 등록
 export async function createSellRecord(payload) {
     await delay(200);
