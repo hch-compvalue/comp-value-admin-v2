@@ -48,6 +48,7 @@ const EQUITY_AXIS_PAD = 0.02;          // 평가금액 축 위아래 여유 (2%)
 const MIN_DRAWDOWN_AXIS_PCT = -1;      // 낙폭이 0뿐일 때도 축이 납작해지지 않도록
 const PIE_INNER_RADIUS = '58%';
 const PIE_OUTER_RADIUS = '88%';
+const TOOLTIP_Z_INDEX = 10;            // 도넛 가운데 '총 평가금액' 문구보다 위
 
 const fmtMan = (v) => `${Math.round(v / KRW_PER_MAN).toLocaleString('ko-KR')}만`;
 const fmtSignedKrw = (v) => (v === null || v === undefined ? '-' : `${v >= 0 ? '+' : ''}${fmtKrw(v)}`);
@@ -141,19 +142,20 @@ const AllocationCard = ({ allocation, totalEquity }) => {
             {pieItems.length ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                     <div className="relative h-56">
+                        {/* 가운데 문구는 차트보다 먼저 그려 툴팁이 그 위에 오게 한다 */}
+                        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-xs text-slate-500 dark:text-slate-400">총 평가금액</span>
+                            <span className="text-sm font-semibold text-slate-900 dark:text-white">{fmtKrw(totalEquity)}</span>
+                        </div>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie data={pieItems} dataKey="valueKrw" nameKey="label" innerRadius={PIE_INNER_RADIUS} outerRadius={PIE_OUTER_RADIUS}
                                     paddingAngle={1} stroke="none" isAnimationActive={false}>
                                     {pieItems.map((i) => <Cell key={i.key} fill={i.color} />)}
                                 </Pie>
-                                <Tooltip content={<AllocationTooltip />} />
+                                <Tooltip content={<AllocationTooltip />} wrapperStyle={{ zIndex: TOOLTIP_Z_INDEX }} />
                             </PieChart>
                         </ResponsiveContainer>
-                        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-xs text-slate-500 dark:text-slate-400">총 평가금액</span>
-                            <span className="text-sm font-semibold text-slate-900 dark:text-white">{fmtKrw(totalEquity)}</span>
-                        </div>
                     </div>
                     <ul className="space-y-1.5">
                         {items.map((i) => (
