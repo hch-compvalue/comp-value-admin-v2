@@ -72,6 +72,7 @@ import { $isHeadingNode, $createHeadingNode, $createQuoteNode } from '@lexical/r
 import { $isListNode, INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND, REMOVE_LIST_COMMAND } from '@lexical/list';
 import { $isLinkNode, TOGGLE_LINK_COMMAND, $createLinkNode } from '@lexical/link';
 import { $createCodeNode, $isCodeNode } from '@lexical/code';
+import { SLATE } from '@/config/themeColors';
 
 // Resizable Image Component
 function ResizableImageComponent({ src, altText, width, height, nodeKey }) {
@@ -170,7 +171,7 @@ function ResizableImageComponent({ src, altText, width, height, nodeKey }) {
             {isSelected && (
                 <div style={{
                     fontSize: '12px',
-                    color: '#64748b',
+                    color: SLATE[500],
                     marginTop: '4px',
                     textAlign: 'center',
                 }}>
@@ -1502,7 +1503,7 @@ export default function RichTextEditor({ value, onChange, placeholder = '내용�
                     transform: translateX(-50%);
                     margin-bottom: 8px;
                     padding: 4px 8px;
-                    background-color: #1e293b;
+                    background-color: var(--color-slate-800);
                     color: white;
                     font-size: 12px;
                     white-space: nowrap;
@@ -1513,7 +1514,7 @@ export default function RichTextEditor({ value, onChange, placeholder = '내용�
                     z-index: 9999;
                 }
                 .dark .editor-tooltip-btn::before {
-                    background-color: #334155;
+                    background-color: var(--color-slate-700);
                 }
                 .editor-tooltip-btn::after {
                     content: '';
@@ -1523,14 +1524,14 @@ export default function RichTextEditor({ value, onChange, placeholder = '내용�
                     transform: translateX(-50%);
                     margin-bottom: 3px;
                     border: 4px solid transparent;
-                    border-top-color: #1e293b;
+                    border-top-color: var(--color-slate-800);
                     opacity: 0;
                     pointer-events: none;
                     transition: opacity 0.2s;
                     z-index: 9999;
                 }
                 .dark .editor-tooltip-btn::after {
-                    border-top-color: #334155;
+                    border-top-color: var(--color-slate-700);
                 }
                 .editor-tooltip-btn:hover::before,
                 .editor-tooltip-btn:hover::after {
@@ -1542,17 +1543,17 @@ export default function RichTextEditor({ value, onChange, placeholder = '내용�
                     padding: 1rem;
                     outline: none;
                     background-color: white;
-                    color: #0f172a;
+                    color: var(--color-slate-900);
                 }
                 .dark .lexical-editor .editor-input {
-                    background-color: #1e293b;
-                    color: #f1f5f9;
+                    background-color: var(--color-slate-800);
+                    color: var(--color-slate-100);
                 }
                 .lexical-editor .editor-placeholder {
                     position: absolute;
                     top: 1rem;
                     left: 1rem;
-                    color: #94a3b8;
+                    color: var(--color-slate-400);
                     pointer-events: none;
                 }
                 .lexical-editor img {
@@ -1582,7 +1583,7 @@ export default function RichTextEditor({ value, onChange, placeholder = '내용�
                     top: 0.5rem;
                     right: 0.5rem;
                     font-size: 0.75rem;
-                    color: #64748b;
+                    color: var(--color-slate-500);
                     text-transform: uppercase;
                     font-weight: 600;
                     opacity: 0.7;

@@ -1,0 +1,23 @@
+/*
+ * 다크모드 회색 팔레트 (단일 출처)
+ * - 컴포넌트는 slate 클래스를 그대로 쓰고, 다크모드에서만 slate 변수 값을 중립 회색(Tailwind neutral)으로 교체
+ *   (기본 slate 는 파란빛 회색이라 다크모드 전체가 남색으로 보였음)
+ * - 라이트모드는 Tailwind 기본 slate 그대로
+ * - 다크 톤을 바꾸려면 이 파일의 값만 교체 (zinc: 차가운 회색, stone: 따뜻한 회색 — node_modules/tailwindcss/theme.css 참고)
+ * - JS(차트·인라인 style)는 src/config/themeColors.js 의 SLATE 토큰으로 같은 변수를 참조
+ */
+@layer base {
+  .dark {
+    --color-slate-50: oklch(98.5% 0 0);
+    --color-slate-100: oklch(97% 0 0);
+    --color-slate-200: oklch(92.2% 0 0);
+    --color-slate-300: oklch(87% 0 0);
+    --color-slate-400: oklch(70.8% 0 0);
+    --color-slate-500: oklch(55.6% 0 0);
+    --color-slate-600: oklch(43.9% 0 0);
+    --color-slate-700: oklch(37.1% 0 0);
+    --color-slate-800: oklch(26.9% 0 0);
+    --color-slate-900: oklch(20.5% 0 0);
+    --color-slate-950: oklch(14.5% 0 0);
+  }
+}

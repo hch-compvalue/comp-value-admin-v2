@@ -6,13 +6,14 @@ import {
 import useModalAnimation from '@/hooks/useModalAnimation';
 import { useTheme } from '@/context/ThemeContext';
 import { calcFxPnl, calcTotalPnlKrw } from '@/util/SellRecordUtil';
+import { SLATE } from '@/config/themeColors';
 
 // 손익 방향(diverging) 팔레트 — 국내 주식 관행(상승=빨강/하락=파랑), 적록색약 무관(빨강↔파랑 조합)
 const COLORS = {
     profit: { light: '#dc2626', dark: '#ef4444' },
     loss: { light: '#2563eb', dark: '#3b82f6' },
-    grid: { light: '#e2e8f0', dark: '#334155' },
-    axis: { light: '#64748b', dark: '#94a3b8' },
+    grid: { light: SLATE[200], dark: SLATE[700] },
+    axis: { light: SLATE[500], dark: SLATE[400] },
 };
 
 const SYMBOL_TOP_N = 10;

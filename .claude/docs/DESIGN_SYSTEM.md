@@ -20,7 +20,7 @@
 | Error/Danger | orange-500 | orange-400 | orange-100 | orange-900/30 |
 | Selected/Active | blue-600 | blue-400 | blue-50 | blue-900/30 |
 
-### Neutral (slate 계열로 통일 — gray 사용 금지)
+### Neutral (slate 계열로 통일 — gray 사용 금지, 다크모드는 회색으로 자동 교체)
 - 텍스트: slate-900 / 700 / 500 / 400
 - 배경: white / slate-50 / slate-100
 - Border: slate-200 / slate-300
@@ -37,6 +37,13 @@
 | border-slate-300 | dark:border-slate-600 |
 
 - 다크모드: 모든 컴포넌트에 `dark:` variant 필수
+
+### 다크모드 팔레트 (2026-10-19: 남색 → 중립 회색)
+- 클래스는 **slate 그대로** 사용. 다크모드에서만 `src/styles/theme-dark.css`가 `--color-slate-*` 값을 Tailwind neutral(무채색)로 교체 → 화면은 회색, 라이트모드는 기존 slate
+- **다크 톤 변경은 `theme-dark.css` 값만 교체** (컴포넌트 수정 불필요)
+- Tailwind 클래스를 못 쓰는 곳(Recharts props, SVG 속성, 인라인 style)은 `@/config/themeColors`의 `SLATE[N]` / `withAlpha(SLATE[N], %)` 사용, CSS-in-JS 문자열은 `var(--color-slate-N)` 사용
+- **slate hex(`#1e293b` 등) 하드코딩 금지** — 다크 팔레트 변경이 반영되지 않음
+- `gray`/`zinc`/`neutral` 클래스 직접 사용 금지 (slate 하나로 통일해야 팔레트 교체가 한 곳에서 됨)
 
 ## 타이포그래피
 

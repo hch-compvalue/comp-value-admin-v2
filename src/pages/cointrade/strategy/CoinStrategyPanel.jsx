@@ -9,6 +9,7 @@ import {
     RUN_LIMIT, MIN_CAPITAL_KRW, EMERGENCY_CONFIRM_WORD, COLOR_STRATEGY, COLOR_BTC, STRATEGY_COIN, MODES,
     modeLabel, hourRange, fmtKrw, fmtPct, fmtSignedPct, fmtBtc, fmtDateTime, INPUT_CLASS, statusBadge, actionLabel,
 } from './strategyCommon';
+import { SLATE, withAlpha } from '@/config/themeColors';
 
 /**
  * 코인 자동매매 v5.0 — BTC 50일선 추세 + 목표변동성 (매일 1회)
@@ -233,7 +234,7 @@ export default function CoinStrategyPanel({ header }) {
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#94a3b833" />
+                                <CartesianGrid strokeDasharray="3 3" stroke={withAlpha(SLATE[400], 20)} />
                                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                                 <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} />
                                 <Tooltip formatter={(v) => `${v}%`} />

@@ -115,10 +115,10 @@ function View001({
                 <div className="px-3 sm:px-4 py-8">
                     <style>{`
                         .tiptap-view-content {
-                            color: #0f172a;
+                            color: var(--color-slate-900);
                         }
                         .dark .tiptap-view-content {
-                            color: #f1f5f9;
+                            color: var(--color-slate-100);
                         }
                         .tiptap-view-content h1 {
                             font-size: 2em;
@@ -153,28 +153,28 @@ function View001({
                             margin: 0.5em 0;
                         }
                         .tiptap-view-content blockquote {
-                            border-left: 3px solid #cbd5e1;
+                            border-left: 3px solid var(--color-slate-300);
                             padding-left: 1rem;
                             margin: 1rem 0;
-                            color: #64748b;
+                            color: var(--color-slate-500);
                         }
                         .dark .tiptap-view-content blockquote {
-                            border-left-color: #475569;
-                            color: #94a3b8;
+                            border-left-color: var(--color-slate-600);
+                            color: var(--color-slate-400);
                         }
                         .tiptap-view-content code {
-                            background-color: #f1f5f9;
+                            background-color: var(--color-slate-100);
                             padding: 0.2em 0.4em;
                             border-radius: 0.25rem;
                             font-family: 'Courier New', Courier, monospace;
                             font-size: 0.875em;
                         }
                         .dark .tiptap-view-content code {
-                            background-color: #334155;
+                            background-color: var(--color-slate-700);
                         }
                         .tiptap-view-content pre {
                             background-color: #2d2d2d;
-                            color: #f1f5f9;
+                            color: var(--color-slate-100);
                             padding: 1rem;
                             border-radius: 0.5rem;
                             overflow-x: auto;
@@ -199,8 +199,8 @@ function View001({
                         .tiptap-view-content .code-block,
                         .tiptap-view-content [class*="code"] {
                             display: block;
-                            background-color: #1e293b;
-                            color: #f1f5f9;
+                            background-color: var(--color-slate-800);
+                            color: var(--color-slate-100);
                             padding: 1rem;
                             border-radius: 0.5rem;
                             overflow-x: auto;
@@ -212,7 +212,7 @@ function View001({
                         .dark .tiptap-view-content div[data-lexical-decorator="true"] code,
                         .dark .tiptap-view-content .code-block,
                         .dark .tiptap-view-content [class*="code"] {
-                            background-color: #0f172a;
+                            background-color: var(--color-slate-900);
                         }
                         .tiptap-view-content a {
                             color: #0ea5e9;

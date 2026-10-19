@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { fetchMultipleIndices } from '@/util/ChartApi';
+import { SLATE } from '@/config/themeColors';
 
 // 미국 3대 지수 정보
 const US_INDICES = [
@@ -250,10 +251,10 @@ function IndexCard({ index, data, latestData, change, changePercent, isPositive 
             <div className="p-4" style={{ width: '100%', height: '200px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                        <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
                         <XAxis
                             dataKey="date"
-                            tick={{ fontSize: 10, fill: '#64748b' }}
+                            tick={{ fontSize: 10, fill: SLATE[500] }}
                             tickFormatter={(date) => {
                                 const d = new Date(date);
                                 return `${d.getMonth() + 1}/${d.getDate()}`;
@@ -261,14 +262,14 @@ function IndexCard({ index, data, latestData, change, changePercent, isPositive 
                             interval="preserveStartEnd"
                         />
                         <YAxis
-                            tick={{ fontSize: 10, fill: '#64748b' }}
+                            tick={{ fontSize: 10, fill: SLATE[500] }}
                             domain={['dataMin - 50', 'dataMax + 50']}
                             tickFormatter={(value) => value.toFixed(0)}
                         />
                         <Tooltip
                             contentStyle={{
                                 backgroundColor: 'white',
-                                border: '1px solid #e2e8f0',
+                                border: '1px solid var(--color-slate-200)',
                                 borderRadius: '8px',
                                 fontSize: '12px',
                                 padding: '8px 12px',

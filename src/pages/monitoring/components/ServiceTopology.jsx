@@ -1,5 +1,6 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { SLATE, withAlpha } from '@/config/themeColors';
 
 const R = 24;
 
@@ -131,8 +132,8 @@ export default function ServiceTopology({ services = [], trades = [], traffic = 
         return map;
     }, [traffic]);
 
-    const lineColor = isDark ? '#334155' : '#cbd5e1';
-    const statusTextColor = isDark ? '#94a3b8' : '#64748b';
+    const lineColor = isDark ? SLATE[700] : SLATE[300];
+    const statusTextColor = isDark ? SLATE[400] : SLATE[500];
     const particleColor = isDark ? '#06b6d4' : '#0e7490';
 
     useEffect(() => { injectStyles(); }, []);
@@ -209,7 +210,7 @@ export default function ServiceTopology({ services = [], trades = [], traffic = 
         if (status === 'UP') return { fill: '#059669', stroke: '#34d399', glow: 'rgba(52,211,153,0.4)' };
         if (status === 'DEGRADED') return { fill: '#d97706', stroke: '#fbbf24', glow: 'rgba(251,191,36,0.4)' };
         if (status === 'DOWN') return { fill: '#dc2626', stroke: '#f87171', glow: 'rgba(248,113,113,0.4)' };
-        return { fill: '#475569', stroke: '#94a3b8', glow: 'rgba(148,163,184,0.3)' };
+        return { fill: SLATE[600], stroke: SLATE[400], glow: withAlpha(SLATE[400], 30) };
     };
 
     const getNode = (id) => NODES.find(n => n.id === id);

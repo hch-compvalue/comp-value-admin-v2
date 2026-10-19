@@ -8,6 +8,7 @@ import { fetchStockPriceVolume } from '@/util/ChartApi';
 import {
     calcSMA, calcEMA, calcBollingerBands, calcRSI, calcMACD, calcStochastic, getMaxLookback,
 } from '@/util/technicalIndicators';
+import { SLATE } from '@/config/themeColors';
 
 // 기간 옵션
 const PERIOD_OPTIONS = [
@@ -93,7 +94,7 @@ const dateLabelFormatter = (date) =>
 // 공통 Tooltip 스타일
 const tooltipStyle = {
     backgroundColor: 'white',
-    border: '1px solid #e2e8f0',
+    border: '1px solid var(--color-slate-200)',
     borderRadius: '8px',
     fontSize: '12px',
     padding: '8px 12px',
@@ -387,15 +388,15 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                         onDoubleClick={resetZoom}
                                         style={{ cursor: 'crosshair', userSelect: 'none' }}
                                     >
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                        <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
                                         <XAxis
                                             dataKey="date"
-                                            tick={{ fontSize: 11, fill: '#64748b' }}
+                                            tick={{ fontSize: 11, fill: SLATE[500] }}
                                             tickFormatter={dateTickFormatter}
                                             interval="preserveStartEnd"
                                         />
                                         <YAxis
-                                            tick={{ fontSize: 11, fill: '#64748b' }}
+                                            tick={{ fontSize: 11, fill: SLATE[500] }}
                                             domain={['dataMin - 5', 'dataMax + 5']}
                                             tickFormatter={(value) => `$${value.toFixed(0)}`}
                                         />
@@ -416,8 +417,8 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                         />
 
                                         {/* 고가/저가 */}
-                                        <Line type="monotone" dataKey="high" stroke="#94a3b8" strokeWidth={1} dot={false} strokeDasharray="3 3" />
-                                        <Line type="monotone" dataKey="low" stroke="#94a3b8" strokeWidth={1} dot={false} strokeDasharray="3 3" />
+                                        <Line type="monotone" dataKey="high" stroke={SLATE[400]} strokeWidth={1} dot={false} strokeDasharray="3 3" />
+                                        <Line type="monotone" dataKey="low" stroke={SLATE[400]} strokeWidth={1} dot={false} strokeDasharray="3 3" />
 
                                         {/* 종가 */}
                                         <Line type="monotone" dataKey="close" stroke="#3b82f6" strokeWidth={2.5} dot={false} activeDot={{ r: 5 }} />
@@ -461,15 +462,15 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                 <h3 className="text-sm font-semibold text-slate-700 mb-3 dark:text-slate-200">거래량</h3>
                                 <ResponsiveContainer width="100%" height={180}>
                                     <BarChart data={zoomedData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                        <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
                                         <XAxis
                                             dataKey="date"
-                                            tick={{ fontSize: 11, fill: '#64748b' }}
+                                            tick={{ fontSize: 11, fill: SLATE[500] }}
                                             tickFormatter={dateTickFormatter}
                                             interval="preserveStartEnd"
                                         />
                                         <YAxis
-                                            tick={{ fontSize: 11, fill: '#64748b' }}
+                                            tick={{ fontSize: 11, fill: SLATE[500] }}
                                             tickFormatter={(value) => {
                                                 if (value >= 1000000000) return `${(value / 1000000000).toFixed(1)}B`;
                                                 if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -493,15 +494,15 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                     <h3 className="text-sm font-semibold text-slate-700 mb-3 dark:text-slate-200">RSI (14)</h3>
                                     <ResponsiveContainer width="100%" height={120}>
                                         <ComposedChart data={zoomedData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
                                             <XAxis
                                                 dataKey="date"
-                                                tick={{ fontSize: 11, fill: '#64748b' }}
+                                                tick={{ fontSize: 11, fill: SLATE[500] }}
                                                 tickFormatter={dateTickFormatter}
                                                 interval="preserveStartEnd"
                                             />
                                             <YAxis
-                                                tick={{ fontSize: 11, fill: '#64748b' }}
+                                                tick={{ fontSize: 11, fill: SLATE[500] }}
                                                 domain={[0, 100]}
                                                 ticks={[0, 30, 50, 70, 100]}
                                             />
@@ -528,14 +529,14 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                     <h3 className="text-sm font-semibold text-slate-700 mb-3 dark:text-slate-200">MACD (12, 26, 9)</h3>
                                     <ResponsiveContainer width="100%" height={150}>
                                         <ComposedChart data={zoomedData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
                                             <XAxis
                                                 dataKey="date"
-                                                tick={{ fontSize: 11, fill: '#64748b' }}
+                                                tick={{ fontSize: 11, fill: SLATE[500] }}
                                                 tickFormatter={dateTickFormatter}
                                                 interval="preserveStartEnd"
                                             />
-                                            <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
+                                            <YAxis tick={{ fontSize: 11, fill: SLATE[500] }} />
                                             <Tooltip
                                                 contentStyle={tooltipStyle}
                                                 formatter={(value, name) => {
@@ -545,7 +546,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                                 }}
                                                 labelFormatter={dateLabelFormatter}
                                             />
-                                            <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1} />
+                                            <ReferenceLine y={0} stroke={SLATE[400]} strokeWidth={1} />
                                             <Bar dataKey="macdHist" isAnimationActive={false}>
                                                 {zoomedData.map((entry, index) => (
                                                     <Cell key={index} fill={entry.macdHist >= 0 ? '#10b981' : '#ef4444'} />
@@ -578,15 +579,15 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                     <h3 className="text-sm font-semibold text-slate-700 mb-3 dark:text-slate-200">스토캐스틱 (14, 3)</h3>
                                     <ResponsiveContainer width="100%" height={120}>
                                         <ComposedChart data={zoomedData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={SLATE[100]} />
                                             <XAxis
                                                 dataKey="date"
-                                                tick={{ fontSize: 11, fill: '#64748b' }}
+                                                tick={{ fontSize: 11, fill: SLATE[500] }}
                                                 tickFormatter={dateTickFormatter}
                                                 interval="preserveStartEnd"
                                             />
                                             <YAxis
-                                                tick={{ fontSize: 11, fill: '#64748b' }}
+                                                tick={{ fontSize: 11, fill: SLATE[500] }}
                                                 domain={[0, 100]}
                                                 ticks={[0, 20, 50, 80, 100]}
                                             />
@@ -784,7 +785,7 @@ const HelpSection = ({ title, subtitle, items, columns = 1, defaultColor }) => {
 const PriceChartLegend = ({ indicators }) => {
     const items = [
         { color: '#3b82f6', label: '종가', show: true },
-        { color: '#94a3b8', label: '고가/저가', show: true, dashed: true },
+        { color: SLATE[400], label: '고가/저가', show: true, dashed: true },
     ];
 
     OVERLAY_INDICATORS.forEach(ind => {

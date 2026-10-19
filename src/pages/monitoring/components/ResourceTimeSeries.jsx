@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { useTheme } from '@/context/ThemeContext';
+import { SLATE } from '@/config/themeColors';
 
 const POD_COLORS = ['#3b82f6', '#f97316', '#a855f7', '#ec4899', '#14b8a6', '#eab308'];
 
@@ -195,12 +196,12 @@ export default function ResourceTimeSeries({ resourceHistory = [] }) {
         return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     };
 
-    const gridColor = isDark ? '#1e293b' : '#e2e8f0';
-    const axisColor = isDark ? '#334155' : '#cbd5e1';
-    const tickColor = isDark ? '#475569' : '#94a3b8';
-    const tooltipBg = isDark ? '#0f172a' : '#ffffff';
-    const tooltipBorder = isDark ? '#334155' : '#e2e8f0';
-    const tooltipText = isDark ? '#e2e8f0' : '#1e293b';
+    const gridColor = isDark ? SLATE[800] : SLATE[200];
+    const axisColor = isDark ? SLATE[700] : SLATE[300];
+    const tickColor = isDark ? SLATE[600] : SLATE[400];
+    const tooltipBg = isDark ? SLATE[900] : '#ffffff';
+    const tooltipBorder = isDark ? SLATE[700] : SLATE[200];
+    const tooltipText = isDark ? SLATE[200] : SLATE[800];
 
     // 동적 윈도우: 데이터가 30분 미만이면 데이터 범위로, 30분 이상이면 고정 30분 윈도우
     const THIRTY_MIN = 30 * 60 * 1000;

@@ -10,6 +10,7 @@ import {
     RUN_LIMIT, MIN_CAPITAL_KRW, EMERGENCY_CONFIRM_WORD, COLOR_STRATEGY, STRATEGY_STOCK, MODES,
     modeLabel, hourRange, fmtKrw, fmtPct, fmtSignedPct, fmtShares, fmtDateTime, INPUT_CLASS,
 } from './strategyCommon';
+import { SLATE, withAlpha } from '@/config/themeColors';
 
 /**
  * 주식 자동매매 — ETF 3종 분산 (200일선 추세 + 목표변동성, 평일 1회)
@@ -361,7 +362,7 @@ export default function StockStrategyPanel({ header }) {
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#94a3b833" />
+                                <CartesianGrid strokeDasharray="3 3" stroke={withAlpha(SLATE[400], 20)} />
                                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                                 <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} />
                                 <Tooltip formatter={(v) => `${v}%`} />

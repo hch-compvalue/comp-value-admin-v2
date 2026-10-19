@@ -1,11 +1,13 @@
 @import "tailwindcss";
+@import "./styles/theme-dark.css";
 
 @variant dark (&:is(.dark *));
 
-@theme {
-  --color-dark-bg: #0f172a;
-  --color-dark-card: #1e293b;
-  --color-dark-border: #334155;
+/* slate 변수 참조 → 다크 팔레트(styles/theme-dark.css) 변경 자동 반영 */
+@theme inline {
+  --color-dark-bg: var(--color-slate-900);
+  --color-dark-card: var(--color-slate-800);
+  --color-dark-border: var(--color-slate-700);
 }
 
 @font-face {
@@ -100,39 +102,39 @@
 }
 
 .scrollbar-always::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--color-slate-100);
   /* track 색 (slate-100 비슷) */
   border-radius: 9999px;
 }
 
 .scrollbar-always::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--color-slate-300);
   /* thumb 색 (slate-300) */
   border-radius: 9999px;
-  border: 2px solid #f1f5f9;
+  border: 2px solid var(--color-slate-100);
   /* 트랙과 경계 */
 }
 
 .scrollbar-always::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--color-slate-400);
   /* hover (slate-400) */
 }
 
 /* AG Grid 다크모드 스타일 */
 .ag-theme-alpine.dark-mode {
-  --ag-background-color: #1e293b;
-  --ag-foreground-color: #e2e8f0;
-  --ag-border-color: #334155;
-  --ag-secondary-border-color: #475569;
-  --ag-header-background-color: #0f172a;
-  --ag-header-foreground-color: #f1f5f9;
-  --ag-odd-row-background-color: #1e293b;
-  --ag-row-hover-color: #334155;
+  --ag-background-color: var(--color-slate-800);
+  --ag-foreground-color: var(--color-slate-200);
+  --ag-border-color: var(--color-slate-700);
+  --ag-secondary-border-color: var(--color-slate-600);
+  --ag-header-background-color: var(--color-slate-900);
+  --ag-header-foreground-color: var(--color-slate-100);
+  --ag-odd-row-background-color: var(--color-slate-800);
+  --ag-row-hover-color: var(--color-slate-700);
   --ag-selected-row-background-color: #1e3a8a;
   --ag-range-selection-border-color: #3b82f6;
-  --ag-input-border-color: #475569;
+  --ag-input-border-color: var(--color-slate-600);
   --ag-input-focus-border-color: #3b82f6;
   --ag-checkbox-checked-color: #3b82f6;
-  --ag-checkbox-unchecked-color: #64748b;
+  --ag-checkbox-unchecked-color: var(--color-slate-500);
   --ag-checkbox-indeterminate-color: #3b82f6;
 }

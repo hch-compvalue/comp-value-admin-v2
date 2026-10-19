@@ -8,6 +8,7 @@ import {
     MARKET, MARKET_META, tabMarket, isLegacyRecord, displayName,
     computeFlow, computeFlowByMarket, computeFlowBySymbol,
 } from '../history/historyCommon';
+import { SLATE } from '@/config/themeColors';
 
 // 적록색약 친화 팔레트 (파랑/주황/청록/호박/보라/노랑/슬레이트)
 const PALETTE = {
@@ -17,7 +18,7 @@ const PALETTE = {
     expired: '#a855f7',     // 보라 — 만료매도
     maxHold: '#f59e0b',     // 호박 — 강제청산
     manual: '#eab308',      // 노랑 — 수동매도
-    neutral: '#64748b',     // 슬레이트
+    neutral: SLATE[500],     // 슬레이트
     buy: '#3b82f6',         // 파랑 — 매수
     sell: '#f59e0b',        // 호박 — 매도
 };
@@ -155,9 +156,9 @@ function CurrentStats({ rows, market, symbolNames }) {
                         <div style={{ width: '100%', height: Math.max(CHART_HEIGHT, symbolData.length * SYMBOL_ROW_HEIGHT) }}>
                             <ResponsiveContainer>
                                 <BarChart data={symbolData} layout="vertical" margin={{ left: 8 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" strokeOpacity={0.3} />
-                                    <XAxis type="number" tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(v) => `${(v / AXIS_WAN).toFixed(0)}만`} />
-                                    <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fill: '#64748b' }} width={SYMBOL_AXIS_WIDTH} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke={SLATE[300]} strokeOpacity={0.3} />
+                                    <XAxis type="number" tick={{ fontSize: 10, fill: SLATE[500] }} tickFormatter={(v) => `${(v / AXIS_WAN).toFixed(0)}만`} />
+                                    <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fill: SLATE[500] }} width={SYMBOL_AXIS_WIDTH} />
                                     <Tooltip
                                         contentStyle={{ fontSize: 12, borderRadius: 6 }}
                                         formatter={(v, name) => [`${formatNumber(v)}원`, name]}
@@ -283,10 +284,10 @@ function LegacyStats({ records }) {
                                                 <stop offset="100%" stopColor={PALETTE.profit} stopOpacity={0.05} />
                                             </linearGradient>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" strokeOpacity={0.3} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke={SLATE[300]} strokeOpacity={0.3} />
                                         <XAxis
                                             dataKey="time"
-                                            tick={{ fontSize: 10, fill: '#64748b' }}
+                                            tick={{ fontSize: 10, fill: SLATE[500] }}
                                             tickFormatter={(v) => {
                                                 const d = new Date(v);
                                                 return `${d.getMonth() + 1}/${d.getDate()}`;
@@ -294,7 +295,7 @@ function LegacyStats({ records }) {
                                             minTickGap={30}
                                         />
                                         <YAxis
-                                            tick={{ fontSize: 10, fill: '#64748b' }}
+                                            tick={{ fontSize: 10, fill: SLATE[500] }}
                                             tickFormatter={(v) => `${(v / AXIS_WAN).toFixed(0)}만`}
                                         />
                                         <Tooltip
@@ -352,16 +353,16 @@ function LegacyStats({ records }) {
                                 <div style={{ width: '100%', height: CHART_HEIGHT }}>
                                     <ResponsiveContainer>
                                         <BarChart data={stats.reasonData} layout="vertical" margin={{ left: 16 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" strokeOpacity={0.3} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={SLATE[300]} strokeOpacity={0.3} />
                                             <XAxis
                                                 type="number"
-                                                tick={{ fontSize: 10, fill: '#64748b' }}
+                                                tick={{ fontSize: 10, fill: SLATE[500] }}
                                                 tickFormatter={(v) => `${(v / AXIS_WAN).toFixed(0)}만`}
                                             />
                                             <YAxis
                                                 type="category"
                                                 dataKey="label"
-                                                tick={{ fontSize: 11, fill: '#64748b' }}
+                                                tick={{ fontSize: 11, fill: SLATE[500] }}
                                                 width={70}
                                             />
                                             <Tooltip
@@ -387,16 +388,16 @@ function LegacyStats({ records }) {
                             <div style={{ width: '100%', height: Math.max(CHART_HEIGHT, stats.coinTop10.length * LEGACY_COIN_ROW_HEIGHT) }}>
                                 <ResponsiveContainer>
                                     <BarChart data={stats.coinTop10} layout="vertical" margin={{ left: 8 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" strokeOpacity={0.3} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke={SLATE[300]} strokeOpacity={0.3} />
                                         <XAxis
                                             type="number"
-                                            tick={{ fontSize: 10, fill: '#64748b' }}
+                                            tick={{ fontSize: 10, fill: SLATE[500] }}
                                             tickFormatter={(v) => `${(v / AXIS_WAN).toFixed(0)}만`}
                                         />
                                         <YAxis
                                             type="category"
                                             dataKey="coinCode"
-                                            tick={{ fontSize: 11, fill: '#64748b' }}
+                                            tick={{ fontSize: 11, fill: SLATE[500] }}
                                             width={80}
                                         />
                                         <Tooltip

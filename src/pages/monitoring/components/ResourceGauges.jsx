@@ -1,5 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import TruncatedText from './TruncatedText';
+import { SLATE } from '@/config/themeColors';
 
 /**
  * 파드별 리소스 게이지 — CPU / Memory 프로그레스 바
@@ -92,8 +93,8 @@ function GpuRow({ gpu }) {
 
 function ProgressBar({ label, percent, text, noLimit }) {
     const { isDark } = useTheme();
-    const color = noLimit ? (isDark ? '#475569' : '#94a3b8') : getColor(percent);
-    const trackColor = isDark ? '#1e293b' : '#e2e8f0';
+    const color = noLimit ? (isDark ? SLATE[600] : SLATE[400]) : getColor(percent);
+    const trackColor = isDark ? SLATE[800] : SLATE[200];
 
     return (
         <div className="flex items-center gap-1.5 min-w-0">
