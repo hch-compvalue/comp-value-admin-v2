@@ -8,6 +8,13 @@ import ExcelFilter from '@/component/common/table/ExcelFilter';
 import Input from '@/component/common/input/Input';
 import Button from '@/component/common/button/Button';
 import ExcelJS from 'exceljs';
+import HistorySummaryPanel, { MarketBadge } from './history/HistorySummaryPanel';
+import {
+    HISTORY_API, HISTORY_CODES_API, HISTORY_TABS, MARKET_META, PAGE_SIZE_ALL,
+    tabMarket, marketOf, isLegacyRecord, displayName, displayKrw, formatQty, qtyDecimalsOf,
+    loadSavedTab, saveTab, loadSavedLegacy, saveLegacy, fetchSymbolNames,
+    computeFlow, computeFlowByMarket, computeLegacyStats,
+} from './history/historyCommon';
 
 // 숫자를 천 단위 콤마 포맷으로 변환
 const formatNumberWithComma = (value) => {
@@ -151,9 +158,9 @@ const getReasonLabel = (reason) => {
 // 컬럼 너비 정의
 const COL_WIDTHS = {
     createdAt: '140px',
-    coinCode: '100px',
+    coinCode: '260px',
     tradeType: '80px',
-    price: '80px',
+    price: '130px',
     quantity: '130px',
     totalAmount: '120px',
     reason: '100px',
@@ -161,7 +168,7 @@ const COL_WIDTHS = {
     profitLossRate: '100px',
     momentumScore: '110px',
     mlConfidence: '100px',
-    entryReason: '180px',
+    entryReason: '200px',
     holdDurationSec: '110px',
 };
 
@@ -183,7 +190,14 @@ const TABLE_COLUMNS = [
         width: COL_WIDTHS.coinCode,
         sortable: true,
         headerClassName: 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider',
-        cellClassName: 'px-4 py-3 whitespace-nowrap text-left font-medium text-slate-900 dark:text-slate-100',
+        cellClassName: 'px-4 py-3 whitespace-nowrap text-left font-medium text-slate-900 dark:text-slate-100 overflow-hidden text-ellipsis',
+        render: (value, _row, ctx) => value ? (
+            <span className="inline-flex items-center gap-2" title={displayName(value, ctx.names)}>
+                <MarketBadge market={marketOf(value)} />
+                <span className="truncate">{displayName(value, ctx.names)}</span>
+            </span>
+        ) : '-',
+        getFilterLabel: (v, ctx) => (v ? displayName(v, ctx.names) : '(비어있음)'),
     },
     {
         key: 'tradeType',
@@ -209,7 +223,7 @@ const TABLE_COLUMNS = [
         sortable: true,
         headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right text-slate-900 dark:text-slate-100',
-        render: (value) => renderFormattedPrice(value, '원'),
+        render: (value, row) => renderFormattedPrice(displayKrw(value, row), '원'),
         getFilterLabel: (v) => (v == null ? '(비어있음)' : `${formatNumberWithComma(v)}원`),
     },
     {
@@ -219,8 +233,8 @@ const TABLE_COLUMNS = [
         sortable: true,
         headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right text-slate-900 dark:text-slate-100',
-        render: (value) => value ? value.toFixed(8) : '-',
-        getFilterLabel: (v) => (v == null ? '(비어있음)' : Number(v).toFixed(8)),
+        render: (value, row) => formatQty(value, row.coinCode),
+        getFilterLabel: (v) => (v == null ? '(비어있음)' : String(v)),
     },
     {
         key: 'totalAmount',
@@ -229,7 +243,7 @@ const TABLE_COLUMNS = [
         sortable: true,
         headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right font-medium text-slate-900 dark:text-slate-100',
-        render: (value) => renderFormattedPrice(value, '원'),
+        render: (value, row) => renderFormattedPrice(displayKrw(value, row), '원'),
         getFilterLabel: (v) => (v == null ? '(비어있음)' : `${formatNumberWithComma(v)}원`),
     },
     {
@@ -248,6 +262,7 @@ const TABLE_COLUMNS = [
     },
     {
         key: 'profitLoss',
+        legacyOnly: true, // 구 전략(v4 단타) 기록 포함 시에만 표시
         label: '손익',
         width: COL_WIDTHS.profitLoss,
         sortable: true,
@@ -262,6 +277,7 @@ const TABLE_COLUMNS = [
     },
     {
         key: 'profitLossRate',
+        legacyOnly: true, // 구 전략(v4 단타) 기록 포함 시에만 표시
         label: '손익률',
         width: COL_WIDTHS.profitLossRate,
         sortable: true,
@@ -276,6 +292,7 @@ const TABLE_COLUMNS = [
     },
     {
         key: 'momentumScore',
+        legacyOnly: true, // 구 전략(v4 단타) 기록 포함 시에만 표시
         label: '모멘텀점수',
         width: COL_WIDTHS.momentumScore,
         sortable: true,
@@ -286,6 +303,7 @@ const TABLE_COLUMNS = [
     },
     {
         key: 'mlConfidence',
+        legacyOnly: true, // 구 전략(v4 단타) 기록 포함 시에만 표시
         label: 'ML확률',
         width: COL_WIDTHS.mlConfidence,
         sortable: true,
@@ -296,7 +314,7 @@ const TABLE_COLUMNS = [
     },
     {
         key: 'entryReason',
-        label: '진입사유',
+        label: '비고', // 현재 전략: "목표 x% / 이전 y%", 구 전략: 진입사유
         width: COL_WIDTHS.entryReason,
         sortable: true,
         headerClassName: 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider',
@@ -306,6 +324,7 @@ const TABLE_COLUMNS = [
     },
     {
         key: 'holdDurationSec',
+        legacyOnly: true, // 구 전략(v4 단타) 기록 포함 시에만 표시
         label: '보유시간',
         width: COL_WIDTHS.holdDurationSec,
         sortable: true,
@@ -316,9 +335,21 @@ const TABLE_COLUMNS = [
     }
 ];
 
+// 엑셀 열 너비 (거래 목록: TRADE_HEADERS + LEGACY_TRADE_HEADERS 순서, 요약: 항목/값)
+const EXCEL_TRADE_COL_WIDTHS = [20, 8, 28, 12, 8, 16, 18, 16, 14, 24, 16, 12, 12, 12, 12];
+const EXCEL_SUMMARY_COL_WIDTHS = [32, 28];
+
+// 테이블 최소 너비 (구 전략 컬럼 포함 시 넓게)
+const TABLE_MIN_WIDTH = '1200px';
+const TABLE_MIN_WIDTH_LEGACY = '1750px';
+const DEFAULT_SORT = { key: 'createdAt', direction: 'desc' };
+const LEGACY_ONLY_KEYS = new Set(TABLE_COLUMNS.filter(c => c.legacyOnly).map(c => c.key));
+
 /**
- * 코인 자동매매 거래기록 조회 페이지 (v2.2)
- * - 테이블 디자인 개선 (Sticky Header/Columns, Filter Row)
+ * 자동매매 거래기록 조회 페이지 (v3.0)
+ * - 상단 탭으로 코인(btc_trend) / 주식(etf3_trend_v1) 구분 → market 파라미터
+ * - 구 전략(v4 단타) 기록은 토글로 포함 → includeLegacy 파라미터, 손익·모멘텀·ML·보유시간 컬럼도 이때만 표시
+ * - 테이블 디자인 (Sticky Header/Columns, Filter Row)
  */
 export default function CointradeHistory() {
     const [loading, setLoading] = useState(false);
@@ -337,13 +368,18 @@ export default function CointradeHistory() {
         endDate: '',
         endTime: '23:59',
         coinCode: 'all',
-        tradeType: 'all',    // all, BUY, SELL
-        reason: 'all'        // all, SIGNAL, TAKE_PROFIT, STOP_LOSS, EXPIRED
+        tradeType: 'all'     // all, BUY, SELL (매도 사유는 테이블 헤더 필터로 클라이언트 측에서 거름)
     });
+
+    // 시장 탭(전체/코인/주식) · 구 전략(v4 단타) 포함 여부 — 조회 파라미터로 전달, localStorage 기억
+    const [activeTab, setActiveTab] = useState(loadSavedTab);
+    const [includeLegacy, setIncludeLegacy] = useState(loadSavedLegacy);
+    // 종목코드 → 표시명 (전략 목록 기준, 없으면 코드 그대로)
+    const [symbolNames, setSymbolNames] = useState({});
 
     // 테이블 내부 필터/정렬
     const [columnFilters, setColumnFilters] = useState({});
-    const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
+    const [sortConfig, setSortConfig] = useState(DEFAULT_SORT);
 
     // 데이터
     const [records, setRecords] = useState([]);
@@ -351,34 +387,10 @@ export default function CointradeHistory() {
 
     // 페이지네이션 (서버 사이드)
     const [currentPage, setCurrentPage] = useState(0); // 0-based for server
-    const [itemsPerPage, setItemsPerPage] = useState(9999);
+    const [itemsPerPage, setItemsPerPage] = useState(PAGE_SIZE_ALL);
     const [totalElements, setTotalElements] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
 
-    // 요약 정보
-    const [summary, setSummary] = useState({
-        buyCount: 0,
-        buyAmount: 0,
-        sellCount: 0,
-        sellAmount: 0,
-        winCount: 0,
-        winRate: 0,
-        totalProfit: 0,
-        realizedProfitRate: 0,
-        takeProfitCount: 0,
-        stopLossCount: 0,
-        trailingStopCount: 0,
-        expiredCount: 0,
-        maxHoldExpiredCount: 0,
-        manualCount: 0,
-        // 매도 사유별 손익 합계
-        takeProfitAmount: 0,
-        stopLossAmount: 0,
-        trailingStopAmount: 0,
-        expiredAmount: 0,
-        maxHoldExpiredAmount: 0,
-        manualAmount: 0
-    });
 
     // Toast auto-hide
     useEffect(() => {
@@ -410,13 +422,14 @@ export default function CointradeHistory() {
         }));
 
         fetchCoinList();
+        fetchSymbolNames().then(setSymbolNames).catch((e) => console.error('전략 종목명 조회 실패:', e));
     }, []);
 
     // 종목 목록 조회
     const fetchCoinList = async () => {
         try {
             // 거래기록에 존재하는 종목 코드 목록 (string[], 정렬됨)
-            const { data, error } = await send('/dart/api/cointrade/history/codes', {}, 'GET');
+            const { data, error } = await send(HISTORY_CODES_API, {}, 'GET');
             if (!error && data?.success && Array.isArray(data?.response)) {
                 setCoinList(data.response);
             }
@@ -425,14 +438,23 @@ export default function CointradeHistory() {
         }
     };
 
-    // 거래기록 조회
-    const handleSearch = async (page = 0, size = null) => {
+    // 선택 탭 시장의 종목만 (종목 필터 드롭다운용)
+    const marketCoinList = useMemo(() => {
+        const market = tabMarket(activeTab);
+        return market ? coinList.filter(code => marketOf(code) === market) : coinList;
+    }, [coinList, activeTab]);
+
+    // 거래기록 조회 (overrides: 탭/토글 변경 직후 아직 반영 전인 상태값 { tabKey, legacy, coinCode })
+    const handleSearch = async (page = 0, size = null, overrides = {}) => {
         if (!filters.startDate || !filters.endDate) {
             setToast('조회 기간을 선택해주세요.');
             return;
         }
 
         const pageSize = size !== null ? size : itemsPerPage;
+        const market = tabMarket(overrides.tabKey ?? activeTab);
+        const legacy = overrides.legacy ?? includeLegacy;
+        const coinCode = overrides.coinCode ?? filters.coinCode;
 
         setLoading(true);
         try {
@@ -448,17 +470,18 @@ export default function CointradeHistory() {
                 size: pageSize.toString()
             });
 
-            if (filters.coinCode !== 'all') {
-                params.append('coinCode', filters.coinCode);
+            if (coinCode !== 'all') {
+                params.append('coinCode', coinCode);
             }
             if (filters.tradeType !== 'all') {
                 params.append('tradeType', filters.tradeType);
             }
-            if (filters.reason !== 'all') {
-                params.append('reason', filters.reason);
+            if (market) {
+                params.append('market', market);
             }
+            params.append('includeLegacy', String(legacy));
 
-            const { data, error } = await send(`/dart/api/cointrade/history?${params.toString()}`, {}, 'GET');
+            const { data, error } = await send(`${HISTORY_API}?${params.toString()}`, {}, 'GET');
 
             if (error) {
                 setToast('조회 실패: ' + error);
@@ -473,11 +496,6 @@ export default function CointradeHistory() {
                 setTotalElements(data.response.totalElements || 0);
                 setTotalPages(data.response.totalPages || 0);
                 setCurrentPage(page);
-
-                // 전체 보기(9999)일 때만 요약 계산 (페이징 시에는 전체 데이터가 아니므로 정확하지 않음)
-                if (pageSize === 9999) {
-                    calculateSummary(data.response.content);
-                }
             }
         } catch (e) {
             console.error('거래기록 조회 실패:', e);
@@ -488,65 +506,26 @@ export default function CointradeHistory() {
         }
     };
 
-    // 요약 정보 계산
-    const calculateSummary = (data) => {
-        const buyRecords = data.filter(r => r.tradeType === 'BUY');
-        const sellRecords = data.filter(r => r.tradeType === 'SELL');
+    // 탭 변경 → market 파라미터로 다시 조회 (다른 시장 종목이 선택돼 있으면 해제)
+    const handleTabChange = (tabKey) => {
+        if (tabKey === activeTab) return;
+        const market = tabMarket(tabKey);
+        const coinCode = market && filters.coinCode !== 'all' && marketOf(filters.coinCode) !== market ? 'all' : filters.coinCode;
+        setActiveTab(tabKey);
+        saveTab(tabKey);
+        setFilters(prev => ({ ...prev, coinCode }));
+        setColumnFilters({});
+        handleSearch(0, null, { tabKey, coinCode });
+    };
 
-        const buyAmount = buyRecords.reduce((sum, r) => sum + (r.totalAmount || 0), 0);
-        const sellAmount = sellRecords.reduce((sum, r) => sum + (r.totalAmount || 0), 0);
-        const totalProfit = sellRecords.reduce((sum, r) => sum + (r.profitLoss || 0), 0);
-
-        // 승률: 수익 매도(profitLoss > 0) 건수 / 전체 매도 건수
-        const winCount = sellRecords.filter(r => (r.profitLoss || 0) > 0).length;
-        const winRate = sellRecords.length > 0 ? (winCount / sellRecords.length * 100) : 0;
-
-        // 실현 수익률: 매도 원금 = 매도금액 - 손익, 수익률 = 손익 / 원금 * 100
-        const sellCostBasis = sellAmount - totalProfit;
-        const realizedProfitRate = sellCostBasis > 0 ? (totalProfit / sellCostBasis * 100) : 0;
-
-        // 사유별 분류 (카운트 + 손익 합계)
-        const sumBy = (predicate) => {
-            const filtered = sellRecords.filter(predicate);
-            const amount = filtered.reduce((s, r) => s + (r.profitLoss || 0), 0);
-            return { count: filtered.length, amount };
-        };
-        const takeProfit = sumBy(r => ['TAKE_PROFIT', 'PARTIAL_TAKE_PROFIT'].includes(r.reason));
-        const stopLoss = sumBy(r => ['STOP_LOSS', 'PARTIAL_STOP_LOSS'].includes(r.reason));
-        const trailingStop = sumBy(r => ['TRAILING_STOP', 'PARTIAL_TRAILING_STOP'].includes(r.reason));
-        const expired = sumBy(r => ['EXPIRED'].includes(r.reason) || /^(PARTIAL_)?\d+DAY_PROFIT$/.test(r.reason));
-        const maxHoldExpired = sumBy(r => ['MAX_HOLD_EXPIRED', 'MAX_HOLDING_EXPIRED'].includes(r.reason));
-        const manual = sumBy(r => ['MANUAL', 'PARTIAL_MANUAL', 'MANUAL_CLEANUP', 'CLEANUP_NO_BALANCE'].includes(r.reason));
-
-        const takeProfitCount = takeProfit.count;
-        const stopLossCount = stopLoss.count;
-        const trailingStopCount = trailingStop.count;
-        const expiredCount = expired.count;
-        const maxHoldExpiredCount = maxHoldExpired.count;
-        const manualCount = manual.count;
-
-        setSummary({
-            buyCount: buyRecords.length,
-            buyAmount,
-            sellCount: sellRecords.length,
-            sellAmount,
-            winCount,
-            winRate,
-            totalProfit,
-            realizedProfitRate,
-            takeProfitCount,
-            stopLossCount,
-            trailingStopCount,
-            expiredCount,
-            maxHoldExpiredCount,
-            manualCount,
-            takeProfitAmount: takeProfit.amount,
-            stopLossAmount: stopLoss.amount,
-            trailingStopAmount: trailingStop.amount,
-            expiredAmount: expired.amount,
-            maxHoldExpiredAmount: maxHoldExpired.amount,
-            manualAmount: manual.amount
-        });
+    // 구 전략(v4 단타) 포함 토글 → includeLegacy 파라미터로 다시 조회
+    const handleLegacyToggle = () => {
+        const next = !includeLegacy;
+        setIncludeLegacy(next);
+        saveLegacy(next);
+        setColumnFilters({});
+        if (!next && LEGACY_ONLY_KEYS.has(sortConfig.key)) setSortConfig(DEFAULT_SORT);
+        handleSearch(0, null, { legacy: next });
     };
 
     // 필터 변경
@@ -581,14 +560,22 @@ export default function CointradeHistory() {
         });
     }, []);
 
+    // 표시 컬럼 — 구 전략 전용 컬럼(손익/모멘텀/ML/보유시간)은 구 전략 포함 시에만
+    const visibleColumns = useMemo(
+        () => (includeLegacy ? TABLE_COLUMNS : TABLE_COLUMNS.filter(col => !col.legacyOnly)),
+        [includeLegacy]
+    );
+    // 컬럼 render/getFilterLabel 공통 컨텍스트
+    const columnCtx = useMemo(() => ({ names: symbolNames }), [symbolNames]);
+
     // 컬럼별 전체 원본 값 (엑셀 필터 옵션용, records 변경 시에만 재계산)
     const columnValuesMap = useMemo(() => {
         const map = {};
-        TABLE_COLUMNS.forEach(col => {
+        visibleColumns.forEach(col => {
             map[col.key] = records.map(r => r[col.key]);
         });
         return map;
-    }, [records]);
+    }, [records, visibleColumns]);
 
     // 클라이언트 사이드 필터링 및 정렬 데이터
     const processedData = useMemo(() => {
@@ -662,55 +649,81 @@ export default function CointradeHistory() {
         return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
     };
 
-    // 요약 데이터를 행 배열로 변환
-    const getSummaryRows = () => {
-        const fmtAmount = (v) => `${v >= 0 ? '+' : ''}${Math.floor(v).toLocaleString()}원`;
-        const fmtPct = (count) => summary.sellCount > 0
-            ? `${(count / summary.sellCount * 100).toFixed(1)}%`
-            : '0.0%';
-        const reasonRows = [
-            ['익절', summary.takeProfitCount, summary.takeProfitAmount],
-            ['손절', summary.stopLossCount, summary.stopLossAmount],
-            ['트레일링스탑', summary.trailingStopCount, summary.trailingStopAmount],
-            ['강제청산', summary.maxHoldExpiredCount, summary.maxHoldExpiredAmount],
-            ['수동매도', summary.manualCount, summary.manualAmount],
-            ['만료매도', summary.expiredCount, summary.expiredAmount],
-        ].flatMap(([label, count, amount]) => [
-            [`${label} 건수`, `${count}건`],
-            [`${label} 비율`, fmtPct(count)],
-            [`${label} 손익`, count === 0 ? '-' : fmtAmount(amount)],
-        ]);
+    const activeTabLabel = HISTORY_TABS.find(t => t.key === activeTab)?.label ?? '';
 
+    // 요약 데이터를 행 배열로 변환 (현재 전략: 시장별 흐름, 구 전략 포함 시 v4 손익 통계 추가)
+    const getSummaryRows = () => {
+        const won = (v) => `${Math.floor(v).toLocaleString()}원`;
+        const signedWon = (v) => `${v >= 0 ? '+' : ''}${won(v)}`;
+        const flowRows = (prefix, f) => [
+            [`${prefix}매수 건수`, `${f.buyCount}건`],
+            [`${prefix}매수 금액`, won(f.buyAmount)],
+            [`${prefix}매도 건수`, `${f.sellCount}건`],
+            [`${prefix}매도 금액`, won(f.sellAmount)],
+            [`${prefix}순매수(매수-매도)`, signedWon(f.netBuy)],
+        ];
+        const currentRows = records.filter(r => !isLegacyRecord(r));
+        const market = tabMarket(activeTab);
+        const rows = [
+            ['조회 탭', activeTabLabel],
+            ['구 전략(v4) 포함', includeLegacy ? '예' : '아니오'],
+            ...flowRows('[현재 전략] ', computeFlow(currentRows)),
+        ];
+        if (!market) {
+            const byMarket = computeFlowByMarket(currentRows);
+            Object.keys(byMarket).forEach(m => rows.push(...flowRows(`[${MARKET_META[m].label}] `, byMarket[m])));
+        }
+        if (!includeLegacy) return rows;
+
+        const legacy = computeLegacyStats(records.filter(isLegacyRecord));
+        const pct = (count) => (legacy.sellCount > 0 ? `${(count / legacy.sellCount * 100).toFixed(1)}%` : '0.0%');
         return [
-            ['매수 건수', `${summary.buyCount}건`],
-            ['매수 금액', `${Math.floor(summary.buyAmount).toLocaleString()}원`],
-            ['매도 건수', `${summary.sellCount}건`],
-            ['매도 금액', `${Math.floor(summary.sellAmount).toLocaleString()}원`],
-            ['승률', `${summary.winRate.toFixed(1)}% (${summary.winCount}/${summary.sellCount}건)`],
-            ['실현 손익', fmtAmount(summary.totalProfit)],
-            ...reasonRows,
-            ['실현 수익률', `${summary.realizedProfitRate >= 0 ? '+' : ''}${summary.realizedProfitRate.toFixed(2)}%`],
+            ...rows,
+            ...flowRows('[구 전략(v4)] ', legacy),
+            ['[구 전략(v4)] 승률', `${legacy.winRate.toFixed(1)}% (${legacy.winCount}/${legacy.sellCount}건)`],
+            ['[구 전략(v4)] 실현 손익', signedWon(legacy.totalProfit)],
+            ...legacy.reasons.flatMap(({ label, count, amount }) => [
+                [`[구 전략(v4)] ${label} 건수`, `${count}건`],
+                [`[구 전략(v4)] ${label} 비율`, pct(count)],
+                [`[구 전략(v4)] ${label} 손익`, count === 0 ? '-' : signedWon(amount)],
+            ]),
+            ['[구 전략(v4)] 실현 수익률', `${legacy.realizedProfitRate >= 0 ? '+' : ''}${legacy.realizedProfitRate.toFixed(2)}%`],
         ];
     };
 
-    // 거래 목록 → plain 값 행 배열 변환
-    const getTradeRows = (data) => data.map(row => [
-        row.createdAt ? formatDateTime(row.createdAt) : '-',
-        row.coinCode || '-',
-        row.tradeType === 'BUY' ? '매수' : '매도',
-        row.price != null ? `${formatNumberWithComma(row.price)}원` : '-',
-        row.quantity != null ? row.quantity.toFixed(8) : '-',
-        row.totalAmount != null ? `${formatNumberWithComma(row.totalAmount)}원` : '-',
-        row.reason ? getReasonLabel(row.reason) : '-',
-        row.profitLoss != null ? `${row.profitLoss >= 0 ? '+' : ''}${formatNumberWithComma(row.profitLoss)}원` : '-',
-        row.profitLossRate != null ? `${row.profitLossRate >= 0 ? '+' : ''}${row.profitLossRate.toFixed(2)}%` : '-',
-        row.momentumScore != null ? Number(row.momentumScore).toFixed(4) : '-',
-        row.mlConfidence != null ? `${(Number(row.mlConfidence) * 100).toFixed(1)}%` : '-',
-        row.entryReason || '-',
-        formatHoldDuration(row.holdDurationSec),
-    ]);
+    // 거래 목록 → plain 값 행 배열 변환 (구 전략 컬럼은 구 전략 포함 시에만)
+    const getTradeRows = (data) => data.map(row => {
+        const krw = (v) => {
+            const n = displayKrw(v, row);
+            return n != null ? `${formatNumberWithComma(n)}원` : '-';
+        };
+        const base = [
+            row.createdAt ? formatDateTime(row.createdAt) : '-',
+            row.coinCode ? MARKET_META[marketOf(row.coinCode)].label : '-',
+            row.coinCode ? (symbolNames[row.coinCode] ?? row.coinCode) : '-',
+            row.coinCode || '-',
+            row.tradeType === 'BUY' ? '매수' : '매도',
+            krw(row.price),
+            formatQty(row.quantity, row.coinCode),
+            krw(row.totalAmount),
+            row.reason ? getReasonLabel(row.reason) : '-',
+            row.entryReason || '-',
+        ];
+        if (!includeLegacy) return base;
+        return [
+            ...base,
+            row.profitLoss != null ? `${row.profitLoss >= 0 ? '+' : ''}${formatNumberWithComma(row.profitLoss)}원` : '-',
+            row.profitLossRate != null ? `${row.profitLossRate >= 0 ? '+' : ''}${row.profitLossRate.toFixed(2)}%` : '-',
+            row.momentumScore != null ? Number(row.momentumScore).toFixed(4) : '-',
+            row.mlConfidence != null ? `${(Number(row.mlConfidence) * 100).toFixed(1)}%` : '-',
+            formatHoldDuration(row.holdDurationSec),
+        ];
+    });
 
-    const TRADE_HEADERS = ['일시', '종목', '유형', '가격', '수량', '금액', '사유', '손익', '손익률', '모멘텀점수', 'ML확률', '진입사유', '보유시간'];
+    const TRADE_HEADERS = ['일시', '시장', '종목명', '종목코드', '유형', '가격', '수량', '금액', '사유', '비고'];
+    const LEGACY_TRADE_HEADERS = ['손익', '손익률', '모멘텀점수', 'ML확률', '보유시간'];
+    const tradeHeaders = includeLegacy ? [...TRADE_HEADERS, ...LEGACY_TRADE_HEADERS] : TRADE_HEADERS;
+    const fileLabel = `거래기록_${activeTabLabel}${includeLegacy ? '_구전략포함' : ''}`;
 
     // CSV 문자열 생성
     const toCsv = (headers, rows) => {
@@ -736,13 +749,13 @@ export default function CointradeHistory() {
 
             getSummaryRows().forEach(r => ws.addRow(r));
 
-            ws.getColumn(1).width = 20;
-            ws.getColumn(2).width = 25;
+            ws.getColumn(1).width = EXCEL_SUMMARY_COL_WIDTHS[0];
+            ws.getColumn(2).width = EXCEL_SUMMARY_COL_WIDTHS[1];
 
             const buf = await wb.xlsx.writeBuffer();
             triggerDownload(
                 new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
-                `코인거래_요약_${getTimestamp()}.xlsx`
+                `${fileLabel}_요약_${getTimestamp()}.xlsx`
             );
         } catch (e) {
             console.error('요약 엑셀 다운로드 실패:', e);
@@ -755,7 +768,7 @@ export default function CointradeHistory() {
             const csv = toCsv(['항목', '값'], getSummaryRows());
             triggerDownload(
                 new Blob([csv], { type: 'text/csv;charset=utf-8' }),
-                `코인거래_요약_${getTimestamp()}.csv`
+                `${fileLabel}_요약_${getTimestamp()}.csv`
             );
         } catch (e) {
             console.error('요약 CSV 다운로드 실패:', e);
@@ -770,7 +783,7 @@ export default function CointradeHistory() {
             const ws = wb.addWorksheet('거래목록');
 
             // 헤더
-            ws.addRow(TRADE_HEADERS);
+            ws.addRow(tradeHeaders);
             ws.getRow(1).eachCell(cell => {
                 cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF475569' } };
@@ -781,13 +794,12 @@ export default function CointradeHistory() {
             rows.forEach(r => ws.addRow(r));
 
             // 열 너비 자동 조정
-            const colWidths = [20, 14, 8, 16, 18, 16, 12, 16, 12, 12, 12];
-            colWidths.forEach((w, i) => { ws.getColumn(i + 1).width = w; });
+            EXCEL_TRADE_COL_WIDTHS.slice(0, tradeHeaders.length).forEach((w, i) => { ws.getColumn(i + 1).width = w; });
 
             const buf = await wb.xlsx.writeBuffer();
             triggerDownload(
                 new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
-                `코인거래_목록_${getTimestamp()}.xlsx`
+                `${fileLabel}_목록_${getTimestamp()}.xlsx`
             );
         } catch (e) {
             console.error('거래목록 엑셀 다운로드 실패:', e);
@@ -797,10 +809,10 @@ export default function CointradeHistory() {
 
     const handleDownloadTradeCsv = () => {
         try {
-            const csv = toCsv(TRADE_HEADERS, getTradeRows(processedData));
+            const csv = toCsv(tradeHeaders, getTradeRows(processedData));
             triggerDownload(
                 new Blob([csv], { type: 'text/csv;charset=utf-8' }),
-                `코인거래_목록_${getTimestamp()}.csv`
+                `${fileLabel}_목록_${getTimestamp()}.csv`
             );
         } catch (e) {
             console.error('거래목록 CSV 다운로드 실패:', e);
@@ -861,6 +873,8 @@ export default function CointradeHistory() {
         };
 
         const isBuy = selectedRecord.tradeType === 'BUY';
+        const isLegacy = isLegacyRecord(selectedRecord);
+        const qtyDecimals = qtyDecimalsOf(selectedRecord.coinCode);
 
         return (
             <div
@@ -872,8 +886,9 @@ export default function CointradeHistory() {
                     {/* 헤더 */}
                     <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
                         <div className="flex items-center gap-2 sm:gap-3">
+                            {selectedRecord.coinCode && <MarketBadge market={marketOf(selectedRecord.coinCode)} />}
                             <h3 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">
-                                {selectedRecord.coinCode}
+                                {displayName(selectedRecord.coinCode, symbolNames)}
                             </h3>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${isBuy
                                 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
@@ -881,7 +896,7 @@ export default function CointradeHistory() {
                                 }`}>
                                 {isBuy ? '매수' : '매도'}
                             </span>
-                            {!isBuy && selectedRecord.reason && (
+                            {(!isBuy || !isLegacy) && selectedRecord.reason && (
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getReasonColor(selectedRecord.reason)}`}>
                                     {getReasonLabel(selectedRecord.reason)}
                                 </span>
@@ -947,7 +962,7 @@ export default function CointradeHistory() {
                                     ? 'text-blue-800 dark:text-blue-300'
                                     : 'text-slate-800 dark:text-slate-200'
                                     }`}>
-                                    {renderFormattedPrice(selectedRecord.price, '원')}
+                                    {renderFormattedPrice(displayKrw(selectedRecord.price, selectedRecord), '원')}
                                 </div>
                             </div>
 
@@ -955,7 +970,8 @@ export default function CointradeHistory() {
                             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 sm:p-4">
                                 <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">수량</div>
                                 <div className="text-base sm:text-lg text-slate-800 dark:text-slate-200">
-                                    {selectedRecord.quantity ? renderFormattedNumber(selectedRecord.quantity, 8) : '-'}
+                                    {selectedRecord.quantity ? renderFormattedNumber(selectedRecord.quantity, qtyDecimals) : '-'}
+                                    {selectedRecord.quantity && qtyDecimals === 0 ? <span className="font-normal">주</span> : null}
                                 </div>
                             </div>
 
@@ -963,7 +979,7 @@ export default function CointradeHistory() {
                             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 sm:p-4">
                                 <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">총 금액</div>
                                 <div className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                                    {renderFormattedPrice(selectedRecord.totalAmount, '원')}
+                                    {renderFormattedPrice(displayKrw(selectedRecord.totalAmount, selectedRecord), '원')}
                                 </div>
                             </div>
 
@@ -1023,7 +1039,7 @@ export default function CointradeHistory() {
 
                         {/* 매수 진입 정보 (매수/매도 모두 - 매도는 보유 당시 진입 정보 유지) */}
                         <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700/50 dark:to-slate-800/50 rounded-lg p-4 sm:p-5 border border-slate-200 dark:border-slate-700">
-                            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">매수 진입 정보</h4>
+                            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">{isLegacy ? '매수 진입 정보 (구 전략 v4)' : '비고'}</h4>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                 {/* 모멘텀 점수 */}
@@ -1065,7 +1081,7 @@ export default function CointradeHistory() {
                                 {/* 진입 사유 */}
                                 {selectedRecord.entryReason && (
                                     <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700 sm:col-span-2">
-                                        <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">진입 사유</div>
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{isLegacy ? '진입 사유' : '전략 메모'}</div>
                                         <div className="text-sm text-slate-800 dark:text-slate-200 break-all">
                                             {selectedRecord.entryReason}
                                         </div>
@@ -1225,6 +1241,30 @@ export default function CointradeHistory() {
         <div className="px-2 py-8 md:px-4">
             <PageTitle>거래기록 조회</PageTitle>
 
+            {/* 시장 탭 (자동매매 화면 탭과 동일한 모양) */}
+            <div role="tablist" className="flex gap-1 mb-4 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-slate-200 dark:border-slate-700">
+                {HISTORY_TABS.map((tab) => {
+                    const isActive = tab.key === activeTab;
+                    return (
+                        <button
+                            key={tab.key}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActive}
+                            onClick={() => handleTabChange(tab.key)}
+                            disabled={loading}
+                            className={`whitespace-nowrap px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px disabled:cursor-not-allowed ${
+                                isActive
+                                    ? 'border-sky-600 text-sky-700 dark:border-sky-400 dark:text-sky-400'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-500'
+                            }`}
+                        >
+                            {tab.label}
+                        </button>
+                    );
+                })}
+            </div>
+
             {/* 필터 영역 */}
             <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-6 mb-6">
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
@@ -1295,8 +1335,10 @@ export default function CointradeHistory() {
                                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="all">전체</option>
-                                    {coinList.map(code => (
-                                        <option key={code} value={code}>{code}</option>
+                                    {marketCoinList.map(code => (
+                                        <option key={code} value={code}>
+                                            {activeTab === HISTORY_TABS[0].key ? `[${MARKET_META[marketOf(code)].label}] ` : ''}{displayName(code, symbolNames)}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -1315,22 +1357,19 @@ export default function CointradeHistory() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    매도 사유
+                                <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    기록 범위
+                                </span>
+                                <label className="flex items-center gap-2 h-10 cursor-pointer select-none text-sm text-slate-700 dark:text-slate-300">
+                                    <input
+                                        type="checkbox"
+                                        checked={includeLegacy}
+                                        onChange={handleLegacyToggle}
+                                        disabled={loading}
+                                        className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    구 전략 기록 포함 (v4 단타)
                                 </label>
-                                <select
-                                    value={filters.reason}
-                                    onChange={(e) => handleFilterChange('reason', e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="all">전체</option>
-                                    <option value="SIGNAL">매수 (SIGNAL)</option>
-                                    <option value="TAKE_PROFIT">익절 (TAKE_PROFIT)</option>
-                                    <option value="STOP_LOSS">손절 (STOP_LOSS)</option>
-                                    <option value="TRAILING_STOP">트레일링스탑 (TRAILING_STOP)</option>
-                                    <option value="EXPIRED">만료 (EXPIRED)</option>
-                                    <option value="MAX_HOLDING_EXPIRED">강제청산 (MAX_HOLDING_EXPIRED)</option>
-                                </select>
                             </div>
                         </div>
                     </fieldset>
@@ -1354,7 +1393,7 @@ export default function CointradeHistory() {
                         <div>
                             <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
                                 조회 결과 요약
-                                {itemsPerPage !== 9999 && (
+                                {itemsPerPage !== PAGE_SIZE_ALL && (
                                     <span className="ml-2 text-xs font-normal text-slate-500 dark:text-slate-400">
                                         (전체 보기로 조회 시 정확한 요약을 확인할 수 있습니다)
                                     </span>
@@ -1364,15 +1403,16 @@ export default function CointradeHistory() {
                                 <span>{filters.startDate} {filters.startTime} ~ {filters.endDate} {filters.endTime}</span>
                                 <span>·</span>
                                 <span>{totalElements.toLocaleString()}건</span>
-                                {(filters.tradeType !== 'all' || filters.coinCode !== 'all' || filters.reason !== 'all') && (
+                                <span>·</span>
+                                <span className="font-medium text-slate-700 dark:text-slate-300">{activeTabLabel}{includeLegacy ? ' (구 전략 포함)' : ''}</span>
+                                {(filters.tradeType !== 'all' || filters.coinCode !== 'all') && (
                                     <>
                                         <span>·</span>
                                         <span className="text-amber-600 dark:text-amber-400 font-medium">
                                             필터 적용됨
                                             ({[
                                                 filters.tradeType !== 'all' && (filters.tradeType === 'BUY' ? '매수' : '매도'),
-                                                filters.coinCode !== 'all' && filters.coinCode,
-                                                filters.reason !== 'all' && getReasonLabel(filters.reason)
+                                                filters.coinCode !== 'all' && displayName(filters.coinCode, symbolNames)
                                             ].filter(Boolean).join(', ')})
                                             — 조회 조건에 해당하는 데이터만 집계
                                         </span>
@@ -1380,7 +1420,7 @@ export default function CointradeHistory() {
                                 )}
                             </div>
                         </div>
-                        {itemsPerPage === 9999 && (
+                        {itemsPerPage === PAGE_SIZE_ALL && (
                             <div className="flex items-center gap-2">
                                 <button
                                     type="button"
@@ -1395,135 +1435,8 @@ export default function CointradeHistory() {
                         )}
                     </div>
 
-                    {itemsPerPage === 9999 ? (
-                        <>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                                {/* 매수 건수 */}
-                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
-                                    <div className="text-xs text-blue-700 dark:text-blue-400 mb-1">매수 건수</div>
-                                    <div className="text-xl font-bold text-blue-800 dark:text-blue-300">
-                                        {summary.buyCount}건
-                                    </div>
-                                </div>
-
-                                {/* 매수 금액 */}
-                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
-                                    <div className="text-xs text-blue-700 dark:text-blue-400 mb-1">매수 금액</div>
-                                    <div className="text-lg font-bold text-blue-800 dark:text-blue-300">
-                                        {formatNumberWithComma(Math.floor(summary.buyAmount))}원
-                                    </div>
-                                </div>
-
-                                {/* 매도 건수 */}
-                                <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">매도 건수</div>
-                                    <div className="text-xl font-bold text-slate-800 dark:text-slate-200">
-                                        {summary.sellCount}건
-                                    </div>
-                                </div>
-
-                                {/* 매도 금액 */}
-                                <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">매도 금액</div>
-                                    <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
-                                        {formatNumberWithComma(Math.floor(summary.sellAmount))}원
-                                    </div>
-                                </div>
-
-                                {/* 승률 */}
-                                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
-                                    <div className="text-xs text-amber-700 dark:text-amber-400 mb-1">승률</div>
-                                    <div className="text-xl font-bold text-amber-800 dark:text-amber-300">
-                                        {summary.winRate.toFixed(1)}%
-                                    </div>
-                                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-                                        {summary.winCount} / {summary.sellCount}건
-                                    </div>
-                                </div>
-
-                                {/* 실현 손익 */}
-                                <div className={`p-4 rounded-lg ${summary.totalProfit >= 0 ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800' : 'bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800'}`}>
-                                    <div className={`text-xs mb-1 ${summary.totalProfit >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>실현 손익</div>
-                                    <div className={`text-lg font-bold ${summary.totalProfit >= 0 ? 'text-blue-800 dark:text-blue-300' : 'text-orange-800 dark:text-orange-300'}`}>
-                                        {summary.totalProfit >= 0 ? '+' : ''}{formatNumberWithComma(Math.floor(summary.totalProfit))}원
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* 매도 사유별 건수 */}
-                            <div className="mt-4">
-                                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
-                                    매도 사유별 건수 · 비율 · 손익
-                                    <span className="ml-2 font-normal text-[10px] text-slate-400 dark:text-slate-500">
-                                        (비율은 전체 매도 {summary.sellCount}건 대비)
-                                    </span>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                                    {[
-                                        { label: '익절', count: summary.takeProfitCount, amount: summary.takeProfitAmount,
-                                          bg: 'bg-sky-50 dark:bg-sky-900/20', border: 'border-sky-100 dark:border-sky-800',
-                                          labelColor: 'text-sky-700 dark:text-sky-400', valueColor: 'text-sky-800 dark:text-sky-300' },
-                                        { label: '손절', count: summary.stopLossCount, amount: summary.stopLossAmount,
-                                          bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-100 dark:border-orange-800',
-                                          labelColor: 'text-orange-700 dark:text-orange-400', valueColor: 'text-orange-800 dark:text-orange-300' },
-                                        { label: '트레일링스탑', count: summary.trailingStopCount, amount: summary.trailingStopAmount,
-                                          bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-100 dark:border-amber-800',
-                                          labelColor: 'text-amber-700 dark:text-amber-400', valueColor: 'text-amber-800 dark:text-amber-300' },
-                                        { label: '강제청산', count: summary.maxHoldExpiredCount, amount: summary.maxHoldExpiredAmount,
-                                          bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-100 dark:border-amber-800',
-                                          labelColor: 'text-amber-700 dark:text-amber-400', valueColor: 'text-amber-800 dark:text-amber-300' },
-                                        { label: '수동매도', count: summary.manualCount, amount: summary.manualAmount,
-                                          bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-100 dark:border-orange-800',
-                                          labelColor: 'text-orange-700 dark:text-orange-400', valueColor: 'text-orange-800 dark:text-orange-300' },
-                                        { label: '만료매도', count: summary.expiredCount, amount: summary.expiredAmount,
-                                          bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-100 dark:border-purple-800',
-                                          labelColor: 'text-purple-700 dark:text-purple-400', valueColor: 'text-purple-800 dark:text-purple-300' },
-                                    ].map(({ label, count, amount, bg, border, labelColor, valueColor }) => {
-                                        const pct = summary.sellCount > 0 ? (count / summary.sellCount * 100) : 0;
-                                        const profitClass = amount >= 0
-                                            ? 'text-blue-700 dark:text-blue-400'
-                                            : 'text-orange-700 dark:text-orange-400';
-                                        return (
-                                            <div key={label} className={`p-4 rounded-lg border ${bg} ${border}`}>
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <span className={`text-xs ${labelColor}`}>{label}</span>
-                                                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/60 dark:bg-slate-900/40 ${labelColor}`}>
-                                                        {pct.toFixed(1)}%
-                                                    </span>
-                                                </div>
-                                                <div className={`text-xl font-bold ${valueColor}`}>
-                                                    {count}건
-                                                </div>
-                                                <div className={`text-xs mt-1 font-medium ${profitClass}`}>
-                                                    {count === 0 ? (
-                                                        <span className="text-slate-400 dark:text-slate-500">-</span>
-                                                    ) : (
-                                                        <>{amount >= 0 ? '+' : ''}{formatNumberWithComma(Math.floor(amount))}원</>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* 수익률 요약 */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                                {/* 실현 수익률 */}
-                                <div className={`p-4 rounded-lg border ${summary.realizedProfitRate >= 0 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800'}`}>
-                                    <div className={`text-xs mb-1 ${summary.realizedProfitRate >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>
-                                        실현 수익률
-                                    </div>
-                                    <div className={`text-xl font-bold ${summary.realizedProfitRate >= 0 ? 'text-blue-800 dark:text-blue-300' : 'text-orange-800 dark:text-orange-300'}`}>
-                                        {summary.realizedProfitRate >= 0 ? '+' : ''}{summary.realizedProfitRate.toFixed(2)}%
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                                        매도 실현 손익 / 매도 원금
-                                    </div>
-                                </div>
-                            </div>
-
-                        </>
+                    {itemsPerPage === PAGE_SIZE_ALL ? (
+                        <HistorySummaryPanel records={records} activeTab={activeTab} includeLegacy={includeLegacy} />
                     ) : (
                         <div className="text-center py-4 text-slate-500 dark:text-slate-400">
                             <p className="text-sm">총 <span className="font-bold text-slate-700 dark:text-slate-300">{totalElements.toLocaleString()}건</span>의 거래 내역이 있습니다.</p>
@@ -1556,7 +1469,7 @@ export default function CointradeHistory() {
                             <option value={20}>20개씩 보기</option>
                             <option value={50}>50개씩 보기</option>
                             <option value={100}>100개씩 보기</option>
-                            <option value={9999}>전체 보기</option>
+                            <option value={PAGE_SIZE_ALL}>전체 보기</option>
                         </select>
 
                         {Object.keys(columnFilters).length > 0 && (
@@ -1570,7 +1483,7 @@ export default function CointradeHistory() {
                         )}
                         {totalElements > 0 && (
                             <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 font-medium text-sm dark:bg-blue-900 dark:text-blue-200">
-                                {itemsPerPage === 9999
+                                {itemsPerPage === PAGE_SIZE_ALL
                                     ? `전체 ${totalElements.toLocaleString()}건`
                                     : `${currentPage * itemsPerPage + 1}-${Math.min((currentPage + 1) * itemsPerPage, totalElements)} / 총 ${totalElements.toLocaleString()}건`}
                             </span>
@@ -1579,11 +1492,11 @@ export default function CointradeHistory() {
                 </div>
 
                 <div className="overflow-x-auto overflow-y-auto scrollbar-always bg-white border border-slate-200 rounded-lg shadow-sm max-h-[70vh] dark:bg-slate-800 dark:border-slate-700" style={{ scrollbarGutter: 'stable' }}>
-                  <div style={{ minWidth: '1200px' }}>
+                  <div style={{ minWidth: includeLegacy ? TABLE_MIN_WIDTH_LEGACY : TABLE_MIN_WIDTH }}>
                     <table className="w-full table-fixed border-separate border-spacing-0 text-sm">
                         <thead className="sticky top-0 z-10 bg-gradient-to-r from-slate-700 to-slate-600 text-white">
                             <tr>
-                                {TABLE_COLUMNS.map((col, index) => {
+                                {visibleColumns.map((col, index) => {
                                     const isSorted = sortConfig.key === col.key;
                                     const sortDir = isSorted ? sortConfig.direction : null;
                                     const justify = col.headerClassName.includes('text-center')
@@ -1619,7 +1532,7 @@ export default function CointradeHistory() {
                                                     onApply={(values) => handleColumnFilterChange(col.key, values)}
                                                     onSort={col.sortable ? (dir) => handleSort(col.key, dir) : undefined}
                                                     sortDirection={sortDir}
-                                                    getOptionLabel={col.getFilterLabel}
+                                                    getOptionLabel={col.getFilterLabel ? (v) => col.getFilterLabel(v, columnCtx) : undefined}
                                                 />
                                             </div>
                                         </th>
@@ -1630,13 +1543,13 @@ export default function CointradeHistory() {
                         <tbody className="bg-white divide-y divide-slate-200 dark:bg-slate-800 dark:divide-slate-700">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={TABLE_COLUMNS.length} className="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
+                                    <td colSpan={visibleColumns.length} className="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
                                         데이터를 불러오는 중입니다...
                                     </td>
                                 </tr>
                             ) : currentRecords.length === 0 ? (
                                 <tr>
-                                    <td colSpan={TABLE_COLUMNS.length} className="px-4 py-12 text-center">
+                                    <td colSpan={visibleColumns.length} className="px-4 py-12 text-center">
                                         <div className="flex flex-col items-center gap-3">
                                             <svg
                                                 className="w-12 h-12 text-slate-300 dark:text-slate-600"
@@ -1664,9 +1577,9 @@ export default function CointradeHistory() {
                                         onDoubleClick={() => handleRowDoubleClick(row)}
                                         className="cursor-pointer hover:bg-blue-50 transition-colors dark:hover:bg-slate-700"
                                     >
-                                        {TABLE_COLUMNS.map((col, index) => {
+                                        {visibleColumns.map((col, index) => {
                                             const value = row[col.key];
-                                            const displayValue = col.render ? col.render(value) : (value ?? '-');
+                                            const displayValue = col.render ? col.render(value, row, columnCtx) : (value ?? '-');
 
                                             return (
                                                 <td
@@ -1749,7 +1662,10 @@ export default function CointradeHistory() {
                 isOpen={isStatsModalOpen}
                 onClose={() => setIsStatsModalOpen(false)}
                 records={records}
-                periodLabel={`${filters.startDate} ${filters.startTime} ~ ${filters.endDate} ${filters.endTime}`}
+                symbolNames={symbolNames}
+                activeTab={activeTab}
+                includeLegacy={includeLegacy}
+                periodLabel={`${filters.startDate} ${filters.startTime} ~ ${filters.endDate} ${filters.endTime} · ${activeTabLabel}`}
             />
         </div>
     );
