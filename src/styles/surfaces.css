@@ -1,4 +1,7 @@
 /*
+ * 본문 바닥색 (bg-canvas) — 라이트모드에서 순백 바닥이 눈부셔서 무채색 연회색으로, 카드(흰색)가 바닥 위에 떠 보이게
+ * 다크는 기존 본문색(slate-900) 그대로
+ *
  * 표 행 배경·차트 격자 토큰 — 차트 격자는 JS 에서 themeColors.CHART_GRID 로 사용
  * 표 행 배경 클래스: bg-row-base / bg-row-hover / bg-row-nested / bg-row-hit
  * - 다크 값을 토큰 안에서 처리하므로 dark: 변형 없이 한 클래스로 사용 (hover 우선순위 충돌 방지)
@@ -6,6 +9,7 @@
  * - 다크 값은 slate 변수 기반이라 theme-dark.css 팔레트 변경이 자동 반영
  */
 @theme inline {
+  --color-canvas: var(--canvas);
   --color-row-base: var(--row-base);
   --color-row-hover: var(--row-hover);
   --color-row-nested: var(--row-nested);
@@ -14,6 +18,9 @@
 
 @layer base {
   :root {
+    --canvas: oklch(97.2% 0 0);
+    /* 입력창 기본 배경 — Tailwind 기본(투명)이면 회색 바닥이 비쳐서 라이트만 흰색 */
+    --field-bg: white;
     --row-base: white;
     --row-hover: var(--color-slate-50);
     --row-nested: color-mix(in oklab, var(--color-slate-100) 45%, white);
@@ -22,10 +29,24 @@
   }
 
   .dark {
+    --canvas: var(--color-slate-900);
+    --field-bg: transparent;
     --row-base: var(--color-slate-800);
     --row-hover: color-mix(in oklab, var(--color-slate-700) 45%, var(--color-slate-800));
     --row-nested: color-mix(in oklab, var(--color-slate-900) 55%, var(--color-slate-800));
     --row-hit: color-mix(in oklab, var(--color-amber-500) 10%, var(--color-slate-800));
     --chart-grid: var(--color-slate-600);
+  }
+}
+
+/*
+ * 입력창 기본 배경 (배경 클래스를 안 붙인 input/select/textarea)
+ * - base 레이어라 컴포넌트에 붙인 bg-* 유틸리티가 항상 우선
+ */
+@layer base {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="submit"], [type="button"]),
+  select,
+  textarea {
+    background-color: var(--field-bg);
   }
 }

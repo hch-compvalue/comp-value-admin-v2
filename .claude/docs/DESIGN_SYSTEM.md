@@ -25,6 +25,8 @@
 ### Neutral (slate 계열로 통일 — gray 사용 금지, 다크모드는 회색으로 자동 교체)
 - 텍스트: slate-900 / 700 / 500 / 400
 - 배경: white / slate-50 / slate-100
+- **본문 바닥: `bg-canvas`** (2026-10-20, `src/styles/surfaces.css`) — 라이트는 무채색 연회색 `oklch(97.2% 0 0)`(순백 바닥 눈부심 해소), 다크는 slate-900. 카드·헤더·사이드바는 흰색(다크 slate-800) 유지 → 바닥 < 카드 구조
+- 입력창(input/select/textarea)은 배경 클래스가 없으면 라이트에서 흰색(`--field-bg`)이 기본 — 회색 바닥이 비치지 않게
 - Border: slate-200 / slate-300
 
 ### 다크모드 매핑

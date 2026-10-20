@@ -105,7 +105,7 @@ function Layout001() {
                     onMouseLeave={handleSidebarMouseLeave}
                 />
 
-                <main ref={mainRef} className="scrollbar-always relative flex-1 overflow-auto bg-white p-4 md:p-6 dark:bg-slate-900">
+                <main ref={mainRef} className="scrollbar-always relative flex-1 overflow-auto bg-canvas p-4 md:p-6">
                     <TabSheet />
                     <KeepAliveOutlet />
                 </main>
