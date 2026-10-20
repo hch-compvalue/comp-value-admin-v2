@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { send } from '@/util/ClientUtil';
 import useModalAnimation from '@/hooks/useModalAnimation';
+import { SYNC_TITLE, SYNC_ON_HINT, SYNC_OFF_HINT } from '@/util/SellTargetGuide';
 
 export default function TransactionModal({ isOpen, mode, data, onClose, onSave }) {
     const [formData, setFormData] = useState({
@@ -10,7 +11,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
         buyPrice: '',
         totalBuyAmount: '',
         targetPrice: '',
-        targetPriceSync: false,
+        targetPriceSync: true,   // 기본 ON: 최신 기업가치 목표가 (백테스트 근거 SellTargetGuide)
         buyExchangeRateAtTrade: '',
         rmk: '',
     });
@@ -58,7 +59,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                 buyPrice: '',
                 totalBuyAmount: '',
                 targetPrice: '',
-                targetPriceSync: false,
+                targetPriceSync: true,
                 buyExchangeRateAtTrade: fxRate || '',
                 rmk: '',
             });
@@ -276,7 +277,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
                                         formData.targetPriceSync ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
                                     }`}
-                                    title="동기화: 기업가치 분석 목표매도가 자동 적용"
+                                    title={SYNC_TITLE}
                                 >
                                     <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
                                         formData.targetPriceSync ? 'translate-x-[18px]' : 'translate-x-[3px]'
@@ -297,6 +298,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                 />
                             )}
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{formData.targetPriceSync ? SYNC_ON_HINT : SYNC_OFF_HINT}</div>
                             {!formData.targetPriceSync && fxRate && formData.targetPrice && parseFloat(formData.targetPrice) > 0 && (
                                 <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                     (₩{(parseFloat(formData.targetPrice) * fxRate).toLocaleString('ko-KR', { maximumFractionDigits: 0 })})

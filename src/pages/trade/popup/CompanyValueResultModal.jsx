@@ -6,6 +6,7 @@ import CompanyInfoModal from './CompanyInfoModal';
 import InvestmentDetailModal, { FullDetailModal } from './InvestmentDetailModal';
 import { hasPriceRange } from './priceRangeUtil';
 import PriceGuideBar from './PriceGuideBar';
+import { SELL_TARGET_GUIDE } from '@/util/SellTargetGuide';
 import { send } from '@/util/ClientUtil';
 import { SignalDot } from '@/util/SignalStyleUtil';
 import { AlertTriangle } from 'lucide-react';
@@ -592,6 +593,9 @@ const HighlightCards = ({ data, investmentData }) => {
                         );
                     })}
                 </div>
+                {!isNaN(sellNum) && (
+                    <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">{SELL_TARGET_GUIDE}</div>
+                )}
                 {/* 가격 막대 (공용) */}
                 <PriceGuideBar price={priceNum} stopLoss={stopLossNum} purchase={purchaseNum} sell={sellNum} fair={targetNum}
                                rangeLow={hasPriceRange(et) ? et.rangeLow : NaN} rangeHigh={hasPriceRange(et) ? et.rangeHigh : NaN}

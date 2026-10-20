@@ -8,6 +8,7 @@ import StockChartModal from '@/pages/trade/popup/StockChartModal';
 import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
 import PriceRangeBlock from '@/pages/trade/popup/PriceRangeBlock';
 import PriceGuideBar from '@/pages/trade/popup/PriceGuideBar';
+import { SELL_TARGET_GUIDE } from '@/util/SellTargetGuide';
 import { RANGE_TITLE, hasPriceRange, fmtProb } from '@/pages/trade/popup/priceRangeUtil';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import { send, API_ENDPOINTS } from '@/util/ClientUtil';
@@ -454,6 +455,10 @@ const TradingGuideSection = ({ data }) => {
                         );
                     })}
                 </div>
+
+                {!isNaN(sellTarget) && (
+                    <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">{SELL_TARGET_GUIDE}</div>
+                )}
 
                 {/* 20거래일 예상 변동 범위 */}
                 {!isNaN(rangeLow) && (

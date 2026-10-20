@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { send } from '@/util/ClientUtil';
 import useModalAnimation from '@/hooks/useModalAnimation';
+import { SYNC_TITLE, SYNC_ON_HINT, SYNC_OFF_HINT } from '@/util/SellTargetGuide';
 import { fetchCurrentPriceBySymbol } from '../services/TransactionService';
 
 /**
@@ -578,7 +579,7 @@ export default function TransactionDetailModal({
                                                     className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${
                                                         formData.targetPriceSync ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
                                                     }`}
-                                                    title="동기화: 기업가치 분석 목표매도가 자동 적용"
+                                                    title={SYNC_TITLE}
                                                 >
                                                     <span className={`inline-block h-3 w-3 rounded-full bg-white transition-transform ${
                                                         formData.targetPriceSync ? 'translate-x-[14px]' : 'translate-x-[2px]'
@@ -598,6 +599,7 @@ export default function TransactionDetailModal({
                                                     className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                                 />
                                             )}
+                                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{formData.targetPriceSync ? SYNC_ON_HINT : SYNC_OFF_HINT}</div>
                                         </div>
                                     </div>
                                     <div>
@@ -735,7 +737,7 @@ export default function TransactionDetailModal({
                                                     className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${
                                                         formData.targetPriceSync ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
                                                     }`}
-                                                    title="동기화: 기업가치 분석 목표매도가 자동 적용"
+                                                    title={SYNC_TITLE}
                                                 >
                                                     <span className={`inline-block h-3 w-3 rounded-full bg-white transition-transform ${
                                                         formData.targetPriceSync ? 'translate-x-[14px]' : 'translate-x-[2px]'
@@ -755,6 +757,7 @@ export default function TransactionDetailModal({
                                                     className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                                 />
                                             )}
+                                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{formData.targetPriceSync ? SYNC_ON_HINT : SYNC_OFF_HINT}</div>
                                         </div>
                                         <div>
                                             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">매수당시환율 (₩)</label>
