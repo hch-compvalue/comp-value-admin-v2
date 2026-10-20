@@ -144,7 +144,7 @@ export default function SideBar001({ isSidebarOpen, setSidebarOpen, setIsPinned,
                     type="button"
                     onClick={() => toggleSection(sectionLabel)}
                     aria-expanded={isOpen}
-                    className="flex w-full items-center justify-between rounded-md px-2.5 py-2.5 text-sm font-semibold uppercase tracking-wide text-slate-500 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200"
+                    className="flex w-full items-center justify-between rounded-md px-2.5 py-2.5 text-sm font-semibold text-slate-500 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200"
                 >
                     <span className="flex items-center gap-2">
                         {SectionIcon && <SectionIcon className="h-4 w-4 shrink-0" />}
@@ -168,12 +168,12 @@ export default function SideBar001({ isSidebarOpen, setSidebarOpen, setIsPinned,
                                         onClick={() => handleLinkClick(route.path)}
                                         className={`group relative flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200 ease-out ${
                                             isActive
-                                                ? 'bg-sky-50 text-sky-700 font-semibold dark:bg-sky-900/30 dark:text-sky-400'
-                                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-1 dark:text-slate-300 dark:hover:bg-slate-700/50 dark:hover:text-white'
+                                                ? 'bg-blue-50 text-blue-600 font-semibold dark:bg-blue-900/30 dark:text-blue-400'
+                                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700/50 dark:hover:text-white'
                                         }`}
                                     >
                                         {/* 왼쪽 인디케이터 바 */}
-                                        <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-full bg-sky-500 transition-all duration-200 ease-out dark:bg-sky-400 ${
+                                        <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-full bg-brand transition-all duration-200 ease-out dark:bg-blue-400 ${
                                             isActive
                                                 ? 'h-5 opacity-100'
                                                 : 'h-0 opacity-0 group-hover:h-3.5 group-hover:opacity-70'
@@ -194,7 +194,7 @@ export default function SideBar001({ isSidebarOpen, setSidebarOpen, setIsPinned,
         <aside
             className={`${
                 isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
-            } fixed inset-y-16 left-0 z-30 w-60 transform border-r border-slate-200 bg-white/95 px-3 py-4 text-sm shadow-lg transition-all duration-200 ease-out md:static md:inset-y-0 md:bg-white md:shadow-none dark:bg-slate-900/95 dark:border-slate-700 md:dark:bg-slate-900 ${
+            } fixed inset-y-16 left-0 z-30 w-60 transform border-r border-slate-200 bg-white px-3 py-4 text-sm shadow-lg transition-all duration-200 ease-out md:static md:inset-y-0 md:bg-white md:shadow-none dark:bg-slate-900 dark:border-slate-700 md:dark:bg-slate-900 ${
                 isDesktopCollapsed
                     ? 'md:w-0 md:min-w-0 md:overflow-hidden md:opacity-0 md:p-0 md:border-0'
                     : 'md:translate-x-0 md:opacity-100 md:w-64 md:shrink-0'
@@ -203,7 +203,7 @@ export default function SideBar001({ isSidebarOpen, setSidebarOpen, setIsPinned,
             onMouseLeave={onMouseLeave}
         >
             <nav className="scrollbar-always flex h-full flex-col overflow-y-auto pb-6">
-                <div className="sticky top-0 z-10 -mx-3 mb-2 bg-white/95 px-3 pb-2 pt-1 dark:bg-slate-900/95">
+                <div className="sticky top-0 z-10 -mx-3 mb-2 bg-white px-3 pb-2 pt-1 dark:bg-slate-900/95">
                     <GlobalSearchBar onOpen={handlePaletteOpen} />
                 </div>
                 {SECTIONS.map(renderSection)}

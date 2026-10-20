@@ -73,7 +73,7 @@ function PageNation({ totalCount, pageSize = 10, pageBlock = 3, currentPage, onP
 
             {/* < 버튼 */}
             {startPage > 1 && (
-                <button onClick={goPrevBlock} className="p-2 hover:scale-110">
+                <button onClick={goPrevBlock} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
                     ◀
                 </button>
             )}
@@ -86,7 +86,7 @@ function PageNation({ totalCount, pageSize = 10, pageBlock = 3, currentPage, onP
                         key={page}
                         onClick={() => onPageChange(page)}
                         className={`px-3 py-1 rounded border 
-                            ${page === currentPage ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}
+                            ${page === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700'}
                         `}
                     >
                         {page}
@@ -96,13 +96,13 @@ function PageNation({ totalCount, pageSize = 10, pageBlock = 3, currentPage, onP
 
             {/* > 버튼 */}
             {endPage < totalPage && (
-                <button onClick={goNextBlock} className="p-2 hover:scale-110">
+                <button onClick={goNextBlock} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
                     ▶
                 </button>
             )}
             {/* >> 버튼 */}
             {endPage < totalPage && (
-                <button onClick={goEndPage} className="p-2 hover:scale-110">
+                <button onClick={goEndPage} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
                     ▶▶
                 </button>
             )}

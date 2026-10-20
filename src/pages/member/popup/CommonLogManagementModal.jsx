@@ -12,7 +12,7 @@ import useModalAnimation from '@/hooks/useModalAnimation';
  * - apiEndpoints: { list: string, content: (filename) => string }
  * - streamUrl: string
  * - windowName: string
- * - theme: 'blue' | 'indigo' | 'orange' | 'green' (default: 'blue')
+ * - theme: 'blue' | 'indigo' | 'orange' | 'green' (default: 'blue') — 2026-10-20 부터 모든 값이 같은 중립 스타일
  */
 export default function CommonLogManagementModal({
     isOpen,
@@ -41,59 +41,24 @@ export default function CommonLogManagementModal({
     const logSearchInputRef = useRef(null);
     const resultRefs = useRef({});
 
+    // 화면마다 다른 브랜드 색을 쓰지 않도록 모든 theme 이 같은 중립 스타일을 사용 (theme prop 은 호환용으로 유지)
+    const neutralTheme = {
+        activeTabBg: 'bg-brand',
+        focusRing: 'focus:ring-blue-500',
+        loaderBorder: 'border-blue-500',
+        iconBg: 'bg-blue-50 dark:bg-blue-900/30',
+        iconText: 'text-blue-600 dark:text-blue-400',
+        streamBtn: 'bg-brand hover:bg-brand-hover',
+        selectedItemBg: 'bg-blue-50 dark:bg-blue-900/20',
+        selectedItemBorder: 'border-blue-200 dark:border-blue-800',
+        selectedItemText: 'text-blue-700 dark:text-blue-300',
+        backButtonText: 'text-blue-400'
+    };
     const themeConfig = {
-        blue: {
-            headerGradient: 'from-blue-500 to-indigo-600',
-            activeTabBg: 'bg-blue-600',
-            focusRing: 'focus:ring-blue-500',
-            loaderBorder: 'border-blue-500',
-            iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-            iconText: 'text-blue-600 dark:text-blue-400',
-            streamBtnGradient: 'from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700',
-            selectedItemBg: 'bg-blue-50 dark:bg-blue-900/20',
-            selectedItemBorder: 'border-blue-200 dark:border-blue-800',
-            selectedItemText: 'text-blue-700 dark:text-blue-300',
-            backButtonText: 'text-blue-600 dark:text-blue-400'
-        },
-        indigo: {
-            headerGradient: 'from-indigo-500 to-purple-600',
-            activeTabBg: 'bg-indigo-600',
-            focusRing: 'focus:ring-indigo-500',
-            loaderBorder: 'border-indigo-500',
-            iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
-            iconText: 'text-indigo-600 dark:text-indigo-400',
-            streamBtnGradient: 'from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700',
-            selectedItemBg: 'bg-indigo-50 dark:bg-indigo-900/20',
-            selectedItemBorder: 'border-indigo-200 dark:border-indigo-800',
-            selectedItemText: 'text-indigo-700 dark:text-indigo-300',
-            backButtonText: 'text-indigo-600 dark:text-indigo-400'
-        },
-        orange: {
-            headerGradient: 'from-orange-500 to-red-600',
-            activeTabBg: 'bg-orange-600',
-            focusRing: 'focus:ring-orange-500',
-            loaderBorder: 'border-orange-500',
-            iconBg: 'bg-orange-100 dark:bg-orange-900/30',
-            iconText: 'text-orange-600 dark:text-orange-400',
-            streamBtnGradient: 'from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700',
-            selectedItemBg: 'bg-orange-50 dark:bg-orange-900/20',
-            selectedItemBorder: 'border-orange-200 dark:border-orange-800',
-            selectedItemText: 'text-orange-700 dark:text-orange-300',
-            backButtonText: 'text-orange-600 dark:text-orange-400'
-        },
-        green: {
-            headerGradient: 'from-emerald-500 to-teal-600',
-            activeTabBg: 'bg-emerald-600',
-            focusRing: 'focus:ring-emerald-500',
-            loaderBorder: 'border-emerald-500',
-            iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
-            iconText: 'text-emerald-600 dark:text-emerald-400',
-            streamBtnGradient: 'from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700',
-            selectedItemBg: 'bg-emerald-50 dark:bg-emerald-900/20',
-            selectedItemBorder: 'border-emerald-200 dark:border-emerald-800',
-            selectedItemText: 'text-emerald-700 dark:text-emerald-300',
-            backButtonText: 'text-emerald-600 dark:text-emerald-400'
-        }
+        blue: neutralTheme,
+        indigo: neutralTheme,
+        orange: neutralTheme,
+        green: neutralTheme
     };
     const currentTheme = themeConfig[theme] || themeConfig.blue;
 
@@ -254,23 +219,23 @@ export default function CommonLogManagementModal({
     return (
         <div className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-black/60 px-0 sm:px-4 animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}>
             <div className={`w-full max-w-5xl h-[85vh] sm:rounded-2xl bg-white dark:bg-slate-800 shadow-xl ring-1 ring-slate-900/5 dark:ring-slate-700 overflow-hidden flex flex-col animate__animated ${isAnimatingOut ? 'animate__fadeOutDown' : 'animate__fadeInUp'}`} style={{ animationDuration: '0.25s' }}>
-                <div className={`flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r ${currentTheme.headerGradient} shrink-0`}>
-                    <h2 className="text-base sm:text-lg font-semibold text-white truncate pr-4">{title}</h2>
-                    <button onClick={onClose} className="text-white/80 hover:text-white transition-colors p-1">
+                <div className={`flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0`}>
+                    <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white truncate pr-4">{title}</h2>
+                    <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-200 transition-colors">
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
 
                 <div className="shrink-0 flex gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 overflow-x-auto no-scrollbar">
                     {['fileList', 'logView', 'realtime'].map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab ? `${currentTheme.activeTabBg} text-white shadow-sm` : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}`}>
+                        <button key={tab} onClick={() => setActiveTab(tab)} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab ? `${currentTheme.activeTabBg} text-white` : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'}`}>
                             {tab === 'fileList' ? '파일 목록' : tab === 'logView' ? '로그 조회' : '실시간 추적'}
                             {tab === 'realtime' && <svg className="w-4 h-4 inline-block ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
                         </button>
                     ))}
                 </div>
 
-                {error && <div className="shrink-0 mx-4 sm:mx-6 mt-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"><p className="text-sm text-red-800 dark:text-red-200">{error}</p></div>}
+                {error && <div className="shrink-0 mx-4 sm:mx-6 mt-4 px-4 py-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg"><p className="text-sm text-orange-800 dark:text-orange-200">{error}</p></div>}
 
                 <div className="flex-1 overflow-hidden p-4 sm:p-6 relative">
                     {loading && (
@@ -291,9 +256,9 @@ export default function CommonLogManagementModal({
                                     <table className="w-full border-collapse min-w-[500px] sm:min-w-full">
                                         <thead className="sticky top-0 bg-slate-100 dark:bg-slate-700 z-10">
                                             <tr>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider border-b border-slate-200 dark:border-slate-600">파일명</th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider border-b border-slate-200 dark:border-slate-600">크기</th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider border-b border-slate-200 dark:border-slate-600">수정일</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-600">파일명</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-600">크기</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-600">수정일</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -322,7 +287,7 @@ export default function CommonLogManagementModal({
                                     <div className="p-3 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 font-medium text-sm text-slate-700 dark:text-slate-300">파일 목록 ({filteredFiles.length})</div>
                                     <div className="flex-1 overflow-y-auto p-2 space-y-1">
                                         {filteredFiles.length > 0 ? filteredFiles.map(file => (
-                                            <button key={file.filename} onClick={() => handleFileSelect(file.filename)} className={`w-full text-left px-3 py-3 rounded-lg text-sm transition-all ${selectedFile === file.filename ? `${currentTheme.selectedItemBg} ${currentTheme.selectedItemText} border ${currentTheme.selectedItemBorder} shadow-sm` : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-transparent'}`}>
+                                            <button key={file.filename} onClick={() => handleFileSelect(file.filename)} className={`w-full text-left px-3 py-3 rounded-lg text-sm transition-all ${selectedFile === file.filename ? `${currentTheme.selectedItemBg} ${currentTheme.selectedItemText} border ${currentTheme.selectedItemBorder}` : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-transparent'}`}>
                                                 <div className="font-mono truncate font-medium">{file.filename}</div>
                                                 <div className="flex justify-between mt-1 text-xs opacity-70"><span>{formatDate(file.modified_at || file.lastModified)}</span><span>{formatFileSize(file.size)}</span></div>
                                             </button>
@@ -331,7 +296,7 @@ export default function CommonLogManagementModal({
                                 </div>
                                 <div className={`flex flex-col border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-slate-900 dark:bg-black ${!showMobileList ? 'w-full absolute inset-0 z-10 sm:relative sm:flex-1 sm:z-0' : 'hidden sm:flex sm:flex-1'}`}>
                                     <div className="p-3 bg-slate-800 border-b border-slate-700 flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2 min-w-0"><button onClick={handleBackToList} className={`sm:hidden p-1 rounded-full bg-slate-700 ${currentTheme.backButtonText}`}><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></button><span className="font-medium text-sm text-slate-300 truncate pr-2">{selectedFile || '파일을 선택해주세요'}</span></div>
+                                        <div className="flex items-center gap-2 min-w-0"><button onClick={handleBackToList} className={`sm:hidden p-1 rounded-lg bg-slate-700 ${currentTheme.backButtonText}`}><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></button><span className="font-medium text-sm text-slate-300 truncate pr-2">{selectedFile || '파일을 선택해주세요'}</span></div>
                                         {selectedFile && <span className="text-xs text-slate-500 whitespace-nowrap shrink-0">{logContent.length > 0 ? `${(logContent.length / 1024).toFixed(2)} KB` : '0 KB'}</span>}
                                     </div>
                                     <div className="p-2 bg-slate-800/50 border-b border-slate-700 flex items-center gap-2">
@@ -343,7 +308,7 @@ export default function CommonLogManagementModal({
                                         <div className="flex gap-1"><button onClick={handlePrevResult} disabled={searchResults.length === 0} className="p-1.5 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg></button><button onClick={handleNextResult} disabled={searchResults.length === 0} className="p-1.5 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></button></div>
                                     </div>
                                     <div className="flex-1 overflow-auto p-4 relative">
-                                        {contentLoading ? <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 z-10"><div className={`w-8 h-8 border-4 ${currentTheme.loaderBorder} border-t-transparent rounded-full animate-spin`}></div></div> : logContent ? <pre className="text-xs sm:text-sm text-green-400 font-mono whitespace-pre-wrap break-words leading-relaxed">{getHighlightedLogContent()}</pre> : <div className="flex items-center justify-center h-full text-slate-600 text-sm">{selectedFile ? '내용이 없습니다.' : '좌측 목록에서 로그 파일을 선택해주세요.'}</div>}
+                                        {contentLoading ? <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 z-10"><div className={`w-8 h-8 border-4 ${currentTheme.loaderBorder} border-t-transparent rounded-full animate-spin`}></div></div> : logContent ? <pre className="text-xs sm:text-sm text-slate-200 font-mono whitespace-pre-wrap break-words leading-relaxed">{getHighlightedLogContent()}</pre> : <div className="flex items-center justify-center h-full text-slate-600 text-sm">{selectedFile ? '내용이 없습니다.' : '좌측 목록에서 로그 파일을 선택해주세요.'}</div>}
                                     </div>
                                 </div>
                             </div>
@@ -355,7 +320,7 @@ export default function CommonLogManagementModal({
                             <div className={`inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 ${currentTheme.iconBg} rounded-full mb-6 sm:mb-8`}><svg className={`w-10 h-10 sm:w-12 sm:h-12 ${currentTheme.iconText}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></div>
                             <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">실시간 로그 스트리밍</h3>
                             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-6 sm:mb-8 max-w-md mx-auto leading-relaxed px-4">로그 파일 조회는 정적 데이터를 보여주지만,<br className="hidden sm:block"/> 실시간 스트리밍은 현재 발생하고 있는 로그를<br className="hidden sm:block"/> <strong>별도 윈도우</strong>에서 실시간으로 추적할 수 있습니다.</p>
-                            <button onClick={openRealtimeLogStream} className={`px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r ${currentTheme.streamBtnGradient} text-white text-base sm:text-lg font-bold rounded-xl shadow-xl transition-all transform hover:scale-105 hover:shadow-2xl flex items-center gap-2 whitespace-nowrap`}><svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>실시간 로그 추적 시작</button>
+                            <button onClick={openRealtimeLogStream} className={`px-6 py-3 ${currentTheme.streamBtn} text-white text-base font-semibold rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap`}><svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>실시간 로그 추적 시작</button>
                         </div>
                     )}
                 </div>

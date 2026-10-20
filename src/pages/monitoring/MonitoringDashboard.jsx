@@ -43,7 +43,7 @@ export default function MonitoringDashboard() {
 
             {/* Connection lost banner */}
             {!isConnected && (
-                <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2 text-sm text-rose-400 animate__animated animate__fadeIn" style={{ animationDuration: '0.3s' }}>
+                <div className="mb-4 rounded-lg bg-orange-500/10 border border-orange-500/30 px-4 py-2 text-sm text-orange-600 dark:text-orange-400 animate__animated animate__fadeIn" style={{ animationDuration: '0.3s' }}>
                     Connection lost — reconnecting...
                 </div>
             )}
@@ -103,10 +103,10 @@ function LiveIndicator({ isConnected }) {
     return (
         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${
             isConnected
-                ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                : 'bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/30'
+                ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30'
+                : 'bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/30'
         }`}>
-            <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
+            <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-sky-400 animate-pulse' : 'bg-orange-400'}`} />
             {isConnected ? 'LIVE' : 'OFFLINE'}
         </div>
     );
@@ -114,9 +114,9 @@ function LiveIndicator({ isConnected }) {
 
 function DashCard({ title, children, className = '' }) {
     return (
-        <div className={`rounded-xl border border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 p-4 shadow-lg h-full ${className}`}>
+        <div className={`rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 shadow-sm h-full ${className}`}>
             {title && (
-                <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">{title}</div>
+                <div className="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-3">{title}</div>
             )}
             {children}
         </div>

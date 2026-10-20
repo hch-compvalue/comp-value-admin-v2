@@ -6,14 +6,9 @@ import PageTitle from '@/component/common/display/PageTitle';
 import DailyPicksHelpModal from '@/component/common/display/DailyPicksHelpModal';
 import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
 import { GRADE_STYLE } from '@/util/GradeStyleUtil';
+import { SIGNAL_STYLE, SignalDot } from '@/util/SignalStyleUtil';
+import { AlertTriangle } from 'lucide-react';
 
-// 색각이상 친화 팔레트 (파랑/노랑/회색) — 초록 대신 파랑
-const SIGNAL_STYLE = {
-    '매수 후보': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    '관심목록': 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-    '관망': 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
-};
-const SIGNAL_ICON = { '매수 후보': '🔵', '관심목록': '🟡', '관망': '⚪' };
 const SIGNAL_ORDER = ['매수 후보', '관심목록', '관망'];
 const ALL_SIGNALS = '전체';
 
@@ -61,8 +56,8 @@ const topPct = (pct) => Math.max(1, Math.round(100 - pct));
 /** 투자 순위 근거: 수익성·가치 상위 비율 + 최근 1주 수익률 (순위 점수가 없으면 null) */
 const RankReason = ({ row }) => {
     const warnings = valuationWarnings(row).map((w) => (
-        <span key={w.label} className="px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 font-semibold dark:bg-orange-900/50 dark:text-orange-200" title={w.title}>
-            ⚠ {w.label}
+        <span key={w.label} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 font-semibold dark:bg-orange-900/50 dark:text-orange-200" title={w.title}>
+            <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />{w.label}
         </span>
     ));
     if (row.rankScore == null) {
@@ -74,7 +69,7 @@ const RankReason = ({ row }) => {
             <span className="px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300" title={`ROE ${row.roe != null ? (row.roe * 100).toFixed(1) + '%' : '-'}`}>
                 수익성 상위 {topPct(row.roePct)}%
             </span>
-            <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" title={`가치점수 ${Number(row.valueScore).toFixed(0)}`}>
+            <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" title={`가치점수 ${Number(row.valueScore).toFixed(0)}`}>
                 가치 상위 {topPct(row.valuePct)}%
             </span>
             <span className={`px-1.5 py-0.5 rounded ${ret < 0 ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}
@@ -254,7 +249,7 @@ const DailyPicks = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                 <button
                     onClick={() => setSignalFilter(ALL_SIGNALS)}
-                    className={`rounded-lg border px-4 py-3 text-left transition bg-white dark:bg-slate-800 ${
+                    className={`rounded-lg border px-4 py-3 text-left transition-colors bg-white dark:bg-slate-800 ${
                         signalFilter === ALL_SIGNALS ? 'border-blue-500 ring-2 ring-blue-400/40' : 'border-slate-200 dark:border-slate-700'
                     }`}
                 >
@@ -265,14 +260,14 @@ const DailyPicks = () => {
                     <button
                         key={sig}
                         onClick={() => setSignalFilter(sig)}
-                        className={`rounded-lg border px-4 py-3 text-left transition ${
+                        className={`rounded-lg border px-4 py-3 text-left transition-colors bg-white dark:bg-slate-800 ${
                             signalFilter === sig
                                 ? 'border-blue-500 ring-2 ring-blue-400/40'
                                 : 'border-slate-200 dark:border-slate-700'
-                        } ${SIGNAL_STYLE[sig]}`}
+                        }`}
                     >
-                        <div className="text-xs font-medium">{SIGNAL_ICON[sig]} {sig}</div>
-                        <div className="text-2xl font-bold">{counts[sig]}</div>
+                        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400"><SignalDot signal={sig} />{sig}</div>
+                        <div className="text-2xl font-bold text-slate-900 dark:text-white">{counts[sig]}</div>
                     </button>
                 ))}
             </div>
@@ -296,7 +291,7 @@ const DailyPicks = () => {
                             type="button"
                             onClick={() => setProfileFilter(name)}
                             aria-pressed={profileFilter === name}
-                            className={`px-3 py-1 rounded-full border text-xs font-medium transition-colors ${
+                            className={`px-3 py-1 rounded-lg border text-xs font-medium transition-colors ${
                                 profileFilter === name
                                     ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
                                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
@@ -329,7 +324,7 @@ const DailyPicks = () => {
                     </button>
                     <button
                         onClick={fetchData}
-                        className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                        className="px-3 py-1.5 text-sm rounded-lg bg-brand text-white hover:bg-brand-hover disabled:opacity-50"
                         disabled={loading}
                     >
                         {loading ? '조회 중…' : '새로고침'}
@@ -380,8 +375,8 @@ const DailyPicks = () => {
                                 <td className="px-4 py-2.5"><RankBar score={r.rankScore} /></td>
                                 <td className="px-4 py-2.5 min-w-[220px]"><RankReason row={r} /></td>
                                 <td className="px-4 py-2.5 whitespace-nowrap">
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold ${SIGNAL_STYLE[r.investmentSignal] || ''}`}>
-                                        {SIGNAL_ICON[r.investmentSignal]} {r.investmentSignal || '-'}
+                                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${SIGNAL_STYLE[r.investmentSignal] || ''}`}>
+                                        <SignalDot signal={r.investmentSignal} />{r.investmentSignal || '-'}
                                     </span>
                                 </td>
                                 <td className="px-4 py-2.5 text-right whitespace-nowrap">

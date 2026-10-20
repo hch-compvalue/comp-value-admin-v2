@@ -7,15 +7,15 @@ export default function ServiceStatusCard({ service }) {
     if (!service) return null;
 
     const statusConfig = {
-        UP: { color: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500 dark:bg-emerald-400', label: 'Online' },
-        DOWN: { color: 'text-rose-600 dark:text-rose-400', dot: 'bg-rose-500 dark:bg-rose-400', label: 'Offline' },
+        UP: { color: 'text-sky-600 dark:text-sky-400', dot: 'bg-sky-500 dark:bg-sky-400', label: 'Online' },
+        DOWN: { color: 'text-orange-600 dark:text-orange-400', dot: 'bg-orange-500 dark:bg-orange-400', label: 'Offline' },
         DEGRADED: { color: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500 dark:bg-amber-400', label: 'Degraded' },
     };
 
     const cfg = statusConfig[service.status] || statusConfig.DOWN;
 
     return (
-        <div className="rounded-xl border border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 p-4 shadow-lg">
+        <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 shadow-sm">
             <div className="flex items-center justify-between mb-2">
                 <TruncatedText className="text-sm font-medium text-slate-700 dark:text-slate-300">{service.name}</TruncatedText>
                 <span className={`flex items-center gap-1.5 text-xs font-semibold ${cfg.color}`}>

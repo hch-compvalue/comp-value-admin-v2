@@ -93,7 +93,7 @@ function PrivateRoute({ children }) {
         if (isPublic) return children;
         return (
             <div className="flex min-h-[calc(100vh-120px)] items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-sky-500" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-500" />
             </div>
         );
     }
@@ -105,8 +105,8 @@ function PrivateRoute({ children }) {
         // 보호된 페이지에서 미로그인일 때: 안내 다이어그램 + 로그인 유도
         return (
             <div className="flex min-h-[calc(100vh-120px)] items-center justify-center px-4">
-                <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
-                    <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-sky-50 text-sky-500 dark:bg-sky-900/30 dark:text-sky-400">
+                <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                    <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
@@ -134,14 +134,14 @@ function PrivateRoute({ children }) {
                             onClick={() => {
                                 window.dispatchEvent(new CustomEvent('auth:login:open'));
                             }}
-                            className="inline-flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:from-sky-600 hover:to-indigo-600"
+                            className="inline-flex flex-1 items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover"
                         >
                             로그인하기
                         </button>
                         <button
                             type="button"
                             onClick={() => navigate('/')}
-                            className="inline-flex flex-1 items-center justify-center rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-200"
+                            className="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-200"
                         >
                             홈으로 가기
                         </button>
@@ -157,8 +157,8 @@ function PrivateRoute({ children }) {
         if (!hasAnyRole(userRoles, currentRoute.accessRoles)) {
             return (
                 <div className="flex min-h-[calc(100vh-120px)] items-center justify-center px-4">
-                    <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
-                        <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400">
+                    <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                        <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
@@ -183,7 +183,7 @@ function PrivateRoute({ children }) {
                         <button
                             type="button"
                             onClick={() => navigate(-1)}
-                            className="inline-flex items-center justify-center rounded-full border border-slate-200 px-6 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-200"
+                            className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-6 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-200"
                         >
                             뒤로 가기
                         </button>

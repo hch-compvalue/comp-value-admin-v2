@@ -7,6 +7,8 @@ import InvestmentDetailModal, { FullDetailModal } from './InvestmentDetailModal'
 import { hasPriceRange } from './priceRangeUtil';
 import PriceGuideBar from './PriceGuideBar';
 import { send } from '@/util/ClientUtil';
+import { SignalDot } from '@/util/SignalStyleUtil';
+import { AlertTriangle } from 'lucide-react';
 
 // 투자판정 배너 스타일 (색각이상 친화: 파랑/노랑/회색) — DailyPicks SIGNAL_STYLE과 동일 팔레트
 const SIGNAL_BANNER_STYLE = {
@@ -14,7 +16,6 @@ const SIGNAL_BANNER_STYLE = {
     '관심목록': 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
     '관망': 'border-slate-300 bg-slate-50 text-slate-700 dark:border-slate-600 dark:bg-slate-700/30 dark:text-slate-300',
 };
-const SIGNAL_ICON = { '매수 후보': '🔵', '관심목록': '🟡', '관망': '⚪' };
 
 /**
  * 기업가치 계산 결과 모달 컴포넌트
@@ -282,7 +283,7 @@ const ModalHeader = ({ onClose, onOpenCompanyInfo, symbol }) => (
                 </button>
             )}
             <button
-                className="text-sm px-2 py-1 border rounded hover:bg-gray-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                className="text-sm px-2 py-1 border rounded hover:bg-slate-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
                 onClick={onClose}
             >
                 닫기 (Esc)
@@ -312,7 +313,7 @@ const ModalContent = ({
     if (!hasData) {
         return (
             <div className="p-4">
-                <p className="text-sm text-gray-600 dark:text-slate-400">표시할 데이터가 없습니다.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">표시할 데이터가 없습니다.</p>
             </div>
         );
     }
@@ -455,8 +456,8 @@ const MetricExplanation = ({ onOpenGuide, 매출기반평가 }) => (
     <div className="mt-1 flex items-center justify-between gap-2">
         <p className="text-[12px] text-slate-500 dark:text-slate-400">
             {매출기반평가
-                ? '💡 PSR = 시가총액 ÷ 매출액 — PSR이 2 이하이면 매출 대비 저평가, 2 이상이면 고평가 가능'
-                : '💡 PEG = PER ÷ 이익성장률(%) — PEG가 1 이하이면 성장 대비 저평가, 1 이상이면 고평가 가능'
+                ? 'PSR = 시가총액 ÷ 매출액 — PSR이 2 이하이면 매출 대비 저평가, 2 이상이면 고평가 가능'
+                : 'PEG = PER ÷ 이익성장률(%) — PEG가 1 이하이면 성장 대비 저평가, 1 이상이면 고평가 가능'
             }
         </p>
         <button
@@ -486,8 +487,8 @@ const RecommendationBanner = ({ data, investmentData }) => {
 
     return (
         <div className={`mt-2 w-full rounded-md border px-3 py-2 text-[13px] ${style}`}>
-            {`📊 가치 ${metrics.valueGrade}등급${scoreText}${timingText} → `}
-            <span className="font-semibold">{SIGNAL_ICON[metrics.investmentSignal]} {metrics.investmentSignal}</span>
+            {`가치 ${metrics.valueGrade}등급${scoreText}${timingText} → `}
+            <span className="inline-flex items-center gap-1.5 font-semibold"><SignalDot signal={metrics.investmentSignal} />{metrics.investmentSignal}</span>
         </div>
     );
 };
@@ -645,7 +646,7 @@ const OvervaluationBanner = ({ data }) => {
 
     return (
         <div className="mt-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-800 flex items-center gap-2">
-            <span className="text-xl leading-none">🔴</span>
+            <AlertTriangle className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400" aria-hidden="true" />
             <div className="text-sm text-orange-800 dark:text-orange-200">
                 현재가(<span className="font-semibold">${formatNumber(current, 2)}</span>)가 적정가(<span className="font-semibold">${formatNumber(fair, 2)}</span>)보다 <span className="font-bold text-orange-600 dark:text-orange-300">{overPct}%</span> 높음 — <span className="font-bold">고평가 주의</span>
             </div>
@@ -718,7 +719,7 @@ const renderValue = (value, label, onOpenDetail) => {
         return (
             <button
                 type="button"
-                className="inline-block float-right text-slate-600 underline text-xs hover:text-indigo-600 transition-colors dark:text-slate-400 dark:hover:text-indigo-400"
+                className="inline-block float-right text-slate-600 underline text-xs hover:text-blue-600 transition-colors dark:text-slate-400 dark:hover:text-blue-400"
                 onClick={() => onOpenDetail(label, value)}
             >
                 자세히 보기
@@ -796,7 +797,7 @@ const ActionButtons = ({ data, onCopy, onClose, onOpenChart, onOpenInvestmentDet
                     JSON 복사
                 </button>
                 <button
-                    className="flex-1 sm:flex-none px-3 py-2 rounded-md bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors"
+                    className="flex-1 sm:flex-none px-3 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-hover transition-colors"
                     onClick={onClose}
                 >
                     닫기
@@ -821,7 +822,7 @@ const GuideOverlay = ({ onClose, data }) => {
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="sticky top-0 flex items-center justify-between border-b bg-white px-4 py-2.5 dark:bg-slate-800 dark:border-slate-700">
-                    <div className="text-sm font-semibold text-slate-800 dark:text-white">📈 해석 요약</div>
+                    <div className="text-sm font-semibold text-slate-800 dark:text-white">해석 요약</div>
                     <button
                         className="text-xs rounded border px-2 py-1 hover:bg-slate-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
                         onClick={onClose}
@@ -842,7 +843,7 @@ const GuideOverlay = ({ onClose, data }) => {
                         {매출기반평가 ? (
                             <>
                                 <GuideCard
-                                    color="emerald"
+                                    color="sky"
                                     title="적정가↑ / PSR↓"
                                     description="매출 대비 저평가 (투자유효)"
                                 />
@@ -852,7 +853,7 @@ const GuideOverlay = ({ onClose, data }) => {
                                     description="높은 기대 반영된 고평가 (관망)"
                                 />
                                 <GuideCard
-                                    color="rose"
+                                    color="orange"
                                     title="적정가↓ / PSR↑"
                                     description="매출둔화 + 고평가 (주의)"
                                 />
@@ -865,7 +866,7 @@ const GuideOverlay = ({ onClose, data }) => {
                         ) : (
                             <>
                                 <GuideCard
-                                    color="emerald"
+                                    color="sky"
                                     title="적정가↑ / PEG↓"
                                     description="성장 대비 저평가 (투자유효)"
                                 />
@@ -875,7 +876,7 @@ const GuideOverlay = ({ onClose, data }) => {
                                     description="성장성 반영된 고평가 (관망)"
                                 />
                                 <GuideCard
-                                    color="rose"
+                                    color="orange"
                                     title="적정가↓ / PEG↑"
                                     description="성장둔화 + 고평가 (주의)"
                                 />
@@ -891,14 +892,14 @@ const GuideOverlay = ({ onClose, data }) => {
                     {/* 투자판정 (가치등급 × 타이밍) */}
                     <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 px-3 py-2.5 dark:border-blue-800 dark:bg-blue-900/20">
                         <div className="text-[12px] font-semibold text-blue-800 dark:text-blue-300 mb-1.5">
-                            📋 투자판정 = 가치등급 × 타이밍
+                            투자판정 = 가치등급 × 타이밍
                         </div>
                         <div className="text-[11px] text-blue-700 dark:text-blue-400 space-y-1">
                             <div className="font-medium">가치등급: 1~5단계(펀더멘털 82점)를 100점 환산 — S≥92 / A≥83 / B≥73 / C≥63 / D≥50 / F</div>
                             <ul className="list-disc pl-4 space-y-0.5">
-                                <li><span className="font-semibold">가치 S/A/B + 타이밍 양호</span> → 🔵 매수 후보</li>
-                                <li><span className="font-semibold">가치 S/A/B + 타이밍 미흡(대기/하락/관망)</span> → 🟡 관심목록</li>
-                                <li><span className="font-semibold">가치 C/D/F</span> → ⚪ 관망</li>
+                                <li><span className="font-semibold">가치 S/A/B + 타이밍 양호</span> → <span className="inline-flex items-center gap-1.5"><SignalDot signal="매수 후보" />매수 후보</span></li>
+                                <li><span className="font-semibold">가치 S/A/B + 타이밍 미흡(대기/하락/관망)</span> → <span className="inline-flex items-center gap-1.5"><SignalDot signal="관심목록" />관심목록</span></li>
+                                <li><span className="font-semibold">가치 C/D/F</span> → <span className="inline-flex items-center gap-1.5"><SignalDot signal="관망" />관망</span></li>
                             </ul>
                             <div>초소형주(&lt;$300M)·극단 괴리(±200%)는 매수 후보에서 관심목록으로 강등, 채권/이상치는 관망</div>
                         </div>
@@ -907,7 +908,7 @@ const GuideOverlay = ({ onClose, data }) => {
                     {/* 6단계 평가 항목 */}
                     <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2.5 dark:border-blue-800 dark:bg-blue-900/20">
                         <div className="text-[12px] font-semibold text-blue-800 dark:text-blue-300 mb-1.5">
-                            📋 6단계 평가 항목 (100점)
+                            6단계 평가 항목 (100점)
                         </div>
                         <div className="text-[11px] text-blue-700 dark:text-blue-400">
                             <ul className="list-disc pl-4 space-y-0.5">
@@ -924,7 +925,7 @@ const GuideOverlay = ({ onClose, data }) => {
                     {/* 엑셀 대량조회 색상 기준 */}
                     <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-600 dark:bg-slate-700/30">
                         <div className="text-[12px] font-semibold text-slate-800 dark:text-slate-200 mb-2">
-                            📊 엑셀 대량조회 색상 기준
+                            엑셀 대량조회 색상 기준
                         </div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
                             가치등급 기반 (1~5단계 펀더멘털, 타이밍 미반영)
@@ -980,23 +981,23 @@ const GuideOverlay = ({ onClose, data }) => {
  */
 const GuideCard = ({ color, title, description }) => {
     const colorStyles = {
-        emerald: 'rounded-md border border-sky-200 bg-sky-50 p-3 dark:border-sky-800 dark:bg-sky-900/30',
+        sky: 'rounded-md border border-sky-200 bg-sky-50 p-3 dark:border-sky-800 dark:bg-sky-900/30',
         amber: 'rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/30',
-        rose: 'rounded-md border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-900/30',
+        orange: 'rounded-md border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-900/30',
         slate: 'rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-700/30'
     };
 
     const titleStyles = {
-        emerald: 'mb-1 text-[11px] font-semibold text-sky-700 dark:text-sky-400',
+        sky: 'mb-1 text-[11px] font-semibold text-sky-700 dark:text-sky-400',
         amber: 'mb-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400',
-        rose: 'mb-1 text-[11px] font-semibold text-orange-700 dark:text-orange-400',
+        orange: 'mb-1 text-[11px] font-semibold text-orange-700 dark:text-orange-400',
         slate: 'mb-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300'
     };
 
     const descStyles = {
-        emerald: 'text-[12px] text-sky-800 dark:text-sky-300',
+        sky: 'text-[12px] text-sky-800 dark:text-sky-300',
         amber: 'text-[12px] text-amber-800 dark:text-amber-300',
-        rose: 'text-[12px] text-orange-800 dark:text-orange-300',
+        orange: 'text-[12px] text-orange-800 dark:text-orange-300',
         slate: 'text-[12px] text-slate-800 dark:text-slate-200'
     };
 
@@ -1019,7 +1020,7 @@ const DetailOverlay = ({ title, data, onClose, onCopy }) => (
             onClick={(e) => e.stopPropagation()}
         >
             <div className="sticky top-0 flex items-center justify-between border-b bg-white px-4 py-2.5 dark:bg-slate-800 dark:border-slate-700">
-                <div className="text-sm font-semibold text-slate-800 dark:text-white">🔎 {title || '상세보기'}</div>
+                <div className="text-sm font-semibold text-slate-800 dark:text-white">{title || '상세보기'}</div>
                 <div className="flex items-center gap-2">
                     <button
                         className="text-xs rounded border px-2 py-1 hover:bg-slate-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"

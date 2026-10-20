@@ -4,7 +4,7 @@ import TruncatedText from './TruncatedText';
 /**
  * Service Activity 로그 — API 요청 로그 실시간 표시
  * 최근 20건만 한 줄씩 표시
- * 상태코드 색상: 2xx=emerald, 4xx=amber, 5xx=rose
+ * 상태코드 색상: 2xx=sky, 4xx=amber, 5xx=orange (적록색약 — 빨강/초록 미사용)
  */
 export default function ServiceActivityLog({ apiLogs = [] }) {
     const containerRef = useRef(null);
@@ -37,16 +37,16 @@ function ActivityRow({ log, isNew }) {
     const animation = isNew ? 'animate__animated animate__fadeIn' : '';
 
     const statusColor = log.status >= 500
-        ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400'
+        ? 'bg-orange-500/20 text-orange-600 dark:text-orange-400'
         : log.status >= 400
             ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
-            : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400';
+            : 'bg-sky-500/20 text-sky-600 dark:text-sky-400';
 
     const methodColor = {
         GET: 'text-sky-600 dark:text-sky-400',
-        POST: 'text-emerald-600 dark:text-emerald-400',
+        POST: 'text-violet-600 dark:text-violet-400',
         PUT: 'text-amber-600 dark:text-amber-400',
-        DELETE: 'text-rose-600 dark:text-rose-400',
+        DELETE: 'text-orange-600 dark:text-orange-400',
     }[log.method] || 'text-slate-500 dark:text-slate-400';
 
     const formatTime = (ts) => {

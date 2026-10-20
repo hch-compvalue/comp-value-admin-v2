@@ -223,7 +223,7 @@ export default function SellModal({
 
                 {/* 에러 메시지 */}
                 {error && (
-                    <div className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</div>
+                    <div className="mb-4 text-sm text-orange-600 dark:text-orange-400">{error}</div>
                 )}
 
                 {/* 버튼 */}

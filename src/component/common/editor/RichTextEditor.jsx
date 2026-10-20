@@ -294,7 +294,7 @@ const theme = {
         ol: 'list-decimal ml-4 my-2',
         ul: 'list-disc ml-4 my-2',
     },
-    link: 'text-sky-500 underline cursor-pointer',
+    link: 'text-blue-600 dark:text-blue-400 underline cursor-pointer',
     text: {
         bold: 'font-bold',
         italic: 'italic',
@@ -730,7 +730,7 @@ function ToolbarButton({ onClick, isActive, title, icon: Icon }) {
             type="button"
             onClick={onClick}
             className={`p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors relative editor-tooltip-btn ${
-                isActive ? 'bg-sky-100 text-sky-600 dark:bg-sky-900 dark:text-sky-400' : 'text-slate-700 dark:text-slate-300'
+                isActive ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'
             }`}
             data-tooltip={title}
         >
@@ -768,9 +768,9 @@ function ColorPickerDropdown({ currentColor, onSelectColor, onRemoveColor, onClo
                             onSelectColor(color);
                             onClose();
                         }}
-                        className={`w-6 h-6 rounded border-2 transition-transform hover:scale-110 ${
+                        className={`w-6 h-6 rounded border-2 ${
                             currentColor === color
-                                ? 'border-sky-500 ring-2 ring-sky-300'
+                                ? 'border-blue-500 ring-2 ring-blue-300'
                                 : 'border-slate-300 dark:border-slate-500'
                         }`}
                         style={{ backgroundColor: color }}
@@ -920,7 +920,7 @@ function FloatingLinkEditorPlugin() {
                     <button
                         type="button"
                         onClick={handleLinkSubmit}
-                        className="px-3 py-1 text-sm bg-sky-500 text-white rounded hover:bg-sky-600"
+                        className="px-3 py-1 text-sm bg-brand text-white rounded hover:bg-brand-hover"
                     >
                         확인
                     </button>
@@ -938,7 +938,7 @@ function FloatingLinkEditorPlugin() {
                         href={linkUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sky-500 hover:underline text-sm truncate max-w-[200px]"
+                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm truncate max-w-[200px]"
                     >
                         {linkUrl}
                     </a>
@@ -952,7 +952,7 @@ function FloatingLinkEditorPlugin() {
                     <button
                         type="button"
                         onClick={handleRemoveLink}
-                        className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800"
+                        className="px-2 py-1 text-xs bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-300 rounded hover:bg-orange-200 dark:hover:bg-orange-800"
                     >
                         삭제
                     </button>
@@ -1259,7 +1259,7 @@ function ToolbarPlugin() {
                     type="button"
                     onClick={() => setShowColorPicker(!showColorPicker)}
                     className={`p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors relative editor-tooltip-btn ${
-                        fontColor ? 'bg-sky-100 dark:bg-sky-900' : 'text-slate-700 dark:text-slate-300'
+                        fontColor ? 'bg-blue-100 dark:bg-blue-900' : 'text-slate-700 dark:text-slate-300'
                     }`}
                     data-tooltip="글자색"
                 >
@@ -1316,7 +1316,7 @@ function ToolbarPlugin() {
                                 <button
                                     type="button"
                                     onClick={handleLinkInputSubmit}
-                                    className="px-3 py-1 text-sm bg-sky-500 text-white rounded hover:bg-sky-600 whitespace-nowrap"
+                                    className="px-3 py-1 text-sm bg-brand text-white rounded hover:bg-brand-hover whitespace-nowrap"
                                 >
                                     확인
                                 </button>

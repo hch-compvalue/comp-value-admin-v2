@@ -21,8 +21,8 @@ const LEGACY_REASON_TONE = {
 const TONE = {
     buy: 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800 text-blue-800 dark:text-blue-300',
     neutral: 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200',
-    profit: 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800 text-blue-800 dark:text-blue-300',
-    loss: 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800 text-orange-800 dark:text-orange-300',
+    profit: 'bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-800 text-rose-800 dark:text-rose-300',
+    loss: 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800 text-blue-800 dark:text-blue-300',
     note: 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800 text-amber-800 dark:text-amber-300',
 };
 
@@ -148,7 +148,7 @@ const LegacySection = ({ rows }) => {
                                         </span>
                                     </div>
                                     <div className={`text-xl font-bold ${tone.value}`}>{count}건</div>
-                                    <div className={`text-xs mt-1 font-medium ${amount >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>
+                                    <div className={`text-xs mt-1 font-medium ${amount >= 0 ? 'text-rose-700 dark:text-rose-400' : 'text-blue-700 dark:text-blue-400'}`}>
                                         {count === 0 ? <span className="text-slate-400 dark:text-slate-500">-</span> : fmtSignedWon(amount)}
                                     </div>
                                 </div>

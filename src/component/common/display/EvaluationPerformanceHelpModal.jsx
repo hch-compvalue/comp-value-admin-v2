@@ -11,16 +11,16 @@ export default function EvaluationPerformanceHelpModal({ isOpen, onClose }) {
 
     return (
         <div
-            className={`fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm p-4 animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`}
+            className={`fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/40 dark:bg-black/60 p-4 animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`}
             style={{ animationDuration: '0.25s' }}
             onClick={(e) => e.target === e.currentTarget && onClose()}
         >
             <div
-                className={`bg-white dark:bg-slate-800 rounded-2xl shadow-xl ring-1 ring-slate-900/5 dark:ring-slate-700 w-full max-w-3xl max-h-[90vh] overflow-y-auto animate__animated ${isAnimatingOut ? 'animate__zoomOut' : 'animate__zoomIn'}`}
+                className={`bg-white dark:bg-slate-800 rounded-2xl shadow-xl ring-1 ring-slate-900/5 dark:ring-slate-700 w-full max-w-3xl max-h-[90vh] overflow-y-auto animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`}
                 style={{ animationDuration: '0.25s' }}
             >
                 {/* 헤더 */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 sticky top-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 sticky top-0">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
                         성과 추적 — 페이지 설명
                     </h3>
@@ -132,8 +132,8 @@ export default function EvaluationPerformanceHelpModal({ isOpen, onClose }) {
                             </table>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                            색상은 색각이상 친화 팔레트를 사용합니다 — <span className="text-blue-600 dark:text-blue-400 font-semibold">파랑 = 플러스</span>,
-                            <span className="text-orange-600 dark:text-orange-400 font-semibold"> 주황 = 마이너스</span>.
+                            색상은 색각이상 친화 팔레트를 사용합니다 — <span className="text-rose-600 dark:text-rose-400 font-semibold">빨강 = 플러스</span>,
+                            <span className="text-blue-600 dark:text-blue-400 font-semibold"> 파랑 = 마이너스</span>.
                         </p>
                         <div className="mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
                             <div className="font-semibold text-slate-800 dark:text-slate-200 mb-1 text-sm">분할·병합 종목 제외</div>

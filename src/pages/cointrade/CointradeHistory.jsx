@@ -179,7 +179,7 @@ const TABLE_COLUMNS = [
         label: '일시',
         width: COL_WIDTHS.createdAt,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-left text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-left text-slate-900 dark:text-slate-100',
         render: (value) => formatDateTime(value),
         getFilterLabel: (v) => formatDateTime(v),
@@ -189,7 +189,7 @@ const TABLE_COLUMNS = [
         label: '종목',
         width: COL_WIDTHS.coinCode,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-left text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-left font-medium text-slate-900 dark:text-slate-100 overflow-hidden text-ellipsis',
         render: (value, _row, ctx) => value ? (
             <span className="inline-flex items-center gap-2" title={displayName(value, ctx.names)}>
@@ -204,7 +204,7 @@ const TABLE_COLUMNS = [
         label: '유형',
         width: COL_WIDTHS.tradeType,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-center text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-center',
         render: (value) => (
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${value === 'BUY'
@@ -221,7 +221,7 @@ const TABLE_COLUMNS = [
         label: '가격',
         width: COL_WIDTHS.price,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right text-slate-900 dark:text-slate-100',
         render: (value, row) => renderFormattedPrice(displayKrw(value, row), '원'),
         getFilterLabel: (v) => (v == null ? '(비어있음)' : `${formatNumberWithComma(v)}원`),
@@ -231,7 +231,7 @@ const TABLE_COLUMNS = [
         label: '수량',
         width: COL_WIDTHS.quantity,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right text-slate-900 dark:text-slate-100',
         render: (value, row) => formatQty(value, row.coinCode),
         getFilterLabel: (v) => (v == null ? '(비어있음)' : String(v)),
@@ -241,7 +241,7 @@ const TABLE_COLUMNS = [
         label: '금액',
         width: COL_WIDTHS.totalAmount,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right font-medium text-slate-900 dark:text-slate-100',
         render: (value, row) => renderFormattedPrice(displayKrw(value, row), '원'),
         getFilterLabel: (v) => (v == null ? '(비어있음)' : `${formatNumberWithComma(v)}원`),
@@ -251,7 +251,7 @@ const TABLE_COLUMNS = [
         label: '사유',
         width: COL_WIDTHS.reason,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-center text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-center',
         render: (value) => value ? (
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getReasonColor(value)}`}>
@@ -265,10 +265,10 @@ const TABLE_COLUMNS = [
         label: '손익',
         width: COL_WIDTHS.profitLoss,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right',
         render: (value) => value != null ? (
-            <span className={value >= 0 ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-orange-600 dark:text-orange-400 font-medium'}>
+            <span className={value >= 0 ? 'text-rose-600 dark:text-rose-400 font-medium' : 'text-blue-600 dark:text-blue-400 font-medium'}>
                 {value >= 0 ? '+' : ''}{renderFormattedPrice(value, '원')}
             </span>
         ) : '-',
@@ -279,10 +279,10 @@ const TABLE_COLUMNS = [
         label: '손익률',
         width: COL_WIDTHS.profitLossRate,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right',
         render: (value) => value != null ? (
-            <span className={value >= 0 ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-orange-600 dark:text-orange-400 font-medium'}>
+            <span className={value >= 0 ? 'text-rose-600 dark:text-rose-400 font-medium' : 'text-blue-600 dark:text-blue-400 font-medium'}>
                 {value >= 0 ? '+' : ''}{value.toFixed(2)}%
             </span>
         ) : '-',
@@ -294,7 +294,7 @@ const TABLE_COLUMNS = [
         label: '모멘텀점수',
         width: COL_WIDTHS.momentumScore,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right text-slate-900 dark:text-slate-100',
         render: (value) => value != null ? Number(value).toFixed(4) : '-',
         getFilterLabel: (v) => (v == null ? '(비어있음)' : Number(v).toFixed(4)),
@@ -305,7 +305,7 @@ const TABLE_COLUMNS = [
         label: 'ML확률',
         width: COL_WIDTHS.mlConfidence,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right text-slate-900 dark:text-slate-100',
         render: (value) => value != null ? `${(Number(value) * 100).toFixed(1)}%` : '-',
         getFilterLabel: (v) => (v == null ? '(비어있음)' : `${(Number(v) * 100).toFixed(1)}%`),
@@ -315,7 +315,7 @@ const TABLE_COLUMNS = [
         label: '비고', // 현재 전략: "목표 x% / 이전 y%", 구 전략: 진입사유
         width: COL_WIDTHS.entryReason,
         sortable: true,
-        headerClassName: 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-left text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-left text-slate-700 dark:text-slate-300 overflow-hidden text-ellipsis',
         render: (value) => value || '-',
         getFilterLabel: (v) => (v == null || v === '' ? '(비어있음)' : v),
@@ -326,7 +326,7 @@ const TABLE_COLUMNS = [
         label: '보유시간',
         width: COL_WIDTHS.holdDurationSec,
         sortable: true,
-        headerClassName: 'px-4 py-3 pr-8 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 pr-8 text-right text-xs font-semibold border-b border-slate-200 dark:border-slate-700',
         cellClassName: 'px-4 py-3 pr-8 whitespace-nowrap text-right text-slate-700 dark:text-slate-300',
         render: (value) => formatHoldDuration(value),
         getFilterLabel: (v) => (v == null ? '(비어있음)' : formatHoldDuration(v)),
@@ -876,11 +876,11 @@ export default function CointradeHistory() {
 
         return (
             <div
-                className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4 animate__animated ${isDetailModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`}
+                className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4 animate__animated ${isDetailModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`}
                 style={{ animationDuration: '0.25s' }}
                 onClick={handleBackdropClick}
             >
-                <div className={`bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto flex flex-col animate__animated ${isDetailModalClosing ? 'animate__zoomOut' : 'animate__zoomIn'}`} style={{ animationDuration: '0.25s' }}>
+                <div className={`bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto flex flex-col animate__animated ${isDetailModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}>
                     {/* 헤더 */}
                     <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
                         <div className="flex items-center gap-2 sm:gap-3">
@@ -997,18 +997,18 @@ export default function CointradeHistory() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 {/* 손익금액 */}
                                 <div className={`rounded-lg p-4 sm:p-5 ${selectedRecord.profitLoss >= 0
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800'
-                                    : 'bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800'
+                                    ? 'bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800'
+                                    : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800'
                                     }`}>
                                     <div className={`text-xs mb-1 ${selectedRecord.profitLoss >= 0
-                                        ? 'text-blue-700 dark:text-blue-400'
-                                        : 'text-orange-700 dark:text-orange-400'
+                                        ? 'text-rose-700 dark:text-rose-400'
+                                        : 'text-blue-700 dark:text-blue-400'
                                         }`}>
                                         손익금액
                                     </div>
                                     <div className={`text-xl sm:text-2xl font-bold ${selectedRecord.profitLoss >= 0
-                                        ? 'text-blue-600 dark:text-blue-400'
-                                        : 'text-orange-600 dark:text-orange-400'
+                                        ? 'text-rose-600 dark:text-rose-400'
+                                        : 'text-blue-600 dark:text-blue-400'
                                         }`}>
                                         {selectedRecord.profitLoss >= 0 ? '+' : ''}{renderFormattedPrice(selectedRecord.profitLoss, '원')}
                                     </div>
@@ -1016,18 +1016,18 @@ export default function CointradeHistory() {
 
                                 {/* 손익률 */}
                                 <div className={`rounded-lg p-4 sm:p-5 ${selectedRecord.profitLossRate >= 0
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800'
-                                    : 'bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800'
+                                    ? 'bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800'
+                                    : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800'
                                     }`}>
                                     <div className={`text-xs mb-1 ${selectedRecord.profitLossRate >= 0
-                                        ? 'text-blue-700 dark:text-blue-400'
-                                        : 'text-orange-700 dark:text-orange-400'
+                                        ? 'text-rose-700 dark:text-rose-400'
+                                        : 'text-blue-700 dark:text-blue-400'
                                         }`}>
                                         손익률
                                     </div>
                                     <div className={`text-xl sm:text-2xl font-bold ${selectedRecord.profitLossRate >= 0
-                                        ? 'text-blue-600 dark:text-blue-400'
-                                        : 'text-orange-600 dark:text-orange-400'
+                                        ? 'text-rose-600 dark:text-rose-400'
+                                        : 'text-blue-600 dark:text-blue-400'
                                         }`}>
                                         {selectedRecord.profitLossRate >= 0 ? '+' : ''}{selectedRecord.profitLossRate.toFixed(2)}%
                                     </div>
@@ -1036,7 +1036,7 @@ export default function CointradeHistory() {
                         )}
 
                         {/* 매수 진입 정보 (매수/매도 모두 - 매도는 보유 당시 진입 정보 유지) */}
-                        <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700/50 dark:to-slate-800/50 rounded-lg p-4 sm:p-5 border border-slate-200 dark:border-slate-700">
+                        <div className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-700 dark:bg-slate-800">
                             <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">{isLegacy ? '매수 진입 정보 (구 전략 v4)' : '비고'}</h4>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1272,7 +1272,7 @@ export default function CointradeHistory() {
                 <div className="space-y-4 mb-4">
                     {/* 기간 그룹 */}
                     <fieldset className="rounded-lg border border-blue-200 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-900/10 px-4 pt-3 pb-4">
-                        <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
+                        <legend className="px-2 text-xs font-semibold text-blue-700 dark:text-blue-400">
                             기간
                         </legend>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1319,7 +1319,7 @@ export default function CointradeHistory() {
 
                     {/* 거래 조건 그룹 */}
                     <fieldset className="rounded-lg border border-amber-200 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-900/10 px-4 pt-3 pb-4">
-                        <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                        <legend className="px-2 text-xs font-semibold text-amber-700 dark:text-amber-400">
                             거래 조건
                         </legend>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1426,7 +1426,7 @@ export default function CointradeHistory() {
                                     className="px-3 py-1.5 rounded-lg border border-blue-300 bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100 transition-colors dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/50"
                                     title="통계 보기"
                                 >
-                                    📊 통계 보기
+                                    통계 보기
                                 </button>
                                 <DownloadButtons onExcel={handleDownloadSummaryExcel} onCsv={handleDownloadSummaryCsv} />
                             </div>
@@ -1450,7 +1450,7 @@ export default function CointradeHistory() {
                     <div className="flex items-center gap-2">
                         <h3 className="text-lg font-semibold text-slate-800 dark:text-white">거래 목록</h3>
                         <span className="text-xs text-slate-500 dark:text-slate-400">
-                            헤더의 <span className="inline-block align-middle w-4 h-4 bg-slate-600 text-white rounded text-[10px] leading-4 text-center">▾</span> 아이콘으로 필터·정렬
+                            헤더의 <span className="inline-block align-middle w-4 h-4 bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300 rounded text-[10px] leading-4 text-center">▾</span> 아이콘으로 필터·정렬
                         </span>
                         {currentRecords.length > 0 && (
                             <DownloadButtons onExcel={handleDownloadTradeExcel} onCsv={handleDownloadTradeCsv} />
@@ -1492,7 +1492,7 @@ export default function CointradeHistory() {
                 <div className="overflow-x-auto overflow-y-auto scrollbar-always bg-white border border-slate-200 rounded-lg shadow-sm max-h-[70vh] dark:bg-slate-800 dark:border-slate-700" style={{ scrollbarGutter: 'stable' }}>
                   <div style={{ minWidth: includeLegacy ? TABLE_MIN_WIDTH_LEGACY : TABLE_MIN_WIDTH }}>
                     <table className="w-full table-fixed border-separate border-spacing-0 text-sm">
-                        <thead className="sticky top-0 z-10 bg-gradient-to-r from-slate-700 to-slate-600 text-white">
+                        <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-300">
                             <tr>
                                 {visibleColumns.map((col, index) => {
                                     const isSorted = sortConfig.key === col.key;
@@ -1505,7 +1505,7 @@ export default function CointradeHistory() {
                                     return (
                                         <th
                                             key={col.key}
-                                            className={`${col.headerClassName} select-none ${col.sticky ? 'sticky z-20 bg-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.3)]' : ''}`}
+                                            className={`${col.headerClassName} select-none ${col.sticky ? 'sticky z-20 bg-slate-50 dark:bg-slate-900 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]' : ''}`}
                                             style={{
                                                 width: col.width,
                                                 left: col.sticky ? (index === 0 ? 0 : col.left) : undefined
@@ -1513,14 +1513,14 @@ export default function CointradeHistory() {
                                         >
                                             <div className={`flex items-center gap-1 ${justify}`}>
                                                 <span
-                                                    className={col.sortable ? 'cursor-pointer hover:text-yellow-300' : ''}
+                                                    className={col.sortable ? 'cursor-pointer hover:text-blue-600 dark:hover:text-blue-400' : ''}
                                                     onClick={() => col.sortable && handleSort(col.key)}
                                                     title={col.sortable ? '클릭하여 정렬' : undefined}
                                                 >
                                                     {col.label}
                                                 </span>
                                                 {col.sortable && isSorted && (
-                                                    <span className="text-[10px] leading-none text-yellow-300">
+                                                    <span className="text-[10px] leading-none text-blue-600 dark:text-blue-400">
                                                         {sortDir === 'asc' ? '▲' : '▼'}
                                                     </span>
                                                 )}

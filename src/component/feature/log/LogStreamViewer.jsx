@@ -3,6 +3,7 @@ import useLogStream, { MAX_LOGS, POLLING_INTERVAL } from './useLogStream';
 
 /**
  * 로그 소스별 설정 (제목·수신방식·엔드포인트·강조색)
+ * - indicatorClass: 헤더 왼쪽 3px 구분선 색 (소스 구분용, 적록색약 고려 — 빨강/초록 미사용)
  * - Tailwind는 동적 클래스 조합을 인식하지 못하므로 색상 클래스는 문자열 그대로 둔다
  */
 const LOG_SOURCES = {
@@ -10,39 +11,39 @@ const LOG_SOURCES = {
         title: 'CompValue App 로그',
         mode: 'sse',
         endpoint: '/dart/mgnt/stream',
-        headerClass: 'from-blue-500 to-indigo-600',
-        accentButtonClass: 'bg-indigo-600 hover:bg-indigo-700',
-        accentRingClass: 'focus:ring-indigo-500',
-        accentCheckClass: 'text-indigo-600 focus:ring-indigo-500',
-        currentResultClass: 'bg-indigo-900/50 dark:bg-indigo-900/70 ring-2 ring-indigo-500',
+        indicatorClass: 'border-l-blue-500 dark:border-l-blue-400',
+        accentButtonClass: 'bg-brand hover:bg-brand-hover',
+        accentRingClass: 'focus:ring-blue-500',
+        accentCheckClass: 'text-blue-600 focus:ring-blue-500',
+        currentResultClass: 'bg-blue-900/50 dark:bg-blue-900/70 ring-2 ring-blue-500',
     },
     ml: {
         title: '주식 예측 프로그램 실시간 로그',
         mode: 'polling',
         endpoint: '/dart/ml/logs/stream/latest',
-        headerClass: 'from-indigo-500 to-purple-600',
-        accentButtonClass: 'bg-indigo-600 hover:bg-indigo-700',
-        accentRingClass: 'focus:ring-indigo-500',
-        accentCheckClass: 'text-indigo-600 focus:ring-indigo-500',
-        currentResultClass: 'bg-indigo-900/50 dark:bg-indigo-900/70 ring-2 ring-indigo-500',
+        indicatorClass: 'border-l-violet-500 dark:border-l-violet-400',
+        accentButtonClass: 'bg-brand hover:bg-brand-hover',
+        accentRingClass: 'focus:ring-blue-500',
+        accentCheckClass: 'text-blue-600 focus:ring-blue-500',
+        currentResultClass: 'bg-blue-900/50 dark:bg-blue-900/70 ring-2 ring-blue-500',
     },
     cointrade: {
         title: '코인 자동매매 프로그램 실시간 로그',
         mode: 'polling',
         endpoint: '/dart/api/cointrade/log/logs/stream/latest',
-        headerClass: 'from-orange-500 to-red-600',
-        accentButtonClass: 'bg-orange-600 hover:bg-orange-700',
-        accentRingClass: 'focus:ring-orange-500',
-        accentCheckClass: 'text-orange-600 focus:ring-orange-500',
-        currentResultClass: 'bg-orange-900/50 dark:bg-orange-900/70 ring-2 ring-orange-500',
+        indicatorClass: 'border-l-amber-500 dark:border-l-amber-400',
+        accentButtonClass: 'bg-brand hover:bg-brand-hover',
+        accentRingClass: 'focus:ring-blue-500',
+        accentCheckClass: 'text-blue-600 focus:ring-blue-500',
+        currentResultClass: 'bg-blue-900/50 dark:bg-blue-900/70 ring-2 ring-blue-500',
     },
 };
 
-// 로그 레벨별 글자색 (적록색약 고려: 일반 로그는 초록 대신 밝은 회색)
+// 로그 레벨별 글자색 (적록색약 고려: 오류=주황, 경고=호박색, 시스템=하늘색, 일반=밝은 회색)
 const getMessageClass = (message) => {
-    if (message.includes('[오류]') || message.includes('[ERROR]')) return 'text-red-400 font-semibold';
-    if (message.includes('[경고]') || message.includes('[WARN]')) return 'text-yellow-400';
-    if (message.includes('[시스템]')) return 'text-cyan-400';
+    if (message.includes('[오류]') || message.includes('[ERROR]')) return 'text-orange-400 font-semibold';
+    if (message.includes('[경고]') || message.includes('[WARN]')) return 'text-amber-400';
+    if (message.includes('[시스템]')) return 'text-sky-400';
     return 'text-slate-200';
 };
 
@@ -199,23 +200,23 @@ export default function LogStreamViewer({ sourceKey }) {
     return (
         <div className="h-screen w-screen flex flex-col bg-slate-50 dark:bg-slate-900">
             {/* 헤더 */}
-            <div className={`flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r ${source.headerClass} shadow-lg`}>
+            <div className={`flex items-center justify-between px-4 sm:px-6 py-3 border-b border-l-[3px] border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 ${source.indicatorClass}`}>
                 <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-white/80 animate-pulse' : 'bg-white/40'}`}></div>
-                    <h1 className="text-base sm:text-lg font-semibold text-white">
+                    <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-sky-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`}></div>
+                    <h1 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
                         {source.title}
                     </h1>
                     {/* 연결 상태 (적록색약 고려: 파랑=연결, 노랑=끊김) */}
                     <span className={`text-xs px-2 py-0.5 rounded-full ${isConnected
-                        ? 'bg-sky-500/30 text-sky-50 border border-sky-200/40'
-                        : 'bg-amber-400/30 text-amber-50 border border-amber-200/40'
+                        ? 'bg-sky-100 text-sky-700 border border-sky-200 dark:bg-sky-900/30 dark:text-sky-300 dark:border-sky-800'
+                        : 'bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800'
                         }`}>
                         {isConnected ? '연결됨' : '연결 끊김'}
                     </span>
                 </div>
                 <button
                     onClick={() => window.close()}
-                    className="text-white/80 hover:text-white transition-colors"
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                     title="창 닫기"
                 >
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -231,27 +232,27 @@ export default function LogStreamViewer({ sourceKey }) {
                         {!isConnected ? (
                             <button
                                 onClick={start}
-                                className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium transition-colors shadow-sm"
+                                className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium transition-colors"
                             >
                                 연결 시작
                             </button>
                         ) : (
                             <button
                                 onClick={stop}
-                                className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium transition-colors shadow-sm"
+                                className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium transition-colors"
                             >
                                 연결 종료
                             </button>
                         )}
                         <button
                             onClick={handleClearLogs}
-                            className="px-3 py-1.5 rounded-lg bg-slate-600 hover:bg-slate-700 text-white text-sm font-medium transition-colors shadow-sm"
+                            className="px-3 py-1.5 rounded-lg bg-slate-600 hover:bg-slate-700 text-white text-sm font-medium transition-colors"
                         >
                             로그 지우기
                         </button>
                         <button
                             onClick={() => (showSearch ? setShowSearch(false) : openSearch())}
-                            className={`px-3 py-1.5 rounded-lg ${source.accentButtonClass} text-white text-sm font-medium transition-colors shadow-sm`}
+                            className={`px-3 py-1.5 rounded-lg ${source.accentButtonClass} text-white text-sm font-medium transition-colors`}
                             title="Ctrl+F"
                         >
                             <svg className="w-4 h-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -344,8 +345,8 @@ export default function LogStreamViewer({ sourceKey }) {
                 style={{ fontFamily: '"D2Coding", "D2Coding ligature", Consolas, Monaco, "Courier New", monospace' }}
             >
                 {error && (
-                    <div className="mb-4 px-4 py-3 bg-red-900/30 border border-red-700 rounded-lg">
-                        <p className="text-sm text-red-300">[오류] {error}</p>
+                    <div className="mb-4 px-4 py-3 bg-orange-900/30 border border-orange-700 rounded-lg">
+                        <p className="text-sm text-orange-300">[오류] {error}</p>
                     </div>
                 )}
 
@@ -392,7 +393,7 @@ export default function LogStreamViewer({ sourceKey }) {
             </div>
 
             {/* 푸터 */}
-            <div className="px-4 sm:px-6 py-2 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg">
+            <div className="px-4 sm:px-6 py-2 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
                     <span>{footerInfo}</span>
                     <span>Max Logs: {MAX_LOGS.toLocaleString()}</span>

@@ -109,7 +109,7 @@ const CompValueCustom = () => {
                     <button
                         type="button"
                         onClick={resetParam}
-                        className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg border border-red-300 bg-white text-red-600 text-sm font-medium hover:bg-red-50 active:bg-red-100 transition-colors whitespace-nowrap dark:bg-slate-700 dark:border-red-500 dark:text-red-400 dark:hover:bg-slate-600"
+                        className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg border border-orange-300 bg-white text-orange-600 text-sm font-medium hover:bg-orange-50 active:bg-orange-100 transition-colors whitespace-nowrap dark:bg-slate-700 dark:border-orange-500 dark:text-orange-400 dark:hover:bg-slate-600"
                     >
                         초기화
                     </button>

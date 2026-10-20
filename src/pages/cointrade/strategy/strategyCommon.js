@@ -31,6 +31,11 @@ export const hourRange = (from, to) => Array.from({ length: to - from + 1 }, (_,
 
 export const fmtKrw = (v) => (v === null || v === undefined ? '-' : `${Math.round(v).toLocaleString('ko-KR')}원`);
 export const fmtPct = (v, digits = 1) => (v === null || v === undefined ? '-' : `${(v * 100).toFixed(digits)}%`);
+// 손익 색 (전체 화면 공통 — 상승/이익 rose, 하락/손실 blue)
+export const PROFIT_TEXT = 'text-rose-600 dark:text-rose-400';
+export const LOSS_TEXT = 'text-blue-600 dark:text-blue-400';
+export const returnAccent = (v) => (v === null || v === undefined ? undefined : v >= 0 ? PROFIT_TEXT : LOSS_TEXT);
+
 export const fmtSignedPct = (v) => (v === null || v === undefined ? '-' : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(2)}%`);
 export const fmtBtc = (v) => (v === null || v === undefined ? '-' : Number(v).toFixed(8));
 export const fmtShares = (v) => (v === null || v === undefined ? '-' : `${Math.floor(v).toLocaleString('ko-KR')}주`);

@@ -111,15 +111,10 @@ export default function Join() {
         <>
             <PageTitle />
 
-            <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+            <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-slate-50 dark:bg-slate-900">
                 <div className="w-full max-w-md">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 border border-slate-200 dark:border-slate-700">
-                        <div className="text-center mb-8">
-                            <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-500 text-white shadow-lg mb-4">
-                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                </svg>
-                            </div>
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-8 border border-slate-200 dark:border-slate-700">
+                        <div className="mb-8">
                             <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">회원가입</h1>
                             <p className="text-sm text-slate-600 dark:text-slate-400">CompValue에 오신 것을 환영합니다</p>
                         </div>
@@ -127,7 +122,7 @@ export default function Join() {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    사용자 ID <span className="text-red-500">*</span>
+                                    사용자 ID <span className="text-orange-500">*</span>
                                 </label>
                                 <Input
                                     value={formData.username}
@@ -140,7 +135,7 @@ export default function Join() {
 
                             <div>
                                 <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    비밀번호 <span className="text-red-500">*</span>
+                                    비밀번호 <span className="text-orange-500">*</span>
                                 </label>
                                 <Input
                                     type="password"
@@ -154,7 +149,7 @@ export default function Join() {
 
                             <div>
                                 <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    비밀번호 확인 <span className="text-red-500">*</span>
+                                    비밀번호 확인 <span className="text-orange-500">*</span>
                                 </label>
                                 <Input
                                     type="password"
@@ -168,7 +163,7 @@ export default function Join() {
 
                             <div>
                                 <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    이메일 <span className="text-red-500">*</span>
+                                    이메일 <span className="text-orange-500">*</span>
                                 </label>
                                 <Input
                                     type="email"
@@ -182,7 +177,7 @@ export default function Join() {
 
                             <div>
                                 <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    닉네임 <span className="text-red-500">*</span>
+                                    닉네임 <span className="text-orange-500">*</span>
                                 </label>
                                 <Input
                                     value={formData.nickname}
@@ -215,7 +210,7 @@ export default function Join() {
                                             window.dispatchEvent(new Event('auth:login:open'));
                                         }, 100);
                                     }}
-                                    className="text-sky-600 dark:text-sky-400 hover:underline font-medium"
+                                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                                 >
                                     로그인
                                 </button>

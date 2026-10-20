@@ -167,7 +167,7 @@ export default function ExcelToolbar({
                     </span>
                     <button
                         onClick={onDeleteSelected}
-                        className="flex items-center gap-1 rounded-lg border border-red-300 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-100 dark:border-red-600 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 whitespace-nowrap"
+                        className="flex items-center gap-1 rounded-lg border border-orange-300 bg-orange-50 px-2.5 py-1.5 text-xs font-medium text-orange-700 transition-colors hover:bg-orange-100 dark:border-orange-600 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50 whitespace-nowrap"
                         title="선택한 행 삭제"
                     >
                         선택 삭제
@@ -239,7 +239,7 @@ export default function ExcelToolbar({
                     onClick={() => setShowColumnPanel((v) => !v)}
                     className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
                         hiddenCols.size > 0
-                            ? 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50'
+                            ? 'border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100 dark:border-sky-600 dark:bg-sky-900/30 dark:text-sky-400 dark:hover:bg-sky-900/50'
                             : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                     }`}
                     title="컬럼 표시/숨기기"
@@ -247,7 +247,7 @@ export default function ExcelToolbar({
                     <Columns className="h-3.5 w-3.5" />
                     컬럼
                     {hiddenCols.size > 0 && (
-                        <span className="ml-0.5 rounded-full bg-purple-200 px-1.5 text-[10px] text-purple-800 dark:bg-purple-700 dark:text-purple-200">
+                        <span className="ml-0.5 rounded-full bg-sky-200 px-1.5 text-[10px] text-sky-800 dark:bg-sky-700 dark:text-sky-200">
                             -{hiddenCols.size}
                         </span>
                     )}
@@ -270,7 +270,7 @@ export default function ExcelToolbar({
                     onClick={onToggleColorSort}
                     className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
                         colorSortDir
-                            ? 'border-pink-300 bg-pink-50 text-pink-700 hover:bg-pink-100 dark:border-pink-600 dark:bg-pink-900/30 dark:text-pink-400 dark:hover:bg-pink-900/50'
+                            ? 'border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100 dark:border-sky-600 dark:bg-sky-900/30 dark:text-sky-400 dark:hover:bg-sky-900/50'
                             : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                     }`}
                     title="행 색상 기준 정렬 (클릭: 없음 → 색상순 → 역순)"
@@ -287,7 +287,7 @@ export default function ExcelToolbar({
                         onClick={() => setShowColorPanel((v) => !v)}
                         className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
                             colorFilter
-                                ? 'border-pink-300 bg-pink-50 text-pink-700 hover:bg-pink-100 dark:border-pink-600 dark:bg-pink-900/30 dark:text-pink-400 dark:hover:bg-pink-900/50'
+                                ? 'border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100 dark:border-sky-600 dark:bg-sky-900/30 dark:text-sky-400 dark:hover:bg-sky-900/50'
                                 : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                         }`}
                         title="행 색상 필터"
@@ -295,7 +295,7 @@ export default function ExcelToolbar({
                         <Palette className="h-3.5 w-3.5" />
                         색상필터
                         {colorFilter && (
-                            <span className="ml-0.5 rounded-full bg-pink-200 px-1.5 text-[10px] text-pink-800 dark:bg-pink-700 dark:text-pink-200">
+                            <span className="ml-0.5 rounded-full bg-sky-200 px-1.5 text-[10px] text-sky-800 dark:bg-sky-700 dark:text-sky-200">
                                 {colorFilter.size}
                             </span>
                         )}

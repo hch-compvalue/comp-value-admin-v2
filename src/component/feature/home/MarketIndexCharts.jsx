@@ -15,7 +15,7 @@ import { OhlcTooltip } from '@/component/common/chart/OhlcTooltip';
 const US_INDICES = [
     { symbol: '^GSPC', name: 'S&P 500', color: '#3b82f6' }, // blue
     { symbol: '^DJI', name: 'Dow Jones', color: '#8b5cf6' }, // purple
-    { symbol: '^IXIC', name: 'NASDAQ', color: '#10b981' }, // green
+    { symbol: '^IXIC', name: 'NASDAQ', color: '#f59e0b' }, // amber (적록색약 — 초록 미사용)
 ];
 
 export default function MarketIndexCharts() {
@@ -109,7 +109,7 @@ export default function MarketIndexCharts() {
                     <h2 className="text-xl font-bold text-slate-800 dark:text-white">미국 주요 지수</h2>
                     <ChartControls interval={interval} onIntervalChange={setChartInterval} style={style} onStyleChange={setStyle} disabled={loading} />
                 </div>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm dark:bg-red-900/30 dark:border-red-800 dark:text-red-300">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-orange-700 text-sm dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-300">
                     {error}
                 </div>
             </div>
@@ -163,7 +163,7 @@ function IndexCard({ index, daily, interval, isCandle, latestData, change, chang
     if (!data || data.length === 0) {
         return (
             <div className="bg-white rounded-lg border shadow-sm dark:bg-slate-800 dark:border-slate-700">
-                <div className="p-4 border-b bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800 dark:border-slate-700">
+                <div className="p-4 border-b bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold text-slate-800 dark:text-white">{index.name}</h3>
                         <span className="text-xs text-slate-500 dark:text-slate-400">{index.symbol}</span>
@@ -180,8 +180,8 @@ function IndexCard({ index, daily, interval, isCandle, latestData, change, chang
     }
 
     return (
-        <div className="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
-            <div className="p-4 border-b bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800 dark:border-slate-700">
+        <div className="bg-white rounded-lg border shadow-sm dark:bg-slate-800 dark:border-slate-700">
+            <div className="p-4 border-b bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
                 <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-slate-800 dark:text-white">{index.name}</h3>
                     <span className="text-xs text-slate-500 dark:text-slate-400">{index.symbol}</span>

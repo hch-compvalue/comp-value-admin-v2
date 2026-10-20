@@ -170,8 +170,8 @@ export default function ExcelFilter({
                     else openPopover();
                 }}
                 className={`ml-1 w-5 h-5 inline-flex items-center justify-center rounded transition-colors ${isFiltered
-                    ? 'bg-yellow-400 text-slate-800 hover:bg-yellow-300'
-                    : 'text-white/80 hover:bg-slate-500/60 hover:text-white'
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-900'
+                    : 'text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200'
                     }`}
                 title={isFiltered ? '필터 적용됨 (클릭하여 편집)' : '필터'}
                 aria-label="필터"

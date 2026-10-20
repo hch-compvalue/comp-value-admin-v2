@@ -402,7 +402,7 @@ export default function RedisManagementModal({ isOpen, onClose }) {
                         <button
                             onClick={handleSearch}
                             disabled={loading}
-                            className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-5 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? '조회 중...' : '조회'}
                         </button>
@@ -411,21 +411,21 @@ export default function RedisManagementModal({ isOpen, onClose }) {
                         <button
                             onClick={handleOpenNew}
                             disabled={loading}
-                            className="px-4 py-1.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            className="px-4 py-1.5 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                         >
                             + 등록
                         </button>
                         <button
                             onClick={handleDeleteMultiple}
                             disabled={loading || selectedKeys.length === 0}
-                            className="px-4 py-1.5 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            className="px-4 py-1.5 rounded-lg bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                         >
                             선택 삭제 ({selectedKeys.length})
                         </button>
                         <button
                             onClick={handleDeleteAll}
                             disabled={loading || !searchKey.trim()}
-                            className="px-4 py-1.5 rounded-lg bg-red-700 text-white text-sm font-medium hover:bg-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            className="px-4 py-1.5 rounded-lg bg-orange-700 text-white text-sm font-medium hover:bg-orange-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                         >
                             전체 삭제 (패턴)
                         </button>
@@ -489,7 +489,7 @@ export default function RedisManagementModal({ isOpen, onClose }) {
                                         </button>
                                         <button
                                             onClick={() => handleDeleteSingle(item.key)}
-                                            className="px-2 sm:px-3 py-1.5 text-xs rounded-md bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors whitespace-nowrap"
+                                            className="px-2 sm:px-3 py-1.5 text-xs rounded-md bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50 transition-colors whitespace-nowrap"
                                         >
                                             삭제
                                         </button>
@@ -567,19 +567,19 @@ export default function RedisManagementModal({ isOpen, onClose }) {
                                     </label>
                                     <div className={`w-full px-4 py-2 rounded-lg border text-sm font-medium ${
                                         editModal.ttl === -1
-                                            ? 'border-green-300 bg-green-50 text-green-700 dark:bg-green-900/30 dark:border-green-700 dark:text-green-400'
+                                            ? 'border-sky-300 bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:border-sky-700 dark:text-sky-400'
                                             : editModal.ttl === 0
-                                            ? 'border-red-300 bg-red-50 text-red-700 dark:bg-red-900/30 dark:border-red-700 dark:text-red-400'
-                                            : editModal.ttl <= 60
                                             ? 'border-orange-300 bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:border-orange-700 dark:text-orange-400'
+                                            : editModal.ttl <= 60
+                                            ? 'border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400'
                                             : 'border-slate-300 bg-slate-50 text-slate-900 dark:bg-slate-600 dark:border-slate-600 dark:text-white'
                                     }`}>
                                         {editModal.ttl === -1
-                                            ? '🔒 영구 저장'
+                                            ? '영구 저장'
                                             : editModal.ttl === -2
-                                            ? '❌ 키가 존재하지 않음'
+                                            ? '키가 존재하지 않음'
                                             : editModal.ttl === 0
-                                            ? '⏰ 만료됨 (0초)'
+                                            ? '만료됨 (0초)'
                                             : (() => {
                                                 const totalSeconds = editModal.ttl;
                                                 const hours = Math.floor(totalSeconds / 3600);
@@ -587,9 +587,9 @@ export default function RedisManagementModal({ isOpen, onClose }) {
                                                 const seconds = totalSeconds % 60;
 
                                                 if (hours > 0) {
-                                                    return `⏱️ ${totalSeconds}초 (${hours}시간 ${minutes}분 ${seconds}초 남음)`;
+                                                    return `${totalSeconds}초 (${hours}시간 ${minutes}분 ${seconds}초 남음)`;
                                                 } else {
-                                                    return `⏱️ ${totalSeconds}초 (${minutes}분 ${seconds}초 남음)`;
+                                                    return `${totalSeconds}초 (${minutes}분 ${seconds}초 남음)`;
                                                 }
                                             })()
                                         }
@@ -629,7 +629,7 @@ export default function RedisManagementModal({ isOpen, onClose }) {
                                 <button
                                     onClick={handleEditSave}
                                     disabled={editLoading}
-                                    className="px-4 sm:px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-4 sm:px-5 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {editLoading ? (editModal.isNew ? '등록 중...' : '저장 중...') : (editModal.isNew ? '등록' : '저장')}
                                 </button>

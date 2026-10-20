@@ -4,7 +4,7 @@ import { SLATE } from '@/config/themeColors';
 
 /**
  * 파드별 리소스 게이지 — CPU / Memory 프로그레스 바
- * 색상: 정상(emerald) → 경고(amber, >70%) → 위험(rose, >90%)
+ * 색상: 정상(sky) → 경고(amber, >70%) → 위험(orange, >90%) — 적록색약 고려
  */
 export default function ResourceGauges({ resources }) {
     const containers = resources?.containers || [];
@@ -115,7 +115,7 @@ function ProgressBar({ label, percent, text, noLimit }) {
 }
 
 function getColor(percent) {
-    if (percent >= 90) return '#ef4444';
+    if (percent >= 90) return '#f97316';
     if (percent >= 70) return '#f59e0b';
-    return '#22c55e';
+    return '#0ea5e9';
 }

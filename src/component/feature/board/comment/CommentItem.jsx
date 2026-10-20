@@ -96,7 +96,7 @@ function CommentItem({ comment, currentUser, onReply, onUpdate, onDelete }) {
                         {canDelete && (
                             <button
                                 onClick={handleDelete}
-                                className="text-xs text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 transition-colors"
+                                className="text-xs text-slate-500 hover:text-orange-600 dark:text-slate-400 dark:hover:text-orange-400 transition-colors"
                             >
                                 삭제
                             </button>

@@ -35,7 +35,7 @@ import { STOCK_DISCOVER_PATH, STOCK_ANALYSIS_PATH, PORTFOLIO_PATH, SCHEDULE_MANA
 
 import { SECTIONS } from '@/component/layouts/common/SideBar001';
 import {
-    Home as HomeIcon, List, BarChart3, Pencil, Sparkles, Briefcase,
+    Home as HomeIcon, List, BarChart3, Pencil, Telescope, Briefcase,
     MessageSquare, LayoutDashboard,
     History, LineChart, FileSpreadsheet, DollarSign, Braces,
     StickyNote, Calculator as CalculatorIcon, Activity, CalendarClock
@@ -67,7 +67,7 @@ const routes = {
         section: SECTIONS[1],
         label: '종목 발굴',
         path: STOCK_DISCOVER_PATH,
-        icon: Sparkles,
+        icon: Telescope,
         element: (
             <SubTabPage basePath={STOCK_DISCOVER_PATH} section={SECTIONS[1]} label='종목 발굴' tabs={[
                 { key: SUB_TAB.DAILY_PICKS, label: '오늘의 매수후보', element: <DailyPicks /> },

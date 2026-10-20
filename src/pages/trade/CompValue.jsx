@@ -5,6 +5,7 @@ import PageTitle from '@/component/common/display/PageTitle';
 import Button from '@/component/common/button/Button';
 
 import { useState } from 'react'
+import { AlertTriangle } from 'lucide-react';
 
 import { getToday } from '@/util/DateUtil'
 import { send } from '@/util/ClientUtil';
@@ -128,10 +129,10 @@ const CompValue = () => {
             {/* 결과 테이블 */}
             <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden mb-4 dark:bg-slate-800 dark:border-slate-700">
                 <table className="w-full text-sm">
-                    <thead className="bg-gradient-to-r from-slate-700 to-slate-600 text-white">
+                    <thead className="bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-1/3">항목</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">값</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold w-1/3">항목</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold">값</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -175,8 +176,9 @@ const CompValue = () => {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="mx-4 my-3 px-4 py-2 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-sm dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-300">
-                                    ⚠️ 위 수치는 단위 적용이 되어있지 않습니다.
+                                <div className="mx-4 my-3 px-4 py-2 flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-sm dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-300">
+                                    <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                                    위 수치는 단위 적용이 되어있지 않습니다.
                                 </div>
                             </>
                         ) : (

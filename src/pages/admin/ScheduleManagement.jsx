@@ -140,7 +140,7 @@ const ScheduleManagement = () => {
             {renderRunModal && (
                 <div className={`fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/40 dark:bg-black/60 px-4 animate__animated ${isRunModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }} onClick={closeRunModal}>
                     <div
-                        className={`w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-800 animate__animated ${isRunModalClosing ? 'animate__zoomOut' : 'animate__zoomIn'}`} style={{ animationDuration: '0.25s' }}
+                        className={`w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-800 animate__animated ${isRunModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-white">{runTarget?.label} 지금 실행</h3>

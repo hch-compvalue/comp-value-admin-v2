@@ -281,7 +281,7 @@ const ProfileSettingModal = ({ isOpen, onClose, profiles, onRefresh, openAlert, 
 
             {/* 모달 */}
             <div
-                className={`fixed z-[80] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[98vw] md:w-[min(95vw,1200px)] max-h-[95vh] md:max-h-[90vh] rounded-lg md:rounded-xl bg-white shadow-2xl dark:bg-slate-800 flex flex-col animate__animated ${isAnimatingOut ? 'animate__zoomOut' : 'animate__zoomIn'}`} style={{ animationDuration: '0.25s' }}
+                className={`fixed z-[80] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[98vw] md:w-[min(95vw,1200px)] max-h-[95vh] md:max-h-[90vh] rounded-lg md:rounded-xl bg-white shadow-2xl dark:bg-slate-800 flex flex-col animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* 헤더 */}

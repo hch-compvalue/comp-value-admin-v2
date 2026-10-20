@@ -232,12 +232,12 @@ const BulkCalcPopup = ({ onClose, year = new Date().getFullYear(), openAlert = (
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 animate__animated animate__fadeIn" style={{ animationDuration: '0.25s' }}>
             <Loading show={isLoading} />
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg w-4/5 max-w-xl relative sm:w-11/12 sm:p-4 animate__animated animate__zoomIn" style={{ animationDuration: '0.25s' }}>
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg w-4/5 max-w-xl relative sm:w-11/12 sm:p-4 animate__animated animate__fadeIn" style={{ animationDuration: '0.25s' }}>
 
                 <h2 className="text-slate-900 dark:text-white">기업명 일괄 계산</h2>
                 <p className="text-slate-700 dark:text-slate-300">기업명을 한 줄에 하나씩 입력하세요:</p>
                 <textarea
-                    className="w-full h-52 p-2 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded resize-y sm:h-40"
+                    className="w-full h-52 p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded resize-y sm:h-40"
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="예:\n삼성전자\nLG전자\n현대자동차"
@@ -250,22 +250,22 @@ const BulkCalcPopup = ({ onClose, year = new Date().getFullYear(), openAlert = (
                         )}%)`}
                 </div>
                 {/* 개별 항목 진행도 프로그래스바 */}
-                <div className="w-full h-2 bg-gray-200 dark:bg-slate-700 rounded mt-1">
+                <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded mt-1">
                     <div
-                        className="h-full bg-gray-800 dark:bg-slate-400 rounded transition-all duration-100 ease-linear"
+                        className="h-full bg-slate-800 dark:bg-slate-400 rounded transition-all duration-100 ease-linear"
                         style={{ width: `${itemProgress}%` }}
                     />
                 </div>
                 <div className="mt-2 text-right sm:text-center">
                     <button
-                        className="mr-2 px-4 py-2 bg-gradient-to-r from-gray-800 to-gray-900 dark:from-slate-700 dark:to-slate-800 text-white rounded cursor-pointer sm:px-3 sm:text-sm sm:mr-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="mr-2 px-4 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-lg cursor-pointer sm:px-3 sm:text-sm sm:mr-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={onClose}
                         disabled={isLoading}
                     >
                         취소
                     </button>
                     <button
-                        className="mr-2 px-4 py-2 bg-gradient-to-r from-gray-800 to-gray-900 dark:from-slate-700 dark:to-slate-800 text-white rounded cursor-pointer sm:px-3 sm:text-sm sm:mr-1"
+                        className="mr-2 px-4 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-lg cursor-pointer sm:px-3 sm:text-sm sm:mr-1"
                         onClick={handleSubmit}
                     >
                         전송

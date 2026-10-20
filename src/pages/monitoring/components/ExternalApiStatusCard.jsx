@@ -14,23 +14,23 @@ export default function ExternalApiStatusCard({ api }) {
     const speedColor = ms === 0
         ? 'text-slate-400'
         : ms < 500
-            ? 'text-emerald-600 dark:text-emerald-400'
+            ? 'text-sky-600 dark:text-sky-400'
             : ms < 2000
                 ? 'text-amber-600 dark:text-amber-400'
-                : 'text-rose-600 dark:text-rose-400';
+                : 'text-orange-600 dark:text-orange-400';
 
     return (
-        <div className="rounded-xl border border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 p-4 shadow-lg">
+        <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 shadow-sm">
             {/* 상단: API 이름 + 상태 */}
             <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{api.name}</span>
                 <span className={`flex items-center gap-1.5 text-xs font-semibold ${
                     isUp
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-rose-600 dark:text-rose-400'
+                        ? 'text-sky-600 dark:text-sky-400'
+                        : 'text-orange-600 dark:text-orange-400'
                 }`}>
                     <span className={`h-2 w-2 rounded-full ${
-                        isUp ? 'bg-emerald-500 dark:bg-emerald-400 animate-pulse' : 'bg-rose-500 dark:bg-rose-400'
+                        isUp ? 'bg-sky-500 dark:bg-sky-400 animate-pulse' : 'bg-orange-500 dark:bg-orange-400'
                     }`} />
                     {isUp ? 'Online' : 'Offline'}
                 </span>

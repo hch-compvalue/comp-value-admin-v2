@@ -45,7 +45,7 @@ function ConfirmDialog({ open, message, onConfirm, onCancel }) {
 function MemoCard({ memo, onEdit, onDelete, onTogglePin }) {
     return (
         <div
-            className={`group relative flex flex-col rounded-xl border bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:bg-slate-800 ${
+            className={`group relative flex flex-col rounded-xl border bg-white p-4 shadow-sm dark:bg-slate-800 ${
                 memo.pinned
                     ? 'border-l-4 border-sky-500 dark:border-sky-400'
                     : 'border-slate-200 dark:border-slate-700'
@@ -413,7 +413,7 @@ export default function Memo() {
                 <div className="flex flex-wrap items-center gap-2">
                     <button
                         onClick={() => setSelectedCategory(null)}
-                        className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                        className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                             selectedCategory === null
                                 ? 'bg-sky-500 text-white'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'
@@ -425,7 +425,7 @@ export default function Memo() {
                         <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
-                            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                                 selectedCategory === cat
                                     ? 'bg-sky-500 text-white'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'

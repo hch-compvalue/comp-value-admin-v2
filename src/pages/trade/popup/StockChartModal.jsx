@@ -26,12 +26,12 @@ const OVERLAY_INDICATORS = [
         tip: '주가가 이 선 위에 있으면 단기 상승 추세, 아래면 하락 추세. 이 선이 지지선/저항선 역할을 자주 함',
     },
     {
-        key: 'sma50', label: 'SMA 50', color: '#10b981',
+        key: 'sma50', label: 'SMA 50', color: '#06b6d4',
         desc: '최근 50봉 종가의 평균선 (중기)',
         tip: 'SMA 20이 SMA 50을 위로 뚫으면 "골든크로스"(매수 신호), 아래로 뚫으면 "데드크로스"(매도 신호)',
     },
     {
-        key: 'sma200', label: 'SMA 200', color: '#ef4444',
+        key: 'sma200', label: 'SMA 200', color: '#ea580c',
         desc: '최근 200봉 종가의 평균선 (장기)',
         tip: '투자자들이 가장 많이 보는 장기 지표. 주가가 이 선 위면 장기 상승장, 아래면 장기 하락장으로 판단',
     },
@@ -61,7 +61,7 @@ const OSCILLATOR_INDICATORS = [
     {
         key: 'macd', label: 'MACD',
         desc: '두 이동평균의 차이로 추세 변화를 포착',
-        tip: '파란선이 빨간선 위로 교차 → 매수 타이밍\n파란선이 빨간선 아래로 교차 → 매도 타이밍\n히스토그램: 초록 막대=상승세 강화, 빨강 막대=하락세 강화',
+        tip: '파란선이 주황선 위로 교차 → 매수 타이밍\n파란선이 주황선 아래로 교차 → 매도 타이밍\n히스토그램: 빨강 막대=상승세 강화, 파랑 막대=하락세 강화',
     },
     {
         key: 'stochastic', label: '스토캐스틱',
@@ -354,7 +354,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                             )}
                         </div>
                         <button
-                            className="text-sm px-3 py-2 border rounded hover:bg-gray-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                            className="text-sm px-3 py-2 border rounded hover:bg-slate-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
                             onClick={onClose}
                         >
                             닫기 (Esc)
@@ -385,7 +385,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                         </div>
                     ) : error ? (
                         <div className="flex items-center justify-center py-20">
-                            <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>
+                            <div className="text-orange-600 dark:text-orange-400 text-sm">{error}</div>
                         </div>
                     ) : chartData.length === 0 ? (
                         <div className="flex items-center justify-center py-20">
@@ -447,10 +447,10 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                             <Line type="monotone" dataKey="sma20" stroke="#f59e0b" strokeWidth={1.5} dot={false} connectNulls={false} isAnimationActive={false} />
                                         )}
                                         {indicators.sma50 && (
-                                            <Line type="monotone" dataKey="sma50" stroke="#10b981" strokeWidth={1.5} dot={false} connectNulls={false} isAnimationActive={false} />
+                                            <Line type="monotone" dataKey="sma50" stroke="#06b6d4" strokeWidth={1.5} dot={false} connectNulls={false} isAnimationActive={false} />
                                         )}
                                         {indicators.sma200 && (
-                                            <Line type="monotone" dataKey="sma200" stroke="#ef4444" strokeWidth={1.5} dot={false} connectNulls={false} isAnimationActive={false} />
+                                            <Line type="monotone" dataKey="sma200" stroke="#ea580c" strokeWidth={1.5} dot={false} connectNulls={false} isAnimationActive={false} />
                                         )}
 
                                         {/* EMA */}
@@ -530,14 +530,14 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                                 formatter={(value) => [value !== null ? value.toFixed(2) : '-', 'RSI']}
                                                 labelFormatter={labelFmt}
                                             />
-                                            <ReferenceLine y={70} stroke="#ef4444" strokeDasharray="3 3" strokeOpacity={0.7} />
-                                            <ReferenceLine y={30} stroke="#10b981" strokeDasharray="3 3" strokeOpacity={0.7} />
+                                            <ReferenceLine y={70} stroke="#f43f5e" strokeDasharray="3 3" strokeOpacity={0.7} />
+                                            <ReferenceLine y={30} stroke="#0ea5e9" strokeDasharray="3 3" strokeOpacity={0.7} />
                                             <Line type="monotone" dataKey="rsi" stroke="#f59e0b" strokeWidth={1.5} dot={false} connectNulls={false} isAnimationActive={false} />
                                         </ComposedChart>
                                     </ResponsiveContainer>
                                     <div className="flex justify-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                        <span className="text-red-500">--- 과매수 (70)</span>
-                                        <span className="text-emerald-500">--- 과매도 (30)</span>
+                                        <span className="text-rose-500">--- 과매수 (70)</span>
+                                        <span className="text-sky-500">--- 과매도 (30)</span>
                                     </div>
                                 </div>
                             )}
@@ -568,11 +568,11 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                             <ReferenceLine y={0} stroke={SLATE[400]} strokeWidth={1} />
                                             <Bar dataKey="macdHist" isAnimationActive={false}>
                                                 {zoomedData.map((entry, index) => (
-                                                    <Cell key={index} fill={entry.macdHist >= 0 ? '#10b981' : '#ef4444'} />
+                                                    <Cell key={index} fill={entry.macdHist >= 0 ? '#f43f5e' : '#3b82f6'} />
                                                 ))}
                                             </Bar>
                                             <Line type="monotone" dataKey="macd" stroke="#3b82f6" strokeWidth={1.5} dot={false} connectNulls={false} isAnimationActive={false} />
-                                            <Line type="monotone" dataKey="macdSignal" stroke="#ef4444" strokeWidth={1.5} dot={false} connectNulls={false} isAnimationActive={false} />
+                                            <Line type="monotone" dataKey="macdSignal" stroke="#f97316" strokeWidth={1.5} dot={false} connectNulls={false} isAnimationActive={false} />
                                         </ComposedChart>
                                     </ResponsiveContainer>
                                     <div className="flex justify-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
@@ -581,11 +581,11 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                             <span>MACD</span>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <div className="w-3 h-0.5 bg-red-500"></div>
+                                            <div className="w-3 h-0.5 bg-orange-500"></div>
                                             <span>시그널</span>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <div className="w-3 h-1.5 bg-emerald-500/50"></div>
+                                            <div className="w-3 h-1.5 bg-rose-500/50"></div>
                                             <span>히스토그램</span>
                                         </div>
                                     </div>
@@ -619,10 +619,10 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                                 }}
                                                 labelFormatter={labelFmt}
                                             />
-                                            <ReferenceLine y={80} stroke="#ef4444" strokeDasharray="3 3" strokeOpacity={0.7} />
-                                            <ReferenceLine y={20} stroke="#10b981" strokeDasharray="3 3" strokeOpacity={0.7} />
+                                            <ReferenceLine y={80} stroke="#f43f5e" strokeDasharray="3 3" strokeOpacity={0.7} />
+                                            <ReferenceLine y={20} stroke="#0ea5e9" strokeDasharray="3 3" strokeOpacity={0.7} />
                                             <Line type="monotone" dataKey="stochK" stroke="#3b82f6" strokeWidth={1.5} dot={false} connectNulls={false} isAnimationActive={false} />
-                                            <Line type="monotone" dataKey="stochD" stroke="#ef4444" strokeWidth={1.5} dot={false} strokeDasharray="5 3" connectNulls={false} isAnimationActive={false} />
+                                            <Line type="monotone" dataKey="stochD" stroke="#f97316" strokeWidth={1.5} dot={false} strokeDasharray="5 3" connectNulls={false} isAnimationActive={false} />
                                         </ComposedChart>
                                     </ResponsiveContainer>
                                     <div className="flex justify-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
@@ -631,11 +631,11 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                             <span>%K</span>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <div className="w-3 h-0.5 bg-red-500 border-dashed border-t"></div>
+                                            <div className="w-3 h-0.5 bg-orange-500 border-dashed border-t"></div>
                                             <span>%D</span>
                                         </div>
-                                        <span className="text-red-500">--- 과매수 (80)</span>
-                                        <span className="text-emerald-500">--- 과매도 (20)</span>
+                                        <span className="text-rose-500">--- 과매수 (80)</span>
+                                        <span className="text-sky-500">--- 과매도 (20)</span>
                                     </div>
                                 </div>
                             )}

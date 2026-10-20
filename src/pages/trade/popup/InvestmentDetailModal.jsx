@@ -1,4 +1,6 @@
 import { GRADE_STYLE, GRADE_STYLE_DEFAULT } from '@/util/GradeStyleUtil';
+import { SignalDot } from '@/util/SignalStyleUtil';
+import { AlertTriangle, TrendingDown, Check, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import useModalAnimation from '@/hooks/useModalAnimation';
 import CompanyInfoModal from '@/pages/trade/popup/CompanyInfoModal';
@@ -22,9 +24,6 @@ const formatNumberWithComma = (value) => {
 const getGradeStyle = (grade) => {
     return GRADE_STYLE[grade] || GRADE_STYLE_DEFAULT;
 };
-
-// 투자판정 아이콘 (색각이상 친화: 파랑/노랑/회색) — DailyPicks와 동일
-const SIGNAL_ICON = { '매수 후보': '🔵', '관심목록': '🟡', '관망': '⚪' };
 
 // 소수점 1자리로 표시할 점수 필드
 const SCORE_FIELDS = new Set(['valueScore', 'totalScore']);
@@ -268,9 +267,10 @@ const getSignalBadgeStyle = (color) => {
     return styles[color] || styles.gray;
 };
 
-const getSignalIcon = (color) => {
-    const icons = { green: '\u{1F7E2}', yellow: '\u{1F7E1}', red: '\u{1F534}', gray: '\u26AA' };
-    return icons[color] || icons.gray;
+// 시그널 색 점 (배지 팔레트와 동일 — 적록색약 친화: 하늘/노랑/주황/회색)
+const getSignalDotColor = (color) => {
+    const dots = { green: 'bg-sky-500', yellow: 'bg-amber-400', red: 'bg-orange-500', gray: 'bg-slate-400' };
+    return dots[color] || dots.gray;
 };
 
 /**
@@ -289,7 +289,7 @@ const EntryTimingSection = ({ entryTiming, currentPrice, stopLoss }) => {
                 {/* 시그널 + 점수 */}
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold border whitespace-nowrap ${getSignalBadgeStyle(entryTiming.signalColor)}`}>
-                        <span>{getSignalIcon(entryTiming.signalColor)}</span>
+                        <span aria-hidden="true" className={`inline-block h-2 w-2 shrink-0 rounded-full ${getSignalDotColor(entryTiming.signalColor)}`} />
                         {entryTiming.signal}
                     </span>
                     <span className="text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">
@@ -741,14 +741,14 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                             {onOpenFullDetail && (
                                 <button
                                     type="button"
-                                    className="whitespace-nowrap px-2 sm:px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+                                    className="whitespace-nowrap px-2 sm:px-3 py-1.5 text-sm rounded-lg bg-brand text-white font-medium hover:bg-brand-hover transition-colors"
                                     onClick={() => onOpenFullDetail(data)}
                                 >
                                     자세히 보기
                                 </button>
                             )}
                             <button
-                                className="whitespace-nowrap text-sm px-2 py-1 border rounded hover:bg-gray-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                                className="whitespace-nowrap text-sm px-2 py-1 border rounded hover:bg-slate-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
                                 onClick={onClose}
                             >
                                 <span className="sm:hidden">닫기</span>
@@ -765,7 +765,7 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
                         <HighlightCard
                             label="투자판정"
-                            value={data.investmentSignal ? `${SIGNAL_ICON[data.investmentSignal] || ''} ${data.investmentSignal}` : '-'}
+                            value={data.investmentSignal ? <span className="inline-flex items-center gap-1.5"><SignalDot signal={data.investmentSignal} />{data.investmentSignal}</span> : '-'}
                         />
                         <HighlightCard
                             label="가치등급"
@@ -823,7 +823,7 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                             const overPct = ((current - fair) / fair * 100).toFixed(1);
                             return (
                                 <div className="mb-4 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-800 flex items-start gap-2">
-                                    <span className="text-xl leading-none flex-shrink-0">🔴</span>
+                                    <AlertTriangle className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400" aria-hidden="true" />
                                     <div className="text-sm text-orange-800 dark:text-orange-200 break-keep">
                                         현재가(<span className="font-semibold">${data.currentPrice}</span>)가 적정가(<span className="font-semibold">${data.fairValue}</span>)보다 <span className="font-bold text-orange-600 dark:text-orange-300">{overPct}%</span> 높음 — <span className="font-bold">고평가 주의</span>
                                     </div>
@@ -836,7 +836,7 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                     {/* Forward PER 경고 배너 */}
                     {data.forwardPerWarning && (
                         <div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-800 flex items-start gap-2">
-                            <span className="text-xl leading-none flex-shrink-0">{'\u{1F7E1}'}</span>
+                            <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
                             <div className="text-sm text-amber-800 dark:text-amber-200 break-keep">
                                 {data.forwardPerWarning}
                             </div>
@@ -855,7 +855,9 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                                     ? 'bg-orange-50 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-800'
                                     : 'bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-800'
                             }`}>
-                                <span className="text-xl leading-none flex-shrink-0">{isSevere ? '\u{1F4C9}' : '\u26A0\uFE0F'}</span>
+                                {isSevere
+                                    ? <TrendingDown className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400" aria-hidden="true" />
+                                    : <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />}
                                 <div className={`text-sm break-keep ${
                                     isSevere
                                         ? 'text-orange-800 dark:text-orange-200'
@@ -896,7 +898,7 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                                     ? 'text-sky-700 border-sky-300 bg-sky-50 dark:text-sky-400 dark:border-sky-800 dark:bg-sky-900/30'
                                     : 'text-orange-700 border-orange-300 bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:bg-orange-900/30'
                             }`}>
-                                {pass ? '✅' : '❌'} {label}
+                                {pass ? <Check className="h-3 w-3" aria-hidden="true" /> : <X className="h-3 w-3" aria-hidden="true" />}{label}
                             </span>
                         );
                         return (
@@ -1044,7 +1046,7 @@ export const FullDetailModal = ({ isOpen, data, onClose, zIndex = 70 }) => {
                             계산 버전: {data.calVersion}
                         </span>
                         <button
-                            className="text-sm px-2 py-1 border rounded hover:bg-gray-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                            className="text-sm px-2 py-1 border rounded hover:bg-slate-50 transition-colors dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
                             onClick={onClose}
                         >
                             닫기 (Esc)
@@ -1057,7 +1059,7 @@ export const FullDetailModal = ({ isOpen, data, onClose, zIndex = 70 }) => {
                     {/* 기본 정보 */}
                     <div className="mb-6">
                         <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span className="w-2 h-2 bg-slate-400 rounded-full"></span>
                             기본 정보
                         </h4>
                         <div className="rounded-lg border bg-slate-50 dark:bg-slate-700 dark:border-slate-600 p-3">
@@ -1108,7 +1110,7 @@ export const FullDetailModal = ({ isOpen, data, onClose, zIndex = 70 }) => {
                     {/* 단계별 점수 */}
                     <div className="mb-6">
                         <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-sky-500 rounded-full"></span>
+                            <span className="w-2 h-2 bg-slate-400 rounded-full"></span>
                             단계별 점수
                         </h4>
                         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -1124,7 +1126,7 @@ export const FullDetailModal = ({ isOpen, data, onClose, zIndex = 70 }) => {
                     {/* 결과 상세 (resultDetail) */}
                     <div className="mb-6">
                         <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                            <span className="w-2 h-2 bg-slate-400 rounded-full"></span>
                             결과 상세 (resultDetail)
                         </h4>
                         <div className="rounded-lg border bg-slate-50 dark:bg-slate-700 dark:border-slate-600 p-3">
@@ -1159,7 +1161,7 @@ export const FullDetailModal = ({ isOpen, data, onClose, zIndex = 70 }) => {
                     {data.entryTiming && (
                         <div className="mb-6">
                             <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                                <span className="w-2 h-2 bg-teal-500 rounded-full"></span>
+                                <span className="w-2 h-2 bg-slate-400 rounded-full"></span>
                                 진입 타이밍 분석
                             </h4>
                             <div className="rounded-lg border bg-slate-50 dark:bg-slate-700 dark:border-slate-600 p-3">
@@ -1212,7 +1214,7 @@ export const FullDetailModal = ({ isOpen, data, onClose, zIndex = 70 }) => {
                     {data.stepDetails && data.stepDetails.length > 0 && (
                         <div>
                             <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                                <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                                <span className="w-2 h-2 bg-slate-400 rounded-full"></span>
                                 단계별 상세 설명
                             </h4>
                             <div className="space-y-3">

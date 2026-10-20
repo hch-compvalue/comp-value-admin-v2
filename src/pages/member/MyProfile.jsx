@@ -187,19 +187,19 @@ export default function MyProfile() {
 
             <div className="max-w-4xl mx-auto space-y-6 px-4 py-8">
                 {/* 프로필 헤더 카드 */}
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
-                    <div className="flex items-center gap-6">
-                        <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-4xl font-bold border-4 border-white/30">
+                <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="flex items-center gap-4">
+                        <div className="h-14 w-14 shrink-0 rounded-full bg-brand text-white text-xl font-bold flex items-center justify-center">
                             {userInfo.nickname?.charAt(0).toUpperCase() || userInfo.username?.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1">
-                            <h1 className="text-3xl font-bold mb-2">{userInfo.nickname || userInfo.username}</h1>
-                            <p className="text-blue-100 text-sm mb-3">{userInfo.email}</p>
+                            <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{userInfo.nickname || userInfo.username}</h1>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">{userInfo.email}</p>
                             <div className="flex items-center gap-2 flex-wrap">
                                 {userInfo.roles?.map((role, idx) => (
                                     <span
                                         key={idx}
-                                        className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium border border-white/30"
+                                        className="rounded-full bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 px-2 py-0.5 text-xs font-medium"
                                     >
                                         {getRoleDisplayName(role)}
                                     </span>
@@ -257,7 +257,7 @@ export default function MyProfile() {
                                 href="https://compvalue.xyz/grafana/dashboards"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -271,8 +271,8 @@ export default function MyProfile() {
                                 className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700 rounded-lg transition-colors group"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
-                                        <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className="w-10 h-10 bg-white ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600 rounded-full flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
                                         </svg>
                                     </div>
@@ -291,8 +291,8 @@ export default function MyProfile() {
                                 className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700 rounded-lg transition-colors group"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                                        <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className="w-10 h-10 bg-white ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600 rounded-full flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
                                     </div>
@@ -311,8 +311,8 @@ export default function MyProfile() {
                                 className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700 rounded-lg transition-colors group"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
-                                        <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className="w-10 h-10 bg-white ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600 rounded-full flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                         </svg>
                                     </div>
@@ -331,8 +331,8 @@ export default function MyProfile() {
                                 className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700 rounded-lg transition-colors group"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
-                                        <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className="w-10 h-10 bg-white ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600 rounded-full flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                         </svg>
                                     </div>
@@ -360,8 +360,8 @@ export default function MyProfile() {
                             className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700 rounded-lg transition-colors group"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div className="w-10 h-10 bg-white ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600 rounded-full flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
                                 </div>
@@ -381,8 +381,8 @@ export default function MyProfile() {
                                 className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700 rounded-lg transition-colors group"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                                        <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className="w-10 h-10 bg-white ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600 rounded-full flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                         </svg>
                                     </div>
@@ -399,20 +399,20 @@ export default function MyProfile() {
 
                         <button
                             onClick={handleDeleteAccount}
-                            className="w-full flex items-center justify-between px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 rounded-lg transition-colors group"
+                            className="w-full flex items-center justify-between px-4 py-3 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20 dark:hover:bg-orange-900/30 rounded-lg transition-colors group"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
                                 </div>
                                 <div className="text-left">
-                                    <div className="font-medium text-red-600 dark:text-red-400">회원 탈퇴</div>
-                                    <div className="text-xs text-red-500/70 dark:text-red-400/70">계정을 영구적으로 삭제합니다</div>
+                                    <div className="font-medium text-orange-600 dark:text-orange-400">회원 탈퇴</div>
+                                    <div className="text-xs text-orange-500/80 dark:text-orange-400/70">계정을 영구적으로 삭제합니다</div>
                                 </div>
                             </div>
-                            <svg className="w-5 h-5 text-red-400 group-hover:text-red-600 dark:group-hover:text-red-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-orange-400 group-hover:text-orange-600 dark:group-hover:text-orange-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </button>
@@ -478,8 +478,8 @@ export default function MyProfile() {
             {/* 회원탈퇴 비밀번호 확인 모달 */}
             {renderDeleteModal && (
                 <div className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-black/60 px-4 animate__animated ${isDeleteModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}>
-                    <div className={`w-full max-w-sm rounded-2xl bg-white p-5 text-slate-900 shadow-xl ring-1 ring-slate-900/5 dark:bg-slate-800 dark:text-white dark:ring-slate-700 animate__animated ${isDeleteModalClosing ? 'animate__zoomOut' : 'animate__zoomIn'}`} style={{ animationDuration: '0.25s' }}>
-                        <h2 className="mb-2 text-base font-semibold text-red-600 dark:text-red-400">회원 탈퇴</h2>
+                    <div className={`w-full max-w-sm rounded-2xl bg-white p-5 text-slate-900 shadow-xl ring-1 ring-slate-900/5 dark:bg-slate-800 dark:text-white dark:ring-slate-700 animate__animated ${isDeleteModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}>
+                        <h2 className="mb-2 text-base font-semibold text-orange-600 dark:text-orange-400">회원 탈퇴</h2>
                         <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">
                             탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.<br />
                             계속하시려면 비밀번호를 입력해주세요.
@@ -506,7 +506,7 @@ export default function MyProfile() {
                             <button
                                 onClick={handleDeleteConfirm}
                                 disabled={deleteLoading}
-                                className="px-4 py-1.5 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50"
+                                className="px-4 py-1.5 text-sm font-medium rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-colors cursor-pointer disabled:opacity-50"
                             >
                                 {deleteLoading ? '처리 중...' : '탈퇴하기'}
                             </button>
@@ -521,7 +521,7 @@ export default function MyProfile() {
 function InfoItem({ label, value }) {
     return (
         <div className="space-y-1">
-            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 {label}
             </div>
             <div className="text-sm text-slate-900 dark:text-white font-medium">

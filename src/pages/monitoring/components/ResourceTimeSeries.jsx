@@ -4,6 +4,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { SLATE } from '@/config/themeColors';
 
 const POD_COLORS = ['#3b82f6', '#f97316', '#a855f7', '#ec4899', '#14b8a6', '#eab308'];
+// GPU 선 — 파드 색과 겹치지 않는 중립색 (초록은 분홍 파드 선과 적록색약에서 구분 안 됨)
+const GPU_COLOR = SLATE[500];
 
 function CustomLegend({ payload = [], hiddenKeys, onToggle }) {
     const groups = useMemo(() => {
@@ -42,7 +44,7 @@ function CustomLegend({ payload = [], hiddenKeys, onToggle }) {
                     </span>
                     {g.items.map(item => {
                         const hidden = hiddenKeys.has(item.dataKey);
-                        const c = hidden ? '#9ca3af' : item.color;
+                        const c = hidden ? SLATE[400] : item.color;
                         return (
                             <button
                                 key={item.dataKey}
@@ -178,8 +180,8 @@ export default function ResourceTimeSeries({ resourceHistory = [] }) {
         if (showMem) podNames.forEach((name, i) => items.push({
             dataKey: `${name}_mem`, color: POD_COLORS[i % POD_COLORS.length],
         }));
-        if (hasGpu && showCpu) items.push({ dataKey: 'gpu', color: '#34d399' });
-        if (hasGpu && showMem) items.push({ dataKey: 'gpu_vram', color: '#34d399' });
+        if (hasGpu && showCpu) items.push({ dataKey: 'gpu', color: GPU_COLOR });
+        if (hasGpu && showMem) items.push({ dataKey: 'gpu_vram', color: GPU_COLOR });
         return items;
     }, [showCpu, showMem, podNames, hasGpu]);
 
@@ -280,7 +282,7 @@ export default function ResourceTimeSeries({ resourceHistory = [] }) {
                                     type="monotone"
                                     dataKey="gpu"
                                     name="GPU"
-                                    stroke="#34d399"
+                                    stroke={GPU_COLOR}
                                     strokeWidth={2}
                                     strokeDasharray="8 4"
                                     dot={false}
@@ -294,7 +296,7 @@ export default function ResourceTimeSeries({ resourceHistory = [] }) {
                                     type="monotone"
                                     dataKey="gpu_vram"
                                     name="GPU VRAM"
-                                    stroke="#34d399"
+                                    stroke={GPU_COLOR}
                                     strokeWidth={1.5}
                                     strokeDasharray="4 3"
                                     dot={false}

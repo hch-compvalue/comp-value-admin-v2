@@ -72,7 +72,7 @@ export default function LoginModal({
                 <button
                     type="button"
                     onClick={onClose}
-                    className="absolute right-3 top-3 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+                    className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-300"
                     aria-label="닫기"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -85,10 +85,7 @@ export default function LoginModal({
                 </button>
 
                 {/* 헤더 영역 */}
-                <div className="mb-5 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-500 text-white shadow-sm">
-                        <span className="text-base font-semibold">CV</span>
-                    </div>
+                <div className="mb-5">
                     <div className="flex flex-col">
                         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">CompValue 로그인</h2>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -123,7 +120,7 @@ export default function LoginModal({
                     <button
                         type="button"
                         onClick={() => setShowFindUsername(true)}
-                        className="hover:text-sky-600 dark:hover:text-sky-400 hover:underline"
+                        className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline"
                     >
                         아이디 찾기
                     </button>
@@ -131,7 +128,7 @@ export default function LoginModal({
                     <button
                         type="button"
                         onClick={() => setShowFindPassword(true)}
-                        className="hover:text-sky-600 dark:hover:text-sky-400 hover:underline"
+                        className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline"
                     >
                         비밀번호 찾기
                     </button>
@@ -142,14 +139,14 @@ export default function LoginModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded-full border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-200"
+                        className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-200"
                     >
                         닫기
                     </button>
                     <button
                         type="button"
                         onClick={onLogin}
-                        className="inline-flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:from-sky-600 hover:to-indigo-600 disabled:opacity-60"
+                        className="inline-flex flex-1 items-center justify-center rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
                         disabled={isLoading}
                     >
                         로그인

@@ -84,7 +84,7 @@ function View() {
                     (payload.memberNickname && payload.memberNickname === currentNickname);
 
                 if (!isOwner) {
-                    openAlert('🔒 비밀글입니다. 작성자만 확인할 수 있습니다.', moveListPage);
+                    openAlert('비밀글입니다. 작성자만 확인할 수 있습니다.', moveListPage);
                     setBoardData(undefined);
                     return;
                 }

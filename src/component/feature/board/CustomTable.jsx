@@ -72,7 +72,7 @@ const CustomTable = forwardRef(({ columns = [], rowData = [], loading = false, m
                             key={row.id || rowIndex}
                             className={`rounded-lg border-2 transition-all ${
                                 isNotice
-                                    ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-900/20 dark:border-blue-300 shadow-md'
+                                    ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-900/20 dark:border-blue-300'
                                     : isSelected
                                     ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 dark:border-sky-600'
                                     : 'border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
@@ -133,7 +133,7 @@ const CustomTable = forwardRef(({ columns = [], rowData = [], loading = false, m
                                         </span>
                                     )}
                                     {/<img\s/i.test(row.content || '') && (
-                                        <Image size={16} className="mt-0.5 flex-shrink-0 text-emerald-500 dark:text-emerald-400" />
+                                        <Image size={16} className="mt-0.5 flex-shrink-0 text-sky-500 dark:text-sky-400" />
                                     )}
                                     {(row.attachments?.length > 0) && (
                                         <Paperclip size={16} className="mt-0.5 flex-shrink-0 text-slate-400 dark:text-slate-500" />
@@ -217,7 +217,7 @@ const CustomTable = forwardRef(({ columns = [], rowData = [], loading = false, m
                                 {visibleColumns.map((col, index) => (
                                     <th
                                         key={index}
-                                        className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
+                                        className="px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300"
                                         style={{ width: col.width || (col.flex ? `${col.flex * 100}%` : 'auto') }}
                                     >
                                         {col.checkboxSelection || col.headerCheckboxSelection ? (

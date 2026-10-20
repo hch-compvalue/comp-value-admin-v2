@@ -79,7 +79,7 @@ export default function CompanyInfoModal({ isOpen, onClose, symbol, zIndex = 70 
                     <h2 className="text-xl font-semibold text-slate-900 dark:text-white">기업 정보</h2>
                     <button
                         onClick={onClose}
-                        className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+                        className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
                     >
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -126,7 +126,7 @@ export default function CompanyInfoModal({ isOpen, onClose, symbol, zIndex = 70 
                                 </div>
                                 <div>
                                     <div className="text-xs text-slate-500 dark:text-slate-400">변동</div>
-                                    <div className={`mt-1 text-lg font-semibold ${companyInfo.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                    <div className={`mt-1 text-lg font-semibold ${companyInfo.change >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                         {companyInfo.change >= 0 ? '+' : ''}{companyInfo.change?.toFixed(2)} ({companyInfo.changePercentage?.toFixed(2)}%)
                                     </div>
                                 </div>

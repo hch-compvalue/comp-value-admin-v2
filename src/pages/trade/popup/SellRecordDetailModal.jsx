@@ -92,11 +92,11 @@ export default function SellRecordDetailModal({ isOpen, data, fxRate, onClose })
 
     return (
         <>
-            <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}>
+            <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}>
             <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate__animated ${isAnimatingOut ? 'animate__fadeOutDown' : 'animate__fadeInUp'}`} style={{ animationDuration: '0.25s' }}>
                 {/* 헤더 */}
-                <div className="sticky top-0 bg-gradient-to-r from-sky-500 to-indigo-500 px-6 py-4 flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
@@ -105,7 +105,7 @@ export default function SellRecordDetailModal({ isOpen, data, fxRate, onClose })
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
-                            className="px-3 py-1.5 text-sm rounded-lg bg-white/20 text-white font-medium hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 whitespace-nowrap"
+                            className="px-3 py-1.5 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 font-medium hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 whitespace-nowrap"
                             onClick={handleOpenCompanyValue}
                             disabled={companyValueLoading}
                             title="기업가치 계산 결과 보기"
@@ -124,7 +124,7 @@ export default function SellRecordDetailModal({ isOpen, data, fxRate, onClose })
                         </button>
                         <button
                             onClick={onClose}
-                            className="text-white hover:bg-white/20 rounded-lg p-1.5 transition-colors"
+                            className="text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300 rounded-lg p-1.5 transition-colors"
                         >
                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -193,11 +193,11 @@ export default function SellRecordDetailModal({ isOpen, data, fxRate, onClose })
 
                         <div>
                             <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">실현 손익</label>
-                            <div className={`text-xl font-bold ${data.realizedPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                            <div className={`text-xl font-bold ${data.realizedPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                 {data.realizedPnl >= 0 ? '+' : ''}${data.realizedPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             {sellRate && (
-                                <div className={`text-sm mt-1 ${data.realizedPnl >= 0 ? 'text-emerald-600/70 dark:text-emerald-400/70' : 'text-red-600/70 dark:text-red-400/70'}`}>
+                                <div className={`text-sm mt-1 ${data.realizedPnl >= 0 ? 'text-rose-600/70 dark:text-rose-400/70' : 'text-blue-600/70 dark:text-blue-400/70'}`}>
                                     {data.realizedPnl >= 0 ? '+' : ''}₩{Math.round(data.realizedPnl * sellRate).toLocaleString()}
                                 </div>
                             )}
@@ -224,7 +224,7 @@ export default function SellRecordDetailModal({ isOpen, data, fxRate, onClose })
                             {fxPnl === null ? (
                                 <div className="text-lg font-semibold text-slate-400 dark:text-slate-500">-</div>
                             ) : (
-                                <div className={`text-lg font-bold ${fxPnl >= 0 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                                <div className={`text-lg font-bold ${fxPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                     {fxPnl >= 0 ? '+' : ''}₩{Math.round(fxPnl).toLocaleString()}
                                 </div>
                             )}
@@ -235,7 +235,7 @@ export default function SellRecordDetailModal({ isOpen, data, fxRate, onClose })
                             {totalPnl === null ? (
                                 <div className="text-xl font-bold text-slate-400 dark:text-slate-500">-</div>
                             ) : (
-                                <div className={`text-xl font-bold ${totalPnl >= 0 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                                <div className={`text-xl font-bold ${totalPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                     {totalPnl >= 0 ? '+' : ''}₩{Math.round(totalPnl).toLocaleString()}
                                 </div>
                             )}
@@ -259,7 +259,7 @@ export default function SellRecordDetailModal({ isOpen, data, fxRate, onClose })
                             </div>
                         </div>
                     ) : companyProfile ? (
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-700 dark:to-slate-600 rounded-lg p-4 border border-blue-200 dark:border-slate-600">
+                        <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
                             <div className="flex items-start gap-3 mb-3">
                                 {companyProfile.image && !companyProfile.defaultImage && (
                                     <img
@@ -320,7 +320,7 @@ export default function SellRecordDetailModal({ isOpen, data, fxRate, onClose })
                 <div className="sticky bottom-0 bg-slate-50 dark:bg-slate-700/50 px-6 py-4 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-lg hover:from-sky-600 hover:to-indigo-600 transition-all shadow-sm font-medium"
+                        className="px-6 py-2.5 bg-brand text-white rounded-lg hover:bg-brand-hover transition-colors font-medium"
                     >
                         닫기
                     </button>

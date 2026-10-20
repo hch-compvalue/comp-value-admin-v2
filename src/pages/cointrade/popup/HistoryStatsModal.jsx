@@ -82,18 +82,18 @@ export default function HistoryStatsModal({ isOpen, onClose, records = [], symbo
 
     return (
         <div
-            className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4 animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`}
+            className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4 animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`}
             style={{ animationDuration: '0.25s' }}
             onClick={handleBackdropClick}
         >
             <div
-                className={`bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto flex flex-col animate__animated ${isAnimatingOut ? 'animate__zoomOut' : 'animate__zoomIn'}`}
+                className={`bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto flex flex-col animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`}
                 style={{ animationDuration: '0.25s' }}
             >
                 {/* 헤더 */}
                 <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
                     <div className="flex items-center gap-2 sm:gap-3">
-                        <h3 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">📊 통계 보기</h3>
+                        <h3 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">통계 보기</h3>
                         {periodLabel && (
                             <span className="text-xs text-slate-500 dark:text-slate-400">{periodLabel}</span>
                         )}
@@ -144,7 +144,7 @@ function CurrentStats({ rows, market, symbolNames }) {
                                 label={`${MARKET_META[m].label} 순매수`}
                                 value={`${formatSignedNumber(byMarket[m].netBuy)}원`}
                                 sub={`매수 ${byMarket[m].buyCount} · 매도 ${byMarket[m].sellCount}건`}
-                                tone={m === MARKET.CRYPTO ? 'profit' : 'stock'}
+                                tone={m === MARKET.CRYPTO ? 'crypto' : 'stock'}
                             />
                         ))}
                     </div>
@@ -435,10 +435,11 @@ function EmptyNote({ text }) {
     return <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">{text}</div>;
 }
 
-// KPI 카드 톤 (적록색약 — 이익/코인 파랑, 손실 주황, 주식 호박)
+// KPI 카드 톤 (적록색약 — 이익 rose / 손실 파랑(전체 화면 공통 손익색), 코인 파랑, 주식 호박)
 const KPI_TONE = {
-    profit: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300',
-    loss: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-800 dark:text-orange-300',
+    profit: 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300',
+    loss: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300',
+    crypto: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300',
     stock: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300',
     neutral: 'bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200',
 };

@@ -1,4 +1,5 @@
 import { GRADE_STYLE } from '@/util/GradeStyleUtil';
+import { SIGNAL_STYLE, SignalDot } from '@/util/SignalStyleUtil';
 import useModalAnimation from '@/hooks/useModalAnimation';
 
 /**
@@ -22,16 +23,16 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
 
     return (
         <div
-            className={`fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm p-4 animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`}
+            className={`fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/40 dark:bg-black/60 p-4 animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`}
             style={{ animationDuration: '0.25s' }}
             onClick={(e) => e.target === e.currentTarget && onClose()}
         >
             <div
-                className={`bg-white dark:bg-slate-800 rounded-2xl shadow-xl ring-1 ring-slate-900/5 dark:ring-slate-700 w-full max-w-3xl max-h-[90vh] overflow-y-auto animate__animated ${isAnimatingOut ? 'animate__zoomOut' : 'animate__zoomIn'}`}
+                className={`bg-white dark:bg-slate-800 rounded-2xl shadow-xl ring-1 ring-slate-900/5 dark:ring-slate-700 w-full max-w-3xl max-h-[90vh] overflow-y-auto animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`}
                 style={{ animationDuration: '0.25s' }}
             >
                 {/* 헤더 */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 sticky top-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 sticky top-0">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
                         오늘의 매수후보 — 페이지 설명
                     </h3>
@@ -113,7 +114,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                 <div>
                                     <div className="font-semibold">이 화면에서 최신 스냅샷 조회</div>
                                     <div className="text-xs text-slate-600 dark:text-slate-400">
-                                        기본값은 <strong>가장 최근 평가일</strong>이며, 투자판정 → 가치점수 내림차순으로 정렬해 보여줍니다.
+                                        기본값은 <strong>가장 최근 평가일</strong>이며, <strong>투자 순위 점수</strong> 내림차순으로 정렬해 보여줍니다(순위 점수가 없는 옛 스냅샷은 가치점수순).
                                     </div>
                                 </div>
                             </li>
@@ -137,21 +138,21 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 whitespace-nowrap">
-                                            <span className="px-2 py-1 rounded text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">🔵 매수 후보</span>
+                                            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${SIGNAL_STYLE['매수 후보']}`}><SignalDot signal="매수 후보" />매수 후보</span>
                                         </td>
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">가치등급 S/A/B <strong>+</strong> 타이밍 양호</td>
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">펀더멘털도 좋고 진입 시점도 괜찮음 → 오늘 볼 종목</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 whitespace-nowrap">
-                                            <span className="px-2 py-1 rounded text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">🟡 관심목록</span>
+                                            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${SIGNAL_STYLE['관심목록']}`}><SignalDot signal="관심목록" />관심목록</span>
                                         </td>
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">가치등급 S/A/B <strong>+</strong> 타이밍 미흡(대기/하락/관망)</td>
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">기업은 좋은데 지금 사기엔 시점이 아쉬움 → 대기</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 whitespace-nowrap">
-                                            <span className="px-2 py-1 rounded text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">⚪ 관망</span>
+                                            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${SIGNAL_STYLE['관망']}`}><SignalDot signal="관망" />관망</span>
                                         </td>
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">가치등급 C/D/F (타이밍 무관)</td>
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">펀더멘털이 기준 미달 → 타이밍이 좋아도 제외</td>
@@ -160,7 +161,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                             </table>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                            요약 타일(🔵/🟡/⚪/전체)을 클릭하면 해당 판정만 필터링됩니다. 기본 화면은 <strong>매수 후보</strong>만 보여줍니다.
+                            요약 타일(매수 후보·관심목록·관망·전체)을 클릭하면 해당 판정만 필터링됩니다. 기본 화면은 <strong>전체</strong> 판정을 투자 순위순으로 보여줍니다.
                         </p>
                     </section>
 
@@ -320,7 +321,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">근거</td>
                                         <td className="px-4 py-2 text-slate-600 dark:text-slate-400">
                                             수익성 상위 N% · 가치 상위 N% · 최근 1주 수익률. 칩에 마우스를 올리면 ROE·가치점수 원값.
-                                            주황 <strong>⚠ 경고 칩</strong>은 순위와 별개로 확인할 점입니다 — <strong>V9 고평가 구간</strong>(현재가가 적정가보다 36% 넘게 높음, 금융주는 11%),
+                                            주황 <strong>경고 칩</strong>은 순위와 별개로 확인할 점입니다 — <strong>V9 고평가 구간</strong>(현재가가 적정가보다 36% 넘게 높음, 금융주는 11%),
                                             <strong>적정가 극단값</strong>(괴리 ±200% 이상, 적정가 계산을 믿기 어려움). 순위 점수에는 반영하지 않습니다
                                         </td>
                                     </tr>

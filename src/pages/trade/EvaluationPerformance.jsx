@@ -6,7 +6,7 @@ import EvaluationPerformanceHelpModal from '@/component/common/display/Evaluatio
 const fmtPct = (v) => {
     if (v == null) return '-';
     const n = Number(v);
-    const cls = n > 0 ? 'text-blue-600 dark:text-blue-400' : n < 0 ? 'text-orange-600 dark:text-orange-400' : 'text-slate-500';
+    const cls = n > 0 ? 'text-rose-600 dark:text-rose-400' : n < 0 ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500';
     return <span className={`font-semibold ${cls}`}>{n > 0 ? '+' : ''}{n.toFixed(2)}%</span>;
 };
 
@@ -23,7 +23,7 @@ const COLUMNS = ['그룹', '종목수', '추적불가', '평균수익률', '중�
 const fmtExcess = (v) => {
     if (v == null) return <span className="text-slate-400">-</span>;
     const n = Number(v);
-    const cls = n > 0 ? 'text-blue-600 dark:text-blue-400' : n < 0 ? 'text-orange-600 dark:text-orange-400' : 'text-slate-500';
+    const cls = n > 0 ? 'text-rose-600 dark:text-rose-400' : n < 0 ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500';
     return <span className={`font-semibold ${cls}`}>{n > 0 ? '+' : ''}{n.toFixed(2)}%p</span>;
 };
 

@@ -11,6 +11,34 @@
   --color-dark-border: var(--color-slate-700);
 }
 
+/* 브랜드 단색 — 주요 버튼·로고·강조 (그라데이션 금지, 색 변경은 여기만) */
+@theme inline {
+  --color-brand: var(--color-blue-600);
+  --color-brand-hover: var(--color-blue-700);
+}
+
+/*
+ * 숫자 전용 폰트 — 숫자·숫자 기호만 Inter 로 그림 (한글·영문은 BaseFont 그대로)
+ * unicode-range 덕분에 html font-family 맨 앞에 두어도 해당 글자만 이 폰트를 씀
+ */
+@font-face {
+  font-family: 'NumFont';
+  src: url('/fonts/Inter-Num-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0024-0025, U+002B-002E, U+0030-003A, U+20A9, U+2212;
+}
+
+@font-face {
+  font-family: 'NumFont';
+  src: url('/fonts/Inter-Num-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0024-0025, U+002B-002E, U+0030-003A, U+20A9, U+2212;
+}
+
 @font-face {
   font-family: 'BaseFont';
   /* src: url('/fonts/Ansungtangmyun-ESG.otf') format('opentype'); */
@@ -35,8 +63,10 @@
 @layer base {
   html {
     font-size: 14px;
-    font-family: 'BaseFont', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-family: 'NumFont', 'BaseFont', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
     font-weight: 400;
+    /* 숫자 폭 고정 → 표·금액 자릿수 정렬 */
+    font-variant-numeric: tabular-nums;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

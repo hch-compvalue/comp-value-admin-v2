@@ -36,7 +36,7 @@ export function SearchFilterBar({ searchText, onSearchChange, filterMode, onFilt
                     <button
                         key={mode}
                         onClick={() => onFilterModeChange(mode)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                             filterMode === mode
                                 ? 'bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-800'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:hover:bg-slate-600'

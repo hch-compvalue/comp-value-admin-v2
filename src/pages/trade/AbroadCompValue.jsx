@@ -46,13 +46,13 @@ const AbroadCompValue = () => {
     const resultCount = useMemo(() => (Array.isArray(compNameData) ? compNameData.length : 0), [compNameData]);
 
     const tableHead = useMemo(() => (
-        <thead className="sticky top-0 z-10 bg-gradient-to-r from-slate-700 to-slate-600 text-white">
+        <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
             <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">심볼</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">기업명</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">통화</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">거래소</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">시장</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold">심볼</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold">기업명</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold">통화</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold">거래소</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold">시장</th>
             </tr>
         </thead>
     ), []);

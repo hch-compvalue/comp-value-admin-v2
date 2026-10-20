@@ -79,7 +79,7 @@ export default function CommandPalette({ open, onClose }) {
             onClick={onClose}
         >
             <div
-                className={`relative flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white text-slate-900 shadow-xl ring-1 ring-slate-900/5 dark:bg-slate-800 dark:text-white dark:ring-slate-700 animate__animated ${isAnimatingOut ? 'animate__zoomOut' : 'animate__zoomIn'}`}
+                className={`relative flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white text-slate-900 shadow-xl ring-1 ring-slate-900/5 dark:bg-slate-800 dark:text-white dark:ring-slate-700 animate__animated ${isAnimatingOut ? 'animate__fadeOut' : 'animate__fadeIn'}`}
                 style={{ animationDuration: '0.2s' }}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -118,7 +118,7 @@ export default function CommandPalette({ open, onClose }) {
                     ) : (
                         grouped.map(([section, items]) => (
                             <div key={section} className="mb-3 last:mb-0">
-                                <div className="px-2 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                <div className="px-2 pb-1.5 text-xs font-semibold text-slate-400 dark:text-slate-500">
                                     {section}
                                 </div>
                                 <div className="ml-2 space-y-0.5 border-l border-slate-200 pl-2 dark:border-slate-700">

@@ -26,7 +26,7 @@ export default function TabSheet() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <span className="max-w-[140px] truncate font-medium">{activeLabel}</span>
-                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-sky-100 px-1.5 text-[10px] font-semibold text-sky-700 dark:bg-sky-900/40 dark:text-sky-400">
+                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-100 px-1.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-400">
                     {tabs.length}
                 </span>
             </button>
@@ -87,7 +87,7 @@ export default function TabSheet() {
                                         key={tab.key}
                                         className={`flex items-center gap-2 rounded-lg px-3 py-2.5 ${
                                             isActive
-                                                ? 'bg-sky-50 dark:bg-sky-900/20'
+                                                ? 'bg-blue-50 dark:bg-blue-900/20'
                                                 : 'hover:bg-slate-50 dark:hover:bg-slate-800'
                                         }`}
                                     >
@@ -96,11 +96,11 @@ export default function TabSheet() {
                                             className="flex min-w-0 flex-1 items-center gap-2"
                                         >
                                             {isActive && (
-                                                <span className="h-2 w-2 shrink-0 rounded-full bg-sky-500" />
+                                                <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
                                             )}
                                             <span className={`truncate text-sm ${
                                                 isActive
-                                                    ? 'font-semibold text-sky-700 dark:text-sky-400'
+                                                    ? 'font-semibold text-blue-600 dark:text-blue-400'
                                                     : 'text-slate-600 dark:text-slate-300'
                                             }`}>
                                                 {tab.label}

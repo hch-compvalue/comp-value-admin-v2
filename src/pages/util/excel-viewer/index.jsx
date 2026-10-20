@@ -30,7 +30,7 @@ export default function ExcelViewer() {
             <Loading show={loading} />
 
             {error && (
-                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400">
+                <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-700 dark:border-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
                     {error}
                 </div>
             )}
@@ -44,7 +44,7 @@ export default function ExcelViewer() {
                     {/* 메타 정보 + 다른 파일 열기 */}
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                            <FileSpreadsheet className="h-5 w-5 text-green-600 dark:text-green-400" />
+                            <FileSpreadsheet className="h-5 w-5 text-slate-500 dark:text-slate-400" />
                             <span className="font-medium">{fileName}</span>
                             <span className="text-slate-400 dark:text-slate-500">|</span>
                             <span>{rowCount}행 x {colCount}열</span>

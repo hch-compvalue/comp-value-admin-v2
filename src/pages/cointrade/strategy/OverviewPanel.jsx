@@ -4,12 +4,14 @@ import {
 } from 'recharts';
 import { Card, Row, ErrorBanner, RefreshButton } from './StrategyUi';
 import useOverviewData from './useOverviewData';
-import { STRATEGY_COIN, STRATEGY_STOCK, modeLabel, fmtKrw, fmtPct, fmtSignedPct, fmtBtc, fmtShares, fmtDateTime } from './strategyCommon';
+import {
+    STRATEGY_COIN, STRATEGY_STOCK, modeLabel, fmtKrw, fmtPct, fmtSignedPct, fmtBtc, fmtShares, fmtDateTime, LOSS_TEXT, returnAccent,
+} from './strategyCommon';
 import { SLATE, withAlpha } from '@/config/themeColors';
 
 /**
  * 자동매매 전체 탭 — 코인·주식 실전(LIVE) 장부 합산 현황
- * 색상: 적록색약 배려 — 코인 파랑 계열 · 주식 노랑/주황 계열, 수익 파랑 · 손실/낙폭 주황 (빨강↔초록 사용 안 함)
+ * 색상: 적록색약 배려 — 코인 파랑 계열 · 주식 노랑/주황 계열, 수익 rose · 손실 파랑 (전체 화면 공통 손익색), 낙폭 차트 주황 (빨강↔초록 사용 안 함)
  */
 
 const MARKET_CRYPTO = 'CRYPTO';
@@ -36,9 +38,6 @@ const MODE_BADGE = {
     OFF: 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300',
 };
 
-const PROFIT_TEXT = 'text-blue-600 dark:text-blue-400';
-const LOSS_TEXT = 'text-orange-500 dark:text-orange-400';
-const returnAccent = (v) => (v === null || v === undefined ? undefined : v >= 0 ? PROFIT_TEXT : LOSS_TEXT);
 
 const PERCENT = 100;
 const KRW_PER_MAN = 10_000;

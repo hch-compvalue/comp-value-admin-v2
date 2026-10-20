@@ -22,7 +22,7 @@ class ErrorBoundary extends Component {
         if (this.state.hasError) {
             return (
                 <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
-                    <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                    <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
                         <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="h-7 w-7">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
@@ -39,7 +39,7 @@ class ErrorBoundary extends Component {
                         <button
                             type="button"
                             onClick={this.handleReload}
-                            className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:from-sky-600 hover:to-indigo-600"
+                            className="inline-flex items-center justify-center rounded-lg bg-brand px-6 py-2 text-sm font-semibold text-white hover:bg-brand-hover"
                         >
                             홈으로 이동
                         </button>

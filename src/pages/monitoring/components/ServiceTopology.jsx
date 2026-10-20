@@ -61,7 +61,7 @@ const COMET_TRAIL = [
 const COMET_TRAIL_GAP = 0.06;
 const MAX_TOTAL_COMETS = 200;
 
-const PRESSURE_COLORS = ['#7dd3fc', '#fbbf24', '#f87171'];
+const PRESSURE_COLORS = ['#7dd3fc', '#fbbf24', '#fb923c'];
 
 // edgeId → trafficKey 역매핑
 const EDGE_TRAFFIC_KEY = {};
@@ -207,9 +207,9 @@ export default function ServiceTopology({ services = [], trades = [], traffic = 
 
     const getNodeColor = (nodeId) => {
         const status = statusMap[nodeId] || 'UNKNOWN';
-        if (status === 'UP') return { fill: '#059669', stroke: '#34d399', glow: 'rgba(52,211,153,0.4)' };
+        if (status === 'UP') return { fill: '#0284c7', stroke: '#38bdf8', glow: 'rgba(56,189,248,0.4)' };
         if (status === 'DEGRADED') return { fill: '#d97706', stroke: '#fbbf24', glow: 'rgba(251,191,36,0.4)' };
-        if (status === 'DOWN') return { fill: '#dc2626', stroke: '#f87171', glow: 'rgba(248,113,113,0.4)' };
+        if (status === 'DOWN') return { fill: '#ea580c', stroke: '#fb923c', glow: 'rgba(251,146,60,0.4)' };
         return { fill: SLATE[600], stroke: SLATE[400], glow: withAlpha(SLATE[400], 30) };
     };
 

@@ -42,8 +42,8 @@ export function PortfolioDashboard({ buySum, curSum, diff, diffPct, fx, fxUpdate
                 {/* 총 손익 */}
                 <div className={`border rounded-xl p-4 shadow-sm ${
                     isProfit
-                        ? 'bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200 dark:from-rose-900/30 dark:to-rose-900/20 dark:border-rose-800'
-                        : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 dark:from-blue-900/30 dark:to-blue-900/20 dark:border-blue-800'
+                        ? 'bg-rose-50 border-rose-200 dark:bg-rose-900/30 dark:border-rose-800'
+                        : 'bg-blue-50 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800'
                 }`}>
                     <div className="text-xs font-medium mb-1 text-slate-600 dark:text-slate-400">총 손익</div>
                     <div className={`text-lg font-bold tabular-nums ${isProfit ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>

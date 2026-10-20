@@ -185,14 +185,14 @@ function Update001({ boardData = {}, moveViewPage = {}, onUpdate = {}, canSetNot
                             />
                         )}
                         <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                            <div className={`${contentSize > 10 * 1024 * 1024 ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-slate-600 dark:text-slate-400'}`}>
+                            <div className={`${contentSize > 10 * 1024 * 1024 ? 'text-orange-600 dark:text-orange-400 font-semibold' : 'text-slate-600 dark:text-slate-400'}`}>
                                 전체 크기: {formatSize(contentSize)} / 10 MB
                             </div>
                             {imageSizes.length > 0 && (
                                 <div className="text-slate-600 dark:text-slate-400">
                                     이미지 {imageSizes.length}개
                                     {imageSizes.some(size => size > 5 * 1024 * 1024) && (
-                                        <span className="ml-2 text-red-600 dark:text-red-400 font-semibold">
+                                        <span className="ml-2 text-orange-600 dark:text-orange-400 font-semibold">
                                             (일부 이미지가 5MB를 초과합니다)
                                         </span>
                                     )}
@@ -212,7 +212,7 @@ function Update001({ boardData = {}, moveViewPage = {}, onUpdate = {}, canSetNot
                                 {existingAttachments.map((att) => {
                                     const isDeleted = deletedAttachmentIds.includes(att.id);
                                     return (
-                                        <div key={att.id} className={`flex items-center justify-between px-3 py-2 rounded-lg ${isDeleted ? 'bg-red-50 dark:bg-red-900/20' : 'bg-slate-50 dark:bg-slate-700'}`}>
+                                        <div key={att.id} className={`flex items-center justify-between px-3 py-2 rounded-lg ${isDeleted ? 'bg-orange-50 dark:bg-orange-900/20' : 'bg-slate-50 dark:bg-slate-700'}`}>
                                             <div className="flex items-center gap-2 min-w-0">
                                                 <svg className="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -229,7 +229,7 @@ function Update001({ boardData = {}, moveViewPage = {}, onUpdate = {}, canSetNot
                                                 onClick={() => handleExistingFileDelete(att.id)}
                                                 className={`px-2 py-1 text-xs rounded transition-colors ${isDeleted
                                                     ? 'text-blue-600 hover:text-blue-700 dark:text-blue-400'
-                                                    : 'text-red-500 hover:text-red-700 dark:text-red-400'}`}
+                                                    : 'text-orange-500 hover:text-orange-700 dark:text-orange-400'}`}
                                             >
                                                 {isDeleted ? '취소' : '삭제'}
                                             </button>
@@ -266,7 +266,7 @@ function Update001({ boardData = {}, moveViewPage = {}, onUpdate = {}, canSetNot
                                         <button
                                             type="button"
                                             onClick={() => handleNewFileRemove(index)}
-                                            className="p-1 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                                            className="p-1 text-slate-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
                                         >
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

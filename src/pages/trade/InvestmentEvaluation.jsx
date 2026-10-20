@@ -8,6 +8,8 @@ import Loading from '@/component/common/display/Loading';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import InvestmentDetailModal, { FullDetailModal } from '@/pages/trade/popup/InvestmentDetailModal';
 import { GRADE_STYLE, GRADE_STYLE_DEFAULT, GRADE_EXCEL_ARGB } from '@/util/GradeStyleUtil';
+import { SIGNAL_STYLE, SignalDot } from '@/util/SignalStyleUtil';
+import { AlertTriangle } from 'lucide-react';
 import ExcelJS from 'exceljs';
 
 // 세션 스토리지 키
@@ -107,20 +109,8 @@ const getPriceGapWarning = (priceGapPercent, row) => {
 // 등급별 색상
 const getGradeStyle = (grade) => GRADE_STYLE[grade] || GRADE_STYLE_DEFAULT;
 
-// [2-1] 투자판정 배지 스타일 (색각이상 친화: 파랑/노랑/회색)
-const getInvestmentSignalStyle = (signal) => {
-    const styles = {
-        '매수 후보': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-        '관심목록': 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-        '관망': 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
-    };
-    return styles[signal] || 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
-};
-const getInvestmentSignalIcon = (signal) => {
-    if (signal === '매수 후보') return '🔵';  // 🔵 파랑 (초록 대신)
-    if (signal === '관심목록') return '🟡';   // 🟡 노랑
-    return '⚪';                                    // ⚪ 회색
-};
+// [2-1] 투자판정 배지 스타일 (색각이상 친화: 파랑/노랑/회색 — SignalStyleUtil 공통)
+const getInvestmentSignalStyle = (signal) => SIGNAL_STYLE[signal] || SIGNAL_STYLE['관망'];
 
 // [2-1] 타이밍 신호 스타일 (양호=파랑, 대기=노랑, 하락=주황, 관망=회색)
 const getTimingStyle = (timing) => {
@@ -141,7 +131,7 @@ const TABLE_COLUMNS = [
         width: '90px',
         sortable: true,
         sticky: true,
-        headerClassName: 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-left text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-left',
         render: (value, row, { onMouseEnter, onMouseLeave }) => (
             <span
@@ -158,7 +148,7 @@ const TABLE_COLUMNS = [
         label: '기업명',
         width: '200px',
         sortable: true,
-        headerClassName: 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-left text-xs font-semibold',
         cellClassName: 'px-4 py-3 text-left text-slate-700 dark:text-slate-200',
         render: (value, row, { onMouseEnter, onMouseLeave }) => (
             <span
@@ -177,11 +167,11 @@ const TABLE_COLUMNS = [
         width: '120px',
         sortable: true,
         hasDropdown: true,
-        headerClassName: 'px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-center text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-center',
         render: (value) => (
-            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold ${getInvestmentSignalStyle(value)}`}>
-                <span>{getInvestmentSignalIcon(value)}</span>
+            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${getInvestmentSignalStyle(value)}`}>
+                <SignalDot signal={value} />
                 {value || '-'}
             </span>
         ),
@@ -192,7 +182,7 @@ const TABLE_COLUMNS = [
         width: '90px',
         sortable: true,
         hasDropdown: true,
-        headerClassName: 'px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-center text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-center',
         render: (value, row) => (
             <span className="inline-flex items-center gap-1">
@@ -211,7 +201,7 @@ const TABLE_COLUMNS = [
         width: '80px',
         sortable: true,
         hasDropdown: true,
-        headerClassName: 'px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-center text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-center',
         render: (value, row, { onMouseEnter, onMouseLeave }) => {
             if (!value) return '-';
@@ -232,7 +222,7 @@ const TABLE_COLUMNS = [
         label: '현재가',
         width: '100px',
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right text-slate-600 dark:text-slate-300',
         render: (value) => value ? `$${value}` : '-',
     },
@@ -241,31 +231,31 @@ const TABLE_COLUMNS = [
         label: '시총',
         width: '110px',
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right',
         render: (value, row, { showWarning, hideWarning }) => {
             if (!value || value === 'N/A') return '-';
             const risk = getMarketCapRisk(value);
             if (!risk) return <span className="text-slate-600 dark:text-slate-300">{value}</span>;
             const content = (<>
-                <span className="block font-bold text-yellow-300 mb-1">{risk.label}</span>
+                <span className="block font-bold text-amber-300 mb-1">{risk.label}</span>
                 <span className="block text-slate-200">{risk.desc}</span>
             </>);
             return (
                 <span className="inline-flex items-center gap-1 justify-end">
                     <span className={risk.level === 'micro'
                         ? 'text-orange-500 dark:text-orange-400 font-medium'
-                        : 'text-yellow-600 dark:text-yellow-400'
+                        : 'text-amber-600 dark:text-amber-400'
                     }>
                         {value}
                     </span>
                     <span
-                        className={`cursor-help text-xs ${risk.level === 'micro' ? 'text-orange-500' : 'text-yellow-500'}`}
+                        className={`cursor-help text-xs ${risk.level === 'micro' ? 'text-orange-500' : 'text-amber-500'}`}
                         onMouseEnter={(e) => showWarning(e, content)}
                         onMouseLeave={hideWarning}
                         onClick={(e) => showWarning(e, content)}
                     >
-                        {risk.level === 'micro' ? '\u26A0\uFE0F' : '\u26A0'}
+                        <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
                     </span>
                 </span>
             );
@@ -276,7 +266,7 @@ const TABLE_COLUMNS = [
         label: '평균거래량',
         width: '110px',
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right',
         render: (value) => {
             if (!value) return '-';
@@ -292,7 +282,7 @@ const TABLE_COLUMNS = [
         label: '적정가치',
         width: '100px',
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right',
         render: (value, row) => {
             if (!value) return '-';
@@ -312,7 +302,7 @@ const TABLE_COLUMNS = [
         label: '가격차이율',
         width: '130px',
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right',
         render: (value, row, { showWarning, hideWarning }) => {
             if (!value) return '-';
@@ -320,14 +310,14 @@ const TABLE_COLUMNS = [
             const isPositive = numValue > 0;
             const warning = getPriceGapWarning(value, row);
             const content = warning && (<>
-                <span className="block font-bold text-yellow-300 mb-1.5">
+                <span className="block font-bold text-amber-300 mb-1.5">
                     {warning.level === 'extreme' ? '극단적 이상치' : '이상치 경고'} — 가격차이율 {value}
                 </span>
                 <span className="block text-slate-300 mb-1.5">
                     이 수치는 신뢰하기 어렵습니다. 추정 원인:
                 </span>
                 {warning.reasons.map((reason, i) => (
-                    <span key={i} className="block pl-2 border-l-2 border-yellow-400/60 mb-1 text-slate-200">
+                    <span key={i} className="block pl-2 border-l-2 border-amber-400/60 mb-1 text-slate-200">
                         {reason}
                     </span>
                 ))}
@@ -345,13 +335,13 @@ const TABLE_COLUMNS = [
                             className={`cursor-help text-sm ${
                                 warning.level === 'extreme'
                                     ? 'text-orange-500 animate-pulse'
-                                    : 'text-yellow-500'
+                                    : 'text-amber-500'
                             }`}
                             onMouseEnter={(e) => showWarning(e, content)}
                             onMouseLeave={hideWarning}
                             onClick={(e) => showWarning(e, content)}
                         >
-                            {warning.level === 'extreme' ? '\u26A0\uFE0F' : '\u26A0'}
+                            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
                         </span>
                     )}
                 </span>
@@ -363,7 +353,7 @@ const TABLE_COLUMNS = [
         label: '52주 고점대비',
         width: '110px',
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right',
         render: (value) => {
             if (!value) return '-';
@@ -387,7 +377,7 @@ const TABLE_COLUMNS = [
         label: 'Fwd PER',
         width: '90px',
         sortable: true,
-        headerClassName: 'px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-right text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right',
         render: (value, row, { showWarning, hideWarning }) => {
             if (!value) return '-';
@@ -410,7 +400,7 @@ const TABLE_COLUMNS = [
                             onMouseLeave={hideWarning}
                             onClick={(e) => showWarning(e, content)}
                         >
-                            {'\u26A0'}
+                            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
                         </span>
                     )}
                 </span>
@@ -423,7 +413,7 @@ const TABLE_COLUMNS = [
         width: '150px',
         sortable: true,
         hasDropdown: true,
-        headerClassName: 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-left text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-left text-slate-600 dark:text-slate-300',
     },
     {
@@ -432,7 +422,7 @@ const TABLE_COLUMNS = [
         width: '100px',
         sortable: true,
         hasDropdown: true,
-        headerClassName: 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-left text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-left',
         render: (value) =>
             value ? (
@@ -449,7 +439,7 @@ const TABLE_COLUMNS = [
         width: '80px',
         sortable: true,
         hasDropdown: true,
-        headerClassName: 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-left text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-left',
         render: (value, row, { showWarning, hideWarning }) => {
             if (!value) return '-';
@@ -478,7 +468,7 @@ const TABLE_COLUMNS = [
                             onMouseLeave={hideWarning}
                             onClick={(e) => showWarning(e, content)}
                         >
-                            {'\u26A0'}
+                            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
                         </span>
                     )}
                 </span>
@@ -490,14 +480,14 @@ const TABLE_COLUMNS = [
         label: '추천',
         width: '350px',
         sortable: false,
-        headerClassName: 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider',
+        headerClassName: 'px-4 py-3 text-left text-xs font-semibold',
         cellClassName: 'px-4 py-3 text-left text-slate-600 dark:text-slate-300 text-xs',
         render: (value, row) => {
             const warning = getPriceGapWarning(row?.priceGapPercent, row);
             if (warning) {
                 return (
-                    <span className="text-orange-500 dark:text-orange-400 font-medium">
-                        {'\u26A0\uFE0F'} 이상치 경고: 가격차이율({row.priceGapPercent})이 비현실적 — {warning.reasons[0]}
+                    <span className="inline-flex items-center gap-1 text-orange-500 dark:text-orange-400 font-medium">
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />이상치 경고: 가격차이율({row.priceGapPercent})이 비현실적 — {warning.reasons[0]}
                     </span>
                 );
             }
@@ -1517,12 +1507,12 @@ const InvestmentEvaluation = () => {
                         <table
                             className="w-full table-fixed text-sm divide-y divide-slate-200 dark:divide-slate-700"
                         >
-                            <thead className="sticky top-0 z-10 bg-gradient-to-r from-slate-700 to-slate-600 text-white">
+                            <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
                                 <tr>
                                     {TABLE_COLUMNS.map((col) => (
                                         <th
                                             key={col.key}
-                                            className={`${col.headerClassName} ${col.sortable ? 'cursor-pointer hover:bg-slate-500 select-none' : ''} ${col.sticky ? 'sticky left-0 z-20 bg-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.3)]' : ''}`}
+                                            className={`${col.headerClassName} ${col.sortable ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 select-none' : ''} ${col.sticky ? 'sticky left-0 z-20 bg-slate-50 dark:bg-slate-900 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.3)]' : ''}`}
                                             style={{ width: col.width }}
                                             onClick={() => col.sortable && handleSort(col.key)}
                                         >
@@ -1533,7 +1523,7 @@ const InvestmentEvaluation = () => {
                                                         <span
                                                             className={
                                                                 sortConfig.key === col.key && sortConfig.direction === 'asc'
-                                                                    ? 'opacity-100 text-yellow-300'
+                                                                    ? 'opacity-100 text-blue-600 dark:text-blue-400'
                                                                     : ''
                                                             }
                                                         >
@@ -1542,7 +1532,7 @@ const InvestmentEvaluation = () => {
                                                         <span
                                                             className={
                                                                 sortConfig.key === col.key && sortConfig.direction === 'desc'
-                                                                    ? 'opacity-100 text-yellow-300'
+                                                                    ? 'opacity-100 text-blue-600 dark:text-blue-400'
                                                                     : ''
                                                             }
                                                         >

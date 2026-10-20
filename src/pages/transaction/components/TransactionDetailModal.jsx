@@ -46,7 +46,7 @@ function PriceComparisonChart({ buyPrice, currentPrice, targetPrice }) {
                     <div className="w-14 text-xs text-slate-500 dark:text-slate-400">매수가</div>
                     <div className="flex-1 relative h-6 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
                         <div
-                            className="absolute left-0 top-0 h-full bg-blue-500 rounded-full transition-all duration-500"
+                            className="absolute left-0 top-0 h-full bg-slate-400 rounded-full transition-all duration-500"
                             style={{ width: `${buyPercent}%` }}
                         />
                         <div className="absolute inset-0 flex items-center justify-end pr-2">
@@ -63,7 +63,7 @@ function PriceComparisonChart({ buyPrice, currentPrice, targetPrice }) {
                     <div className="flex-1 relative h-6 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
                         <div
                             className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ${
-                                isProfit ? 'bg-emerald-500' : 'bg-rose-500'
+                                isProfit ? 'bg-rose-500' : 'bg-blue-500'
                             }`}
                             style={{ width: `${curPercent}%` }}
                         />
@@ -99,11 +99,11 @@ function PriceComparisonChart({ buyPrice, currentPrice, targetPrice }) {
             {/* 범례 */}
             <div className="flex flex-wrap gap-4 mt-4 pt-3 border-t border-slate-200 dark:border-slate-600">
                 <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-blue-500" />
+                    <div className="w-3 h-3 rounded-full bg-slate-400" />
                     <span className="text-xs text-slate-500 dark:text-slate-400">매수가</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                    <div className={`w-3 h-3 rounded-full ${isProfit ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                    <div className={`w-3 h-3 rounded-full ${isProfit ? 'bg-rose-500' : 'bg-blue-500'}`} />
                     <span className="text-xs text-slate-500 dark:text-slate-400">
                         현재가 ({isProfit ? '수익' : '손실'})
                     </span>
@@ -371,7 +371,7 @@ export default function TransactionDetailModal({
         >
             <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-auto rounded-xl bg-white shadow-2xl dark:bg-slate-800 animate__animated ${isAnimatingOut ? 'animate__fadeOutDown' : 'animate__fadeInUp'}`} style={{ animationDuration: '0.25s', scrollbarGutter: 'stable' }}>
                 {/* 헤더 */}
-                <div className="sticky top-0 z-10 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white px-6 py-4 dark:border-slate-700 dark:from-slate-800 dark:to-slate-800">
+                <div className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-700 dark:bg-slate-800">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             {companyProfile?.image && !companyProfile?.defaultImage && (
@@ -386,7 +386,7 @@ export default function TransactionDetailModal({
                                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                     {formData.symbol}
                                     {isGroupRow && (
-                                        <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full dark:bg-indigo-900/50 dark:text-indigo-400">
+                                        <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full dark:bg-blue-900/50 dark:text-blue-400">
                                             합계
                                         </span>
                                     )}
@@ -424,7 +424,7 @@ export default function TransactionDetailModal({
                         </div>
                         <button
                             onClick={onClose}
-                            className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300 transition-colors"
+                            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300 transition-colors"
                         >
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -436,10 +436,10 @@ export default function TransactionDetailModal({
                 {/* 본문 */}
                 <div className="p-6 space-y-6">
                     {/* 수익/손실 요약 카드 */}
-                    <div className={`rounded-xl p-5 ${isProfit ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-rose-50 dark:bg-rose-900/20'}`}>
+                    <div className={`rounded-xl p-5 ${isProfit ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-blue-50 dark:bg-blue-900/20'}`}>
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-sm font-medium text-slate-600 dark:text-slate-400">평가손익</span>
-                            <span className={`text-2xl font-bold ${isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                            <span className={`text-2xl font-bold ${isProfit ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                 {isProfit ? '+' : ''}{diffPct.toFixed(2)}%
                             </span>
                         </div>
@@ -468,7 +468,7 @@ export default function TransactionDetailModal({
                             </div>
                             <div>
                                 <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">손익금액</div>
-                                <div className={`${isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                <div className={`${isProfit ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                     <BoldInt text={`${isProfit ? '+' : ''}$${diff.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
                                 </div>
                                 {fxRate > 0 && (
@@ -495,7 +495,7 @@ export default function TransactionDetailModal({
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
                             <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">현재가</div>
-                            <div className={`${isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                            <div className={`${isProfit ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                 <BoldInt text={`$${curPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} />
                             </div>
                             {fxRate > 0 && curPrice > 0 && (
@@ -543,10 +543,10 @@ export default function TransactionDetailModal({
                     {isGroupRow ? (
                         <>
                             {isEditing ? (
-                                <div className="border border-indigo-200 dark:border-indigo-700/50 rounded-lg p-4 space-y-4">
+                                <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 space-y-4">
                                     <div className="flex items-center justify-between mb-2">
                                         <h3 className="font-medium text-slate-900 dark:text-white">그룹 정보 수정</h3>
-                                        <span className="text-xs text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-full">
+                                        <span className="text-xs text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-full">
                                             그룹 내 {row.groupRows?.length || 0}개 항목에 적용
                                         </span>
                                     </div>
@@ -557,7 +557,7 @@ export default function TransactionDetailModal({
                                                 type="text"
                                                 value={formData.symbol}
                                                 onChange={(e) => handleChange('symbol', e.target.value.toUpperCase())}
-                                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                             />
                                         </div>
                                         <div>
@@ -566,7 +566,7 @@ export default function TransactionDetailModal({
                                                 type="text"
                                                 value={formData.companyName}
                                                 onChange={(e) => handleChange('companyName', e.target.value)}
-                                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                             />
                                         </div>
                                         <div>
@@ -595,7 +595,7 @@ export default function TransactionDetailModal({
                                                     step="0.01"
                                                     value={formData.targetPrice}
                                                     onChange={(e) => handleChange('targetPrice', e.target.value)}
-                                                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                                 />
                                             )}
                                         </div>
@@ -608,7 +608,7 @@ export default function TransactionDetailModal({
                                             rows={2}
                                             maxLength={SYMBOL_MEMO_MAX_LENGTH}
                                             placeholder="이 종목 전체에 대한 메모 (매수 건별 비고는 펼친 행에서 수정)"
-                                            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white resize-none"
+                                            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white resize-none"
                                         />
                                     </div>
                                     <div className="flex justify-end gap-2">
@@ -631,19 +631,19 @@ export default function TransactionDetailModal({
                                         <button
                                             onClick={handleGroupSave}
                                             disabled={saving}
-                                            className="px-4 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="px-4 py-1.5 text-sm bg-brand text-white rounded-lg hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {saving ? '저장 중...' : '일괄 저장'}
                                         </button>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="border border-indigo-200 dark:border-indigo-700/50 rounded-lg p-4">
+                                <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
                                     <div className="flex items-center justify-between mb-3">
                                         <h3 className="font-medium text-slate-900 dark:text-white">그룹 정보</h3>
                                         <button
                                             onClick={() => setIsEditing(true)}
-                                            className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center gap-1"
+                                            className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
                                         >
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -853,7 +853,7 @@ export default function TransactionDetailModal({
                     )}
 
                     {/* 기업 프로파일 - 로딩/성공/실패 모두 동일한 높이를 유지해 모달 shift 방지 */}
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-700 dark:to-slate-600 rounded-lg p-4 border border-blue-100 dark:border-slate-600">
+                    <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
                         <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">기업 정보</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                             {loadingProfile ? (
@@ -921,8 +921,8 @@ export default function TransactionDetailModal({
                                     }
                                 }}
                                 disabled={saving}
-                                className="px-4 py-2 text-sm border border-rose-300 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors
-                                    dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-900/30
+                                className="px-4 py-2 text-sm border border-orange-300 rounded-lg text-orange-600 hover:bg-orange-50 transition-colors
+                                    dark:border-orange-800 dark:text-orange-400 dark:hover:bg-orange-900/30
                                     disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 삭제
@@ -941,7 +941,7 @@ export default function TransactionDetailModal({
                         <button
                             onClick={handleAnalyzeClick}
                             disabled={!formData.symbol || isAnalyzing}
-                            className="px-5 py-2 text-sm bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all shadow-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="px-5 py-2 text-sm bg-brand text-white rounded-lg hover:bg-brand-hover transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             {isAnalyzing ? (
                                 <>

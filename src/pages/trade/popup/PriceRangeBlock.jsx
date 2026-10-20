@@ -5,6 +5,7 @@
  * - entryTiming에 range 필드가 없으면(구 평가 데이터) 아무것도 그리지 않음
  */
 import { useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { RANGE_TITLE, RANGE_SOURCE_NOTE, PCT, hasPriceRange, fmtProb, fmtUsd2 } from './priceRangeUtil';
 
 
@@ -32,8 +33,9 @@ export const PriceRangeBlock = ({ entryTiming: et, currentPrice, stopLoss }) => 
                 이 종목은 한 달({et.rangeDays}거래일) 동안 보통 이 범위에서 움직입니다.
             </div>
             {stopInRange && (
-                <div className="mt-2 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded px-2 py-1">
-                    ⚠ 손절매가({fmtUsd2(stopLoss)})가 이 범위 안이에요 — 평소 흔들림에도 손절될 수 있습니다.
+                <div className="mt-2 flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded px-2 py-1">
+                    <AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span>손절매가({fmtUsd2(stopLoss)})가 이 범위 안이에요 — 평소 흔들림에도 손절될 수 있습니다.</span>
                 </div>
             )}
             <button type="button" onClick={() => setShowDetail((v) => !v)}

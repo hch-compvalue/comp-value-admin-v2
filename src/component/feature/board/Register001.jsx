@@ -168,14 +168,14 @@ function Register001({ moveListPage = () => {}, onRegister = () => {}, currentAu
                             onSizeChange={handleSizeChange}
                         />
                         <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                            <div className={`${contentSize > 10 * 1024 * 1024 ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-slate-600 dark:text-slate-400'}`}>
+                            <div className={`${contentSize > 10 * 1024 * 1024 ? 'text-orange-600 dark:text-orange-400 font-semibold' : 'text-slate-600 dark:text-slate-400'}`}>
                                 전체 크기: {formatSize(contentSize)} / 10 MB
                             </div>
                             {imageSizes.length > 0 && (
                                 <div className="text-slate-600 dark:text-slate-400">
                                     이미지 {imageSizes.length}개
                                     {imageSizes.some(size => size > 5 * 1024 * 1024) && (
-                                        <span className="ml-2 text-red-600 dark:text-red-400 font-semibold">
+                                        <span className="ml-2 text-orange-600 dark:text-orange-400 font-semibold">
                                             (일부 이미지가 5MB를 초과합니다)
                                         </span>
                                     )}
@@ -214,7 +214,7 @@ function Register001({ moveListPage = () => {}, onRegister = () => {}, currentAu
                                         <button
                                             type="button"
                                             onClick={() => handleFileRemove(index)}
-                                            className="p-1 text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                                            className="p-1 text-slate-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
                                         >
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

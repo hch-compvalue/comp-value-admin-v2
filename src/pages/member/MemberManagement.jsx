@@ -371,7 +371,7 @@ export default function MemberManagement() {
             return (
                 <button
                     onClick={onClick}
-                    className="px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 rounded text-xs font-medium transition-colors cursor-pointer"
+                    className="px-2 py-0.5 bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 hover:bg-sky-200 dark:hover:bg-sky-900/50 rounded text-xs font-medium transition-colors cursor-pointer"
                     title="클릭하여 미승인으로 변경"
                 >
                     승인
@@ -381,7 +381,7 @@ export default function MemberManagement() {
             return (
                 <button
                     onClick={onClick}
-                    className="px-2 py-0.5 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 rounded text-xs font-medium transition-colors cursor-pointer"
+                    className="px-2 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50 rounded text-xs font-medium transition-colors cursor-pointer"
                     title="클릭하여 승인으로 변경"
                 >
                     미승인
@@ -553,28 +553,28 @@ export default function MemberManagement() {
                                 <table className="w-full min-w-[1000px]">
                                     <thead className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
                                         <tr>
-                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider ${COLUMN_WIDTHS.id}`}>
+                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 ${COLUMN_WIDTHS.id}`}>
                                                 회원번호
                                             </th>
-                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider ${COLUMN_WIDTHS.username}`}>
+                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 ${COLUMN_WIDTHS.username}`}>
                                                 사용자 ID
                                             </th>
-                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider ${COLUMN_WIDTHS.nickname}`}>
+                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 ${COLUMN_WIDTHS.nickname}`}>
                                                 닉네임
                                             </th>
-                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider ${COLUMN_WIDTHS.email}`}>
+                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 ${COLUMN_WIDTHS.email}`}>
                                                 이메일
                                             </th>
-                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider ${COLUMN_WIDTHS.roles}`}>
+                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 ${COLUMN_WIDTHS.roles}`}>
                                                 권한
                                             </th>
-                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider ${COLUMN_WIDTHS.approvalStatus}`}>
+                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 ${COLUMN_WIDTHS.approvalStatus}`}>
                                                 승인상태
                                             </th>
-                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider ${COLUMN_WIDTHS.createdAt}`}>
+                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 ${COLUMN_WIDTHS.createdAt}`}>
                                                 가입일
                                             </th>
-                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider ${COLUMN_WIDTHS.actions}`}>
+                                            <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 ${COLUMN_WIDTHS.actions}`}>
                                                 관리
                                             </th>
                                         </tr>
@@ -628,7 +628,7 @@ export default function MemberManagement() {
                                                         {isSuperAdmin() ? (
                                                             <button
                                                                 onClick={() => handleChangeRole(member)}
-                                                                className="px-2 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 dark:text-purple-400 rounded text-xs font-medium transition-colors"
+                                                                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200 rounded text-xs font-medium transition-colors"
                                                                 title="권한"
                                                             >
                                                                 권한
@@ -645,7 +645,7 @@ export default function MemberManagement() {
                                                         {isSuperAdmin() ? (
                                                             <button
                                                                 onClick={() => handleReject(member)}
-                                                                className="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded text-xs font-medium transition-colors"
+                                                                className="px-2 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 dark:bg-orange-900/30 dark:hover:bg-orange-900/50 dark:text-orange-400 rounded text-xs font-medium transition-colors"
                                                                 title="탈퇴"
                                                             >
                                                                 탈퇴
@@ -772,8 +772,8 @@ export default function MemberManagement() {
             {/* 회원 탈퇴 확인 모달 */}
             {renderDeleteModal && deleteTargetMember && (
                 <div className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-black/60 px-4 animate__animated ${isDeleteModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}>
-                    <div className={`w-full max-w-md rounded-2xl bg-white p-6 text-slate-900 shadow-xl ring-1 ring-slate-900/5 dark:bg-slate-800 dark:text-white dark:ring-slate-700 animate__animated ${isDeleteModalClosing ? 'animate__zoomOut' : 'animate__zoomIn'}`} style={{ animationDuration: '0.25s' }}>
-                        <h2 className="mb-4 text-lg font-semibold text-red-600 dark:text-red-400">회원 강제탈퇴 확인</h2>
+                    <div className={`w-full max-w-md rounded-2xl bg-white p-6 text-slate-900 shadow-xl ring-1 ring-slate-900/5 dark:bg-slate-800 dark:text-white dark:ring-slate-700 animate__animated ${isDeleteModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}>
+                        <h2 className="mb-4 text-lg font-semibold text-orange-600 dark:text-orange-400">회원 강제탈퇴 확인</h2>
 
                         <div className="mb-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 p-4">
                             <div className="space-y-2 text-sm">
@@ -796,9 +796,9 @@ export default function MemberManagement() {
                             </div>
                         </div>
 
-                        <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-900/20 p-3">
-                            <p className="text-sm text-red-600 dark:text-red-400">
-                                ⚠️ 이 작업은 되돌릴 수 없습니다.<br />
+                        <div className="mb-4 rounded-lg bg-orange-50 dark:bg-orange-900/20 p-3">
+                            <p className="text-sm text-orange-600 dark:text-orange-400">
+                                이 작업은 되돌릴 수 없습니다.<br />
                                 회원의 모든 데이터가 영구적으로 삭제됩니다.
                             </p>
                         </div>
@@ -834,7 +834,7 @@ export default function MemberManagement() {
             {/* 회원 정보 수정 모달 */}
             {renderEditModal && editTargetMember && (
                 <div className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-black/60 px-4 animate__animated ${isEditModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}>
-                    <div className={`w-full max-w-md rounded-2xl bg-white p-6 text-slate-900 shadow-xl ring-1 ring-slate-900/5 dark:bg-slate-800 dark:text-white dark:ring-slate-700 animate__animated ${isEditModalClosing ? 'animate__zoomOut' : 'animate__zoomIn'}`} style={{ animationDuration: '0.25s' }}>
+                    <div className={`w-full max-w-md rounded-2xl bg-white p-6 text-slate-900 shadow-xl ring-1 ring-slate-900/5 dark:bg-slate-800 dark:text-white dark:ring-slate-700 animate__animated ${isEditModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}>
                         <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">회원 정보 수정</h2>
 
                         <div className="mb-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 p-4">

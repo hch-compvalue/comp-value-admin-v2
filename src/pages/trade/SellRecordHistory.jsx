@@ -275,7 +275,7 @@ export default function SellRecordHistory() {
                                 <button
                                     onClick={() => { fetchRecords(); fetchFxRate(); }}
                                     disabled={loading}
-                                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors disabled:opacity-50"
+                                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50"
                                     title="재조회"
                                 >
                                     <svg className={`w-5 h-5 text-slate-500 dark:text-slate-400 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -346,13 +346,13 @@ export default function SellRecordHistory() {
 
                     {/* 통계 카드 */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-3 dark:from-slate-700 dark:to-slate-600">
-                            <div className="text-xs text-slate-600 dark:text-slate-300 mb-1">총 매도 건수</div>
+                        <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">총 매도 건수</div>
                             <div className="text-xl font-bold text-slate-900 dark:text-white">{stats.totalRecords}건</div>
                         </div>
-                        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg p-3 dark:from-slate-700 dark:to-slate-600">
-                            <div className="text-xs text-slate-600 dark:text-slate-300 mb-1">총 실현 손익</div>
-                            <div className={`text-xl font-bold ${stats.totalRealizedPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                        <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">총 실현 손익</div>
+                            <div className={`text-xl font-bold ${stats.totalRealizedPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                 ${stats.totalRealizedPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             {avgSellExchangeRate > 0 && (
@@ -361,8 +361,8 @@ export default function SellRecordHistory() {
                                 </div>
                             )}
                         </div>
-                        <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-lg p-3 dark:from-slate-700 dark:to-slate-600">
-                            <div className="text-xs text-slate-600 dark:text-slate-300 mb-1">총 매도 금액</div>
+                        <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">총 매도 금액</div>
                             <div className="text-xl font-bold text-slate-900 dark:text-white">
                                 ${stats.totalSellAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
@@ -372,9 +372,9 @@ export default function SellRecordHistory() {
                                 </div>
                             )}
                         </div>
-                        <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-lg p-3 dark:from-slate-700 dark:to-slate-600">
-                            <div className="text-xs text-slate-600 dark:text-slate-300 mb-1">총손익 (가격+환차)</div>
-                            <div className={`text-xl font-bold ${stats.totalPnlKrw >= 0 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                        <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">총손익 (가격+환차)</div>
+                            <div className={`text-xl font-bold ${stats.totalPnlKrw >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                 {stats.totalPnlKrw >= 0 ? '+' : ''}₩{Math.round(stats.totalPnlKrw).toLocaleString()}
                             </div>
                         </div>
@@ -458,7 +458,7 @@ export default function SellRecordHistory() {
                                                 })()}
                                             </td>
                                             <td className="px-4 py-3 text-sm">
-                                                <div className={`font-semibold ${record.realizedPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                                                <div className={`font-semibold ${record.realizedPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                                     {record.realizedPnl >= 0 ? '+' : ''}${record.realizedPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </div>
                                                 {(() => {
@@ -481,7 +481,7 @@ export default function SellRecordHistory() {
                                                     const fxPnl = calcFxPnl(record);
                                                     if (fxPnl === null) return <span className="text-slate-400 dark:text-slate-500">-</span>;
                                                     return (
-                                                        <span className={`font-medium ${fxPnl >= 0 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                                                        <span className={`font-medium ${fxPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                                             {fxPnl >= 0 ? '+' : ''}₩{Math.round(fxPnl).toLocaleString()}
                                                         </span>
                                                     );
@@ -492,7 +492,7 @@ export default function SellRecordHistory() {
                                                     const totalPnl = calcTotalPnlKrw(record, fxRate);
                                                     if (totalPnl === null) return <span className="text-slate-400 dark:text-slate-500">-</span>;
                                                     return (
-                                                        <span className={`font-bold ${totalPnl >= 0 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                                                        <span className={`font-bold ${totalPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                                             {totalPnl >= 0 ? '+' : ''}₩{Math.round(totalPnl).toLocaleString()}
                                                         </span>
                                                     );
@@ -514,7 +514,7 @@ export default function SellRecordHistory() {
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(record.id)}
-                                                        className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-slate-700"
+                                                        className="p-1.5 text-slate-500 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors dark:text-slate-400 dark:hover:text-orange-400 dark:hover:bg-slate-700"
                                                         title="삭제"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

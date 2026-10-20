@@ -195,7 +195,7 @@ export default function SellRecordModal({ isOpen, mode, data, onClose, onSave })
                         </div>
                         <button
                             onClick={onClose}
-                            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+                            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
                         >
                             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -210,7 +210,7 @@ export default function SellRecordModal({ isOpen, mode, data, onClose, onSave })
                         {/* 티커 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                티커 <span className="text-red-500">*</span>
+                                티커 <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -228,7 +228,7 @@ export default function SellRecordModal({ isOpen, mode, data, onClose, onSave })
                         {/* 기업명 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                기업명 <span className="text-red-500">*</span>
+                                기업명 <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -242,7 +242,7 @@ export default function SellRecordModal({ isOpen, mode, data, onClose, onSave })
                         {/* 매도일 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                매도일 <span className="text-red-500">*</span>
+                                매도일 <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="date"
@@ -255,7 +255,7 @@ export default function SellRecordModal({ isOpen, mode, data, onClose, onSave })
                         {/* 매도가 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                매도가 ($) <span className="text-red-500">*</span>
+                                매도가 ($) <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="number"
@@ -275,7 +275,7 @@ export default function SellRecordModal({ isOpen, mode, data, onClose, onSave })
                         {/* 수량 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                수량 <span className="text-red-500">*</span>
+                                수량 <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="number"
@@ -356,7 +356,7 @@ export default function SellRecordModal({ isOpen, mode, data, onClose, onSave })
 
                     {/* 기업 정보 카드 */}
                     {companyProfile && (
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-700 dark:to-slate-600 rounded-lg p-4 border border-blue-200 dark:border-slate-600">
+                        <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
                             <div className="flex items-start gap-3 mb-3">
                                 {companyProfile.image && !companyProfile.defaultImage && (
                                     <img
@@ -431,7 +431,7 @@ export default function SellRecordModal({ isOpen, mode, data, onClose, onSave })
                     <button
                         onClick={handleSubmit}
                         disabled={saving}
-                        className="px-6 py-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-lg hover:from-sky-600 hover:to-indigo-600 transition-all shadow-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-2 bg-brand text-white rounded-lg hover:bg-brand-hover transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {saving ? '저장 중...' : mode === 'edit' ? '수정' : '저장'}
                     </button>

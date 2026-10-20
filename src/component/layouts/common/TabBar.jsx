@@ -106,7 +106,7 @@ export default function TabBar() {
     );
 
     return (
-        <div className="hidden md:block sticky top-16 z-[35] border-b border-slate-200 bg-white/80 backdrop-blur dark:bg-slate-900/80 dark:border-slate-700">
+        <div className="hidden md:block sticky top-16 z-[35] border-b border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700">
             <div className="flex items-end">
                 <ArrowButton direction={-1} visible={canScrollLeft} onClick={() => scrollBy(-1)} />
 
@@ -126,7 +126,7 @@ export default function TabBar() {
                                 onContextMenu={(e) => handleContextMenu(e, tab)}
                                 className={`group relative flex shrink-0 items-center gap-1.5 pl-4 pr-2.5 pb-2 pt-1.5 text-sm rounded-t-md transition-all duration-200 ease-out select-none ${
                                     isActive
-                                        ? 'text-sky-700 bg-sky-50/70 dark:text-sky-400 dark:bg-sky-950/30'
+                                        ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30'
                                         : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100/80 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/60'
                                 }`}
                             >
@@ -142,7 +142,7 @@ export default function TabBar() {
                                     </span>
                                 )}
                                 {/* 하단 인디케이터 - 호버 시 미리보기, 활성 시 전체 표시 */}
-                                <span className={`absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-sky-600 transition-all duration-200 ease-out origin-center dark:bg-sky-400 ${
+                                <span className={`absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-brand transition-all duration-200 ease-out origin-center dark:bg-blue-400 ${
                                     isActive
                                         ? 'scale-x-100 opacity-100'
                                         : 'scale-x-0 opacity-0 group-hover:scale-x-75 group-hover:opacity-40'

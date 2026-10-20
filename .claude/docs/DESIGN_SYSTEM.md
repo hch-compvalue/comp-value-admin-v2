@@ -1,6 +1,8 @@
 # CompValue 디자인 시스템
 
 ## 디자인 방향
+- **장식 대신 데이터** (2026-10-20 개편): 차분한 업무용 도구 톤. 색은 의미(손익·상태·선택)가 있을 때만, 위계는 굵기·크기·여백·얇은 테두리로
+- **금지**: 그라데이션(`bg-gradient-*`), 장식용 이모지(📊💱📈 등 — 아이콘이 필요하면 lucide-react), 글자 넣은 그라데이션 아이콘 박스, `backdrop-blur` 유리 효과, 화면마다 다른 브랜드 색(보라·분홍·에메랄드 등), 한글 라벨에 `uppercase tracking-*`
 - **미니멀리즘**: 불필요한 장식 요소 제거, 여백 넉넉하게, 콘텐츠에 집중
 - **부드러운 인터랙션**: hover/클릭/페이지 전환에 자연스러운 애니메이션
 - **사용감 우선**: 직관적인 피드백, 명확한 상태 변화, 로딩/에러 상태 처리
@@ -8,8 +10,8 @@
 ## 색상
 
 ### Primary
-- Action (버튼, CTA): sky-500 → indigo-500 그라데이션 / hover 시 sky-600 → indigo-600
-- Accent (링크, 강조): sky-500 / dark:sky-400
+- Brand (주요 버튼, 로고, 링크): **단색** `bg-brand` / `hover:bg-brand-hover` / `text-brand` (= blue-600 / blue-700, `src/index.css` 토큰 — 색 변경은 토큰만)
+- Accent (링크, 강조): blue-600 / dark:blue-400
 
 ### 시맨틱 컬러 (접근성: 적록색약 고려 — 빨강↔초록 대비 금지)
 | 상태 | Light | Dark | 배경 (Light) | 배경 (Dark) |
@@ -48,7 +50,9 @@
 ## 타이포그래피
 
 ### 폰트
-- BinggraeMelona.otf (기본 weight: 400)
+- 글자: BinggraeMelona.otf (기본 weight: 400, Bold 700)
+- **숫자: Inter (`public/fonts/Inter-Num-*.woff2`)** — `NumFont` 의 `unicode-range` 로 숫자·숫자 기호(0-9 $ % + , - . / : ₩ −)만 Inter 로 그림. 별도 클래스 불필요
+- `html` 에 `font-variant-numeric: tabular-nums` 전역 적용 → 표·금액 자릿수 자동 정렬
 
 ### 텍스트 계층
 | 용도 | 크기 | Weight | 예시 |
@@ -70,13 +74,14 @@
 ### 버튼
 | Variant | 스타일 | 용도 |
 |---------|--------|------|
-| Primary | sky→indigo 그라데이션, 흰색 텍스트, shadow-md | 주요 액션 (저장, 확인) |
+| Primary | `bg-brand` 단색, 흰색 텍스트, 그림자 없음 | 주요 액션 (저장, 확인) |
 | Secondary | 흰색 배경, slate border, hover:bg-slate-50 | 보조 액션 (취소, 닫기) |
 | Danger | orange 배경, 흰색 텍스트 | 삭제, 위험 액션 |
 | Ghost | 배경 없음, hover 시 slate-50 | 부가 액션 |
 
 - 크기: `sm`(px-3 py-1.5 text-sm) / `md`(px-4 py-2 text-sm) / `lg`(px-6 py-2.5 text-base)
-- 공통: `rounded-lg`, `disabled:opacity-50 disabled:cursor-not-allowed`
+- 공통: `rounded-lg`, `disabled:opacity-50 disabled:cursor-not-allowed` — 알약형(`rounded-full`) 버튼 금지 (배지·아바타·점만 `rounded-full`)
+- 새 버튼은 `@/component/common/button/Button` 사용 (직접 `<button>`에 색 클래스 조합 지양)
 
 ### 입력 필드
 - 높이: `h-10`
@@ -93,12 +98,14 @@
 - 그림자: `shadow-sm`
 
 ### 테이블
-- 헤더: `bg-slate-50` / `dark:bg-slate-900`, `border-b border-slate-200`
+- 헤더: `bg-slate-50` / `dark:bg-slate-900`, `border-b border-slate-200`, 글자 `text-xs font-semibold text-slate-600` (짙은 그라데이션 헤더·uppercase 금지)
 - 행 hover: `hover:bg-slate-50` / `dark:hover:bg-slate-700/50`
 - 선택된 행: `bg-blue-50` / `dark:bg-blue-900/20`
 - 헤더 정렬 = 셀 정렬 (숫자 컬럼은 헤더도 오른쪽 정렬, 정렬 아이콘은 제목 왼쪽)
 - 금액·수량은 `tabular-nums`, 한 셀 1줄 원칙 (보조 정보는 `text-xs text-slate-400` 한 줄까지)
 - 행 배경 토큰 (`src/styles/surfaces.css`): `bg-row-base` / `bg-row-hover` / `bg-row-nested`(펼친 하위 행) / `bg-row-hit`(목표 도달 등 강조 행) — 불투명색이라 고정 첫 열은 `sticky left-0 bg-inherit` 로 행 배경을 그대로 받음, `dark:` 변형 불필요
+- 통계/요약 카드: 흰 바탕 + `border-slate-200` 테두리, 라벨 `text-xs text-slate-500` + 값 `text-xl font-bold` — 카드마다 다른 배경색 금지 (색은 값의 손익에만)
+- 투자판정 표시: `@/util/SignalStyleUtil` 의 `SIGNAL_STYLE` + `<SignalDot />` (🔵🟡⚪ 이모지 금지)
 - 강조 행은 행 전체 원색 칠 대신 `bg-row-hit` + 첫 셀 왼쪽 3px 강조선
 - 손익 색: 상승 rose / 하락 blue (전일 대비 등락도 동일), 수익률은 연한 배경 배지
 - 참고 구현: 보유종목 `pages/transaction/components/holdings/` (컬럼 정의 `constants/index.js` TABLE_COLUMNS + 셀 렌더러 `cells.jsx`)
@@ -138,7 +145,7 @@
 ### 패턴
 | 대상 | 애니메이션 | 시간 |
 |------|-----------|------|
-| 모달 진입/퇴장 | zoomIn / zoomOut | 0.25s |
+| 모달 진입/퇴장 | fadeIn / fadeOut | 0.2s |
 | 토스트 알림 | fadeInDown / fadeOutDown | 0.3s |
 | 콘텐츠 진입 | fadeIn / fadeInUp | 0.2s |
 | hover 효과 | transition-colors | 150ms |

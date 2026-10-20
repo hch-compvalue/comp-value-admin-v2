@@ -243,7 +243,7 @@ export default function EditProfile() {
                         {/* 이메일 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                이메일 <span className="text-red-500">*</span>
+                                이메일 <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="email"
@@ -261,7 +261,7 @@ export default function EditProfile() {
                         {/* 닉네임 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                닉네임 <span className="text-red-500">*</span>
+                                닉네임 <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -317,7 +317,7 @@ export default function EditProfile() {
                         {/* 현재 비밀번호 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                현재 비밀번호 <span className="text-red-500">*</span>
+                                현재 비밀번호 <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="password"
@@ -332,7 +332,7 @@ export default function EditProfile() {
                         {/* 새 비밀번호 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                새 비밀번호 <span className="text-red-500">*</span>
+                                새 비밀번호 <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="password"
@@ -350,7 +350,7 @@ export default function EditProfile() {
                         {/* 새 비밀번호 확인 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                새 비밀번호 확인 <span className="text-red-500">*</span>
+                                새 비밀번호 확인 <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="password"
@@ -392,7 +392,7 @@ export default function EditProfile() {
                             <button
                                 type="submit"
                                 disabled={changingPassword}
-                                className="flex-1 px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all shadow-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 px-6 py-2.5 bg-brand text-white rounded-lg hover:bg-brand-hover transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {changingPassword ? '변경 중...' : '비밀번호 변경'}
                             </button>

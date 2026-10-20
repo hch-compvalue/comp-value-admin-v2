@@ -7,7 +7,7 @@ import { Card, Row, WeightBar, ModeSelector, ErrorBanner, RefreshButton } from '
 import useStrategyData from './useStrategyData';
 import {
     RUN_LIMIT, MIN_CAPITAL_KRW, EMERGENCY_CONFIRM_WORD, COLOR_STRATEGY, COLOR_BTC, STRATEGY_COIN, MODES,
-    modeLabel, hourRange, fmtKrw, fmtPct, fmtSignedPct, fmtBtc, fmtDateTime, INPUT_CLASS, statusBadge, actionLabel,
+    modeLabel, hourRange, fmtKrw, fmtPct, fmtSignedPct, returnAccent, fmtBtc, fmtDateTime, INPUT_CLASS, statusBadge, actionLabel,
 } from './strategyCommon';
 import { SLATE, withAlpha } from '@/config/themeColors';
 
@@ -198,7 +198,7 @@ export default function CoinStrategyPanel({ header }) {
                                 <span className="font-semibold">{fmtPct(modeLedger.btcWeight)}</span>
                             </div>
                             <WeightBar weight={modeLedger.btcWeight} />
-                            <Row label="전략 수익률" value={fmtSignedPct(modeLedger.returnPct)} accent="text-blue-600 dark:text-blue-400" />
+                            <Row label="전략 수익률" value={fmtSignedPct(modeLedger.returnPct)} accent={returnAccent(modeLedger.returnPct)} />
                             <Row label="같은 기간 BTC 보유" value={fmtSignedPct(modeLedger.btcHoldReturnPct)} accent="text-amber-600 dark:text-amber-400" />
                             <p className="text-[11px] text-slate-400 mt-1">시작: {fmtDateTime(modeLedger.startedAt)}</p>
                         </>
