@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { send } from '@/util/ClientUtil';
 import { STOCK_DISCOVER_PATH } from '@/config/menuPaths';
 import { SIGNAL_STYLE, SignalDot } from '@/util/SignalStyleUtil';
+import { PENDING_LABEL, RANK_PENDING_TITLE, PENDING_BADGE } from '@/util/ValidationGuide';
 
 // 홈에 보여줄 투자 순위 상위 종목 수
 const TOP_COUNT = 5;
@@ -36,6 +37,7 @@ export default function TopPicks() {
             <div className="flex items-baseline justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
                 <h2 className="text-sm font-semibold text-slate-800 dark:text-white">
                     투자 순위 상위 {TOP_COUNT}
+                    <span className={`${PENDING_BADGE} ml-2 align-middle`} title={RANK_PENDING_TITLE}>{PENDING_LABEL}</span>
                     {baseDate && <span className="ml-2 text-xs font-normal text-slate-400">{baseDate} 기준</span>}
                 </h2>
                 <Link to={STOCK_DISCOVER_PATH} className="text-xs text-brand hover:underline dark:text-blue-400">전체 보기</Link>

@@ -8,6 +8,7 @@ import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal
 import { GRADE_STYLE } from '@/util/GradeStyleUtil';
 import { SIGNAL_STYLE, SignalDot } from '@/util/SignalStyleUtil';
 import { AlertTriangle } from 'lucide-react';
+import { PENDING_LABEL, VERIFIED_LABEL, RANK_PENDING_NOTE, SELL_RULE_NOTE, DIVERSIFY_NOTE, PENDING_BADGE, VERIFIED_BADGE } from '@/util/ValidationGuide';
 
 const SIGNAL_ORDER = ['매수 후보', '관심목록', '관망'];
 const ALL_SIGNALS = '전체';
@@ -276,7 +277,12 @@ const DailyPicks = () => {
             {rows.length > 0 && (
                 <div className="mb-4 rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
                     {hasRank
-                        ? <>투자 순위 = 후보 안에서 <strong>수익성(ROE) · 가치점수 · 최근 1주 눌림</strong>의 상위 비율을 같은 비중으로 합친 점수입니다. 2~4주 보유 기준 백테스트에서 순위가 높을수록 성과가 나았던 요소만 썼습니다. 타이밍은 효과가 확인되지 않아 참고용입니다.</>
+                        ? <>
+                            <span className={`${PENDING_BADGE} mr-1.5`}>{PENDING_LABEL}</span>
+                            투자 순위 = 후보 안에서 <strong>수익성(ROE) · 가치점수 · 최근 1주 눌림</strong>의 상위 비율을 같은 비중으로 합친 점수입니다. {RANK_PENDING_NOTE}
+                            <div className="mt-1">{SELL_RULE_NOTE} <span className={`${VERIFIED_BADGE} ml-1`}>{VERIFIED_LABEL}</span></div>
+                            <div className="mt-1">{DIVERSIFY_NOTE}</div>
+                        </>
                         : <>이 스냅샷에는 투자 순위가 없어 가치점수 순으로 보여줍니다. 투자 순위는 2026-10-15 평가분부터 표시됩니다.</>}
                 </div>
             )}
