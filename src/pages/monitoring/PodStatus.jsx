@@ -1,13 +1,14 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ExternalLink, RefreshCw, Search } from 'lucide-react';
 import { send } from '@/util/ClientUtil';
 import { TabActiveContext } from '@/context/TabContext';
 import PageTitle from '@/component/common/display/PageTitle';
 import Button from '@/component/common/button/Button';
 import { LEVEL, formatAgo } from './monitoringModel';
-import { NAMESPACE_DESC, TERMINATED_LABEL, toPodRows, groupByNamespace, isMassRestart, formatAge, shortImage } from './podModel';
+import { NAMESPACE_DESC, TERMINATED_LABEL, toPodRows, groupByNamespace, buildPodMap, isMassRestart, formatAge, shortImage } from './podModel';
 import { Panel, StatusDot, UsageBar } from './components/MonitoringUi';
 import { LEVEL_TEXT } from './components/levelStyles';
+import PodMap from './components/PodMap';
 
 const PODS_API = '/dart/monitoring/pods';
 // 탭을 보고 있을 때만 이 주기로 새로 받음
@@ -35,6 +36,7 @@ export default function PodStatus() {
     const [namespace, setNamespace] = useState(ALL);
     const [keyword, setKeyword] = useState('');
     const [hideDone, setHideDone] = useState(true);
+    const tablesRef = useRef(null);
 
     const fetchPods = useCallback(async () => {
         setLoading(true);
@@ -66,6 +68,15 @@ export default function PodStatus() {
     const rows = useMemo(() => toPodRows(pods || []), [pods]);
     const massRestart = useMemo(() => isMassRestart(pods || []), [pods]);
     const allGroups = useMemo(() => groupByNamespace(rows), [rows]);
+    const podMap = useMemo(() => buildPodMap(rows), [rows]);
+
+    // 구성도에서 앱을 누르면 아래 표를 그 앱으로 거르고 표 위치로 이동
+    const selectApp = useCallback((ns, app) => {
+        setNamespace(ns);
+        setKeyword(app);
+        if (rows.some((r) => r.namespace === ns && r.name.startsWith(app) && r.state.done)) setHideDone(false);
+        tablesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [rows]);
 
     const visibleGroups = useMemo(() => {
         const kw = keyword.trim().toLowerCase();
@@ -125,8 +136,13 @@ export default function PodStatus() {
                     <SummaryTile label="문제" value={problems} sub={problems ? '아래 표 맨 위' : '없음'} level={problems ? LEVEL.WARN : LEVEL.OK} />
                 </div>
 
+                {/* 구성도 */}
+                {rows.length > 0 && (
+                    <PodMap map={podMap} node={nodeCount === 1 ? rows.find((r) => r.node)?.node : null} podCount={total} onSelect={selectApp} />
+                )}
+
                 {/* 필터 */}
-                <div className="flex flex-wrap items-center gap-3">
+                <div ref={tablesRef} className="flex scroll-mt-20 flex-wrap items-center gap-3">
                     <div role="group" aria-label="네임스페이스" className="flex flex-wrap gap-1.5">
                         <NamespaceChip active={namespace === ALL} onClick={() => setNamespace(ALL)} label="전체" count={total} problems={problems} />
                         {allGroups.map((g) => (

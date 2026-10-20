@@ -149,3 +149,92 @@ export function groupByNamespace(rows) {
             problems: list.filter((r) => r.state.level === LEVEL.DOWN || r.state.level === LEVEL.WARN).length,
         }));
 }
+
+// ── 구성도 ──
+
+/** 앱(배포 단위) 이름 → 역할 (구성도 표시용) */
+export const APP_LABEL = {
+    'comp-value-web': '웹 화면',
+    'comp-value-service': '백엔드 API',
+    'trader-api': '자동매매',
+    postgres: '데이터베이스',
+    redis: '캐시',
+    'postgres-backup': 'DB 백업 (매일)',
+    'ingress-nginx-controller': '외부 접속 관문',
+    'ingress-nginx-admission-create': '설치 작업',
+    'ingress-nginx-admission-patch': '설치 작업',
+    prometheus: '지표 수집·저장',
+    grafana: '대시보드',
+    loki: '로그 저장',
+    promtail: '로그 수집',
+    'kube-state-metrics': '쿠버네티스 상태 지표',
+    'dcgm-exporter': 'GPU 지표',
+    'argocd-server': 'ArgoCD 화면·API',
+    'argocd-repo-server': 'Git 저장소 읽기',
+    'argocd-application-controller': '배포 동기화',
+    'argocd-dex-server': '로그인 연동',
+    'argocd-redis': 'ArgoCD 캐시',
+    'argocd-notifications-controller': '알림',
+    coredns: '내부 DNS',
+    etcd: '클러스터 저장소',
+    'kube-apiserver': '쿠버네티스 API',
+    'kube-controller-manager': '컨트롤러',
+    'kube-scheduler': '파드 배치',
+    'kube-proxy': '네트워크 프록시',
+    'metrics-server': '리소스 지표',
+    'nvidia-device-plugin-daemonset': 'GPU 연결',
+    'storage-provisioner': '디스크 할당',
+};
+
+/** 사용자 요청이 지나가는 길 (구성도 맨 위 흐름) — 마지막 칸은 백엔드가 쓰는 것들 */
+export const REQUEST_FLOW = [['ingress-nginx-controller'], ['comp-value-web'], ['comp-value-service'], ['postgres', 'redis', 'trader-api']];
+
+const REPLICASET_HASH = /-[a-z0-9]{6,10}$/;
+const CRONJOB_SUFFIX = /-\d{6,}$/;
+
+/** 파드 → 앱(배포 단위) 이름 */
+export function appName(p) {
+    const owner = p.ownerName;
+    switch (p.ownerKind) {
+        case 'ReplicaSet': return owner.replace(REPLICASET_HASH, '');
+        case 'Job': return owner.replace(CRONJOB_SUFFIX, '');
+        case 'StatefulSet':
+        case 'DaemonSet': return owner;
+        case 'Node': return p.node && p.name.endsWith(`-${p.node}`) ? p.name.slice(0, -(p.node.length + 1)) : p.name;
+        default: return p.name;
+    }
+}
+
+const worstLevel = (levels) => levels.reduce((worst, l) => (LEVEL_RANK[l] < LEVEL_RANK[worst] ? l : worst), LEVEL.UNKNOWN);
+
+/**
+ * 구성도 데이터 — 네임스페이스 → 앱 묶음
+ * @returns {{namespace, desc, apps: {key, app, label, kind, podCount, doneCount, level, allDone, memoryMB}[]}[]}
+ */
+export function buildPodMap(rows) {
+    return groupByNamespace(rows).map((g) => {
+        const apps = new Map();
+        g.pods.forEach((r) => {
+            const app = appName(r);
+            if (!apps.has(app)) apps.set(app, []);
+            apps.get(app).push(r);
+        });
+        const list = [...apps.entries()].map(([app, pods]) => {
+            const active = pods.filter((p) => !p.state.done);
+            return {
+                key: `${g.namespace}/${app}`,
+                app,
+                label: APP_LABEL[app] ?? null,
+                kind: pods[0].ownerKind,
+                podCount: pods.length,
+                doneCount: pods.length - active.length,
+                allDone: active.length === 0,
+                level: active.length ? worstLevel(active.map((p) => p.state.level)) : LEVEL.UNKNOWN,
+                memoryMB: active.reduce((sum, p) => sum + (p.memoryMB || 0), 0),
+            };
+        });
+        // 문제 → 실행 중 → 완료 작업 순, 같은 단계는 이름순
+        list.sort((a, b) => Number(a.allDone) - Number(b.allDone) || LEVEL_RANK[a.level] - LEVEL_RANK[b.level] || a.app.localeCompare(b.app));
+        return { namespace: g.namespace, desc: NAMESPACE_DESC[g.namespace] ?? '', apps: list };
+    });
+}
