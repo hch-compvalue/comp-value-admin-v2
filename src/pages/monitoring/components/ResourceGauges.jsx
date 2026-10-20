@@ -20,8 +20,9 @@ export default function ResourceGauges({ resources }) {
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {/* 롤링 배포 중엔 같은 서비스 파드가 둘 → 이름만 key 로 쓰면 중복돼 사라진 파드 카드가 화면에 남음 */}
             {containers.map((pod, i) => (
-                <PodResourceRow key={pod.name || i} pod={pod} />
+                <PodResourceRow key={`${pod.name}-${i}`} pod={pod} />
             ))}
             {gpu && <GpuRow gpu={gpu} />}
         </div>
