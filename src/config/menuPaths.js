@@ -7,6 +7,7 @@ export const STOCK_ANALYSIS_PATH = '/stock/analysis';
 export const PORTFOLIO_PATH = '/portfolio';
 export const SCHEDULE_MANAGEMENT_PATH = '/admin/schedules';
 export const TRADE_DASHBOARD_PATH = '/cointrade/dashboard';
+export const MONITORING_PATH = '/monitoring';
 
 export const SUB_TAB = {
     DAILY_PICKS: 'daily',
@@ -16,4 +17,6 @@ export const SUB_TAB = {
     EVALUATE: 'evaluate',
     HOLDINGS: 'holdings',
     SELL_RECORD: 'sell-record',
+    MONITOR_SERVICES: 'services',
+    MONITOR_PODS: 'pods',
 };

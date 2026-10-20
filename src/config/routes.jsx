@@ -28,10 +28,11 @@ import JsonViewer from '@/pages/util/json-viewer'
 import Memo from '@/pages/util/memo'
 import Calculator from '@/pages/util/calculator'
 import MonitoringDashboard from '@/pages/monitoring/MonitoringDashboard'
+import PodStatus from '@/pages/monitoring/PodStatus'
 import ScheduleManagement from '@/pages/admin/ScheduleManagement'
 import SubTabPage from '@/component/common/layout/SubTabPage'
 import LegacyRedirect from '@/component/common/layout/LegacyRedirect'
-import { STOCK_DISCOVER_PATH, STOCK_ANALYSIS_PATH, PORTFOLIO_PATH, SCHEDULE_MANAGEMENT_PATH, TRADE_DASHBOARD_PATH, SUB_TAB } from '@/config/menuPaths'
+import { STOCK_DISCOVER_PATH, STOCK_ANALYSIS_PATH, PORTFOLIO_PATH, SCHEDULE_MANAGEMENT_PATH, TRADE_DASHBOARD_PATH, MONITORING_PATH, SUB_TAB } from '@/config/menuPaths'
 
 import { SECTIONS } from '@/component/layouts/common/SideBar001';
 import {
@@ -188,8 +189,13 @@ const routes = {
     "MonitoringDashboard": {
         section: SECTIONS[5],
         label: '실시간 대시보드',
-        path: '/monitoring',
-        element: <MonitoringDashboard />,
+        path: MONITORING_PATH,
+        element: (
+            <SubTabPage basePath={MONITORING_PATH} section={SECTIONS[5]} label='실시간 대시보드' tabs={[
+                { key: SUB_TAB.MONITOR_SERVICES, label: '서비스', element: <MonitoringDashboard /> },
+                { key: SUB_TAB.MONITOR_PODS, label: '파드', element: <PodStatus /> },
+            ]} />
+        ),
         icon: Activity,
         accessRoles: ['ROLE_SUPER_ADMIN']
     },
