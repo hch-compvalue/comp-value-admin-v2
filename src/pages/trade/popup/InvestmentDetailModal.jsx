@@ -5,6 +5,7 @@ import CompanyInfoModal from '@/pages/trade/popup/CompanyInfoModal';
 import StockChartModal from '@/pages/trade/popup/StockChartModal';
 import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
 import PriceRangeBlock from '@/pages/trade/popup/PriceRangeBlock';
+import PriceGuideBar from '@/pages/trade/popup/PriceGuideBar';
 import { RANGE_TITLE, hasPriceRange, fmtProb } from '@/pages/trade/popup/priceRangeUtil';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import { send, API_ENDPOINTS } from '@/util/ClientUtil';
@@ -423,26 +424,6 @@ const TradingGuideSection = ({ data }) => {
         { label: '목표매도가', value: sellTarget, color: 'text-blue-600 dark:text-blue-400', dotColor: 'bg-blue-500' },
     ].filter(item => !isNaN(item.value));
 
-    // 프로그레스 바 계산 (예상 변동 범위도 포함)
-    const barMinBase = isNaN(stopLoss) ? currentPrice * 0.85 : stopLoss;
-    const fairValue = parseFloat(data.fairValue);
-    const barMaxBase = !isNaN(fairValue) ? fairValue : (!isNaN(sellTarget) ? sellTarget : currentPrice * 1.15);
-    const barMinRaw = Math.min(barMinBase, ...([rangeLow].filter(v => !isNaN(v))));
-    const barMaxRaw = Math.max(barMaxBase, ...([rangeHigh].filter(v => !isNaN(v))));
-    const barPadding = (barMaxRaw - barMinRaw) * 0.03;
-    const barMin = barMinRaw - barPadding;
-    const barMax = barMaxRaw + barPadding;
-    const barRange = barMax - barMin;
-    const toBarPct = (v) => {
-        if (isNaN(v) || barRange <= 0) return null;
-        return Math.max(0, Math.min(100, ((v - barMin) / barRange) * 100));
-    };
-    const currentPct = toBarPct(currentPrice);
-    const purchaseBarPct = toBarPct(purchasePrice);
-    const sellBarPct = toBarPct(sellTarget);
-    const rangeLowPct = toBarPct(rangeLow);
-    const rangeHighPct = toBarPct(rangeHigh);
-    const hasBar = currentPct !== null;
 
     // 마커는 반투명 처리하여 겹쳐도 양쪽 다 보이게 함
 
@@ -487,65 +468,9 @@ const TradingGuideSection = ({ data }) => {
                     </div>
                 )}
 
-                {/* 프로그레스 바 */}
-                {hasBar && (
-                    <div className="mt-6 mb-2">
-                        <div className="relative h-2.5 rounded-full bg-slate-200 dark:bg-slate-600">
-                            <div
-                                className="absolute inset-0 rounded-full"
-                                style={{ background: 'linear-gradient(to right, #f97316, #f59e0b, #0ea5e9)' }}
-                            />
-                            {/* 20거래일 예상 변동 범위 띠 */}
-                            {rangeLowPct !== null && rangeHighPct !== null && (
-                                <div className="group/rg absolute cursor-pointer rounded-sm border-2 border-slate-500/70 dark:border-slate-200/70 bg-white/35"
-                                     style={{ left: `${rangeLowPct}%`, width: `${Math.max(0, rangeHighPct - rangeLowPct)}%`, top: '-4px', bottom: '-4px', zIndex: 11 }}>
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-slate-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/rg:opacity-100 group-hover/rg:visible transition-all whitespace-nowrap z-50 pointer-events-none">
-                                        {RANGE_TITLE}: {formatUSD(rangeLow)} ~ {formatUSD(rangeHigh)} (한 달 동안 보통 이 범위에서 움직임)
-                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-700" />
-                                    </div>
-                                </div>
-                            )}
-                            {/* 매수적정가 마커 */}
-                            {purchaseBarPct !== null && (
-                                <div className="group/m absolute cursor-pointer" style={{ left: `${purchaseBarPct}%`, top: '-5px', bottom: '-5px', width: '10px', transform: 'translateX(-50%)', zIndex: 14 }}>
-                                    <div className="absolute rounded-sm transition-all group-hover/m:scale-x-150 group-hover/m:opacity-100" style={{ left: '3px', right: '3px', top: 0, bottom: 0, background: '#0ea5e9', boxShadow: '0 0 4px rgba(14,165,233,0.6)', opacity: 0.85 }} />
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-sky-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/m:opacity-100 group-hover/m:visible transition-all whitespace-nowrap z-50 pointer-events-none">
-                                        매수적정가: {formatUSD(purchasePrice)}{' '}
-                                        <span className={`${pctDiff(purchasePrice) !== null && Number(pctDiff(purchasePrice)) >= 0 ? 'text-sky-200' : 'text-orange-200'}`}>
-                                            {pctDiff(purchasePrice) !== null ? `(${Number(pctDiff(purchasePrice)) >= 0 ? '+' : ''}${pctDiff(purchasePrice)}%)` : ''}
-                                        </span>
-                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-sky-700" />
-                                    </div>
-                                </div>
-                            )}
-                            {/* 목표매도가 마커 */}
-                            {sellBarPct !== null && (
-                                <div className="group/m absolute cursor-pointer" style={{ left: `${sellBarPct}%`, top: '-5px', bottom: '-5px', width: '10px', transform: 'translateX(-50%)', zIndex: 15 }}>
-                                    <div className="absolute rounded-sm transition-all group-hover/m:scale-x-150 group-hover/m:opacity-100" style={{ left: '3px', right: '3px', top: 0, bottom: 0, background: '#3b82f6', boxShadow: '0 0 4px rgba(59,130,246,0.6)', opacity: 0.85 }} />
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 bg-blue-700 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/m:opacity-100 group-hover/m:visible transition-all whitespace-nowrap z-50 pointer-events-none">
-                                        목표매도가: {formatUSD(sellTarget)}{' '}
-                                        <span className={`${pctDiff(sellTarget) !== null && Number(pctDiff(sellTarget)) >= 0 ? 'text-blue-200' : 'text-orange-200'}`}>
-                                            {pctDiff(sellTarget) !== null ? `(${Number(pctDiff(sellTarget)) >= 0 ? '+' : ''}${pctDiff(sellTarget)}%)` : ''}
-                                        </span>
-                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-700" />
-                                    </div>
-                                </div>
-                            )}
-                            {/* 현재가 마커 */}
-                            <div className="group/m absolute cursor-pointer" style={{ left: `${currentPct}%`, top: '50%', transform: 'translate(-50%, -50%)', width: '18px', height: '18px', zIndex: 20, opacity: 0.85 }}>
-                                <div className="w-full h-full rounded-full bg-white border-2 border-slate-800 dark:border-white dark:bg-slate-800 shadow transition-all group-hover/m:scale-125 group-hover/m:opacity-100" />
-                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 px-2.5 py-1.5 bg-slate-800 text-white text-[11px] font-medium rounded shadow-lg opacity-0 invisible group-hover/m:opacity-100 group-hover/m:visible transition-all whitespace-nowrap z-50 pointer-events-none">
-                                    현재가: {formatUSD(currentPrice)}
-                                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800" />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex justify-between mt-2.5 text-[10px] text-slate-400 dark:text-slate-500">
-                            <span>손절매가</span>
-                            <span>적정가</span>
-                        </div>
-                    </div>
-                )}
+                {/* 가격 막대 (공용) */}
+                <PriceGuideBar price={currentPrice} stopLoss={stopLoss} purchase={purchasePrice} sell={sellTarget}
+                               fair={parseFloat(data.fairValue)} rangeLow={rangeLow} rangeHigh={rangeHigh} formatPrice={formatUSD} />
             </div>
         </div>
     );
