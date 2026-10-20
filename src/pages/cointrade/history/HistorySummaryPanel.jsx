@@ -8,10 +8,10 @@ import {
 const fmtWon = (v) => `${Math.floor(v || 0).toLocaleString('en-US')}원`;
 const fmtSignedWon = (v) => `${(v || 0) >= 0 ? '+' : ''}${fmtWon(v)}`;
 
-// 구 전략 사유 카드 색상 (적록색약 — 이익 sky/blue, 손실 orange, 기타 amber/purple)
+// 구 전략 사유 카드 색상 (적록색약 — 익절 rose · 손절 파랑(전체 화면 공통 손익색), 수동 orange, 기타 amber/purple)
 const LEGACY_REASON_TONE = {
-    takeProfit: { box: 'bg-sky-50 dark:bg-sky-900/20 border-sky-100 dark:border-sky-800', text: 'text-sky-700 dark:text-sky-400', value: 'text-sky-800 dark:text-sky-300' },
-    stopLoss: { box: 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800', text: 'text-orange-700 dark:text-orange-400', value: 'text-orange-800 dark:text-orange-300' },
+    takeProfit: { box: 'bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-800', text: 'text-rose-700 dark:text-rose-400', value: 'text-rose-800 dark:text-rose-300' },
+    stopLoss: { box: 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800', text: 'text-blue-700 dark:text-blue-400', value: 'text-blue-800 dark:text-blue-300' },
     trailingStop: { box: 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800', text: 'text-amber-700 dark:text-amber-400', value: 'text-amber-800 dark:text-amber-300' },
     maxHoldExpired: { box: 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800', text: 'text-amber-700 dark:text-amber-400', value: 'text-amber-800 dark:text-amber-300' },
     manual: { box: 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800', text: 'text-orange-700 dark:text-orange-400', value: 'text-orange-800 dark:text-orange-300' },

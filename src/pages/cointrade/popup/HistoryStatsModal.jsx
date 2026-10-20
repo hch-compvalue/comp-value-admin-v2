@@ -10,10 +10,10 @@ import {
 } from '../history/historyCommon';
 import { SLATE } from '@/config/themeColors';
 
-// 적록색약 친화 팔레트 (파랑/주황/청록/호박/보라/노랑/슬레이트)
+// 적록색약 친화 팔레트 — 손익은 전체 화면 공통(이익 rose / 손실 파랑), 나머지 사유는 청록/호박/보라/노랑
 const PALETTE = {
-    profit: '#3b82f6',      // 파랑 — 익절/이익
-    loss: '#f97316',        // 주황 — 손절/손실
+    profit: '#f43f5e',      // rose — 익절/이익
+    loss: '#3b82f6',        // 파랑 — 손절/손실
     trailing: '#14b8a6',    // 청록 — 트레일링스탑
     expired: '#a855f7',     // 보라 — 만료매도
     maxHold: '#f59e0b',     // 호박 — 강제청산
