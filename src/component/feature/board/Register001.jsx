@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Button from '@/component/common/button/Button';
 import Input from '@/component/common/input/Input';
 import RichTextEditor from '@/component/common/editor/RichTextEditor';
+import { MAX_FILE_COUNT, ATTACHMENT_ACCEPT, validateAttachments } from '@/util/AttachmentUtil';
 
 function Register001({ moveListPage = () => {}, onRegister = () => {}, currentAuthor = '', openAlert = (msg) => alert(msg), canSetNotice = false }) {
     const [title, setTitle] = useState('');
@@ -12,9 +13,6 @@ function Register001({ moveListPage = () => {}, onRegister = () => {}, currentAu
     const [contentSize, setContentSize] = useState(0);
     const [imageSizes, setImageSizes] = useState([]);
     const [files, setFiles] = useState([]);
-
-    const MAX_FILE_COUNT = 5;
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     const handleSizeChange = ({ contentSize, imageSizes }) => {
         setContentSize(contentSize);
@@ -31,17 +29,11 @@ function Register001({ moveListPage = () => {}, onRegister = () => {}, currentAu
 
     const handleFileSelect = (e) => {
         const selectedFiles = Array.from(e.target.files);
-        if (files.length + selectedFiles.length > MAX_FILE_COUNT) {
-            openAlert(`첨부파일은 최대 ${MAX_FILE_COUNT}개까지 가능합니다.`);
+        const rejectReason = validateAttachments(files.length, selectedFiles);
+        if (rejectReason) {
+            openAlert(rejectReason);
             e.target.value = '';
             return;
-        }
-        for (const file of selectedFiles) {
-            if (file.size > MAX_FILE_SIZE) {
-                openAlert(`파일 크기는 10MB 이하만 가능합니다: ${file.name}`);
-                e.target.value = '';
-                return;
-            }
         }
         setFiles(prev => [...prev, ...selectedFiles]);
         e.target.value = '';
@@ -194,7 +186,7 @@ function Register001({ moveListPage = () => {}, onRegister = () => {}, currentAu
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                                 </svg>
                                 파일 선택
-                                <input type="file" multiple className="hidden" onChange={handleFileSelect} />
+                                <input type="file" multiple accept={ATTACHMENT_ACCEPT} className="hidden" onChange={handleFileSelect} />
                             </label>
                             <span className="text-xs text-slate-500 dark:text-slate-400">
                                 최대 {MAX_FILE_COUNT}개, 각 10MB 이하

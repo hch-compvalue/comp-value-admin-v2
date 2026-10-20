@@ -1,9 +1,17 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTab } from '@/context/TabContext';
 
+// 드래그 중 탭 바 양 끝에서 자동 스크롤되는 영역 폭(px)과 한 번에 움직이는 양(px)
+const DRAG_SCROLL_EDGE = 48;
+const DRAG_SCROLL_STEP = 12;
+const HOME_KEY = '/';
+
 export default function TabBar() {
-    const { tabs, activeKey, switchTab, closeTab, closeAllTabs, closeOtherTabs, closeRightTabs } = useTab();
+    const { tabs, activeKey, switchTab, closeTab, closeAllTabs, closeOtherTabs, closeRightTabs, moveTab } = useTab();
     const [contextMenu, setContextMenu] = useState(null);
+    const [dragKey, setDragKey] = useState(null);
+    // 놓을 위치 표시: { key, after } — key 탭의 앞(false)/뒤(true)
+    const [dropTarget, setDropTarget] = useState(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);
     const scrollRef = useRef(null);
@@ -88,6 +96,44 @@ export default function TabBar() {
         else if (action === 'closeRight') closeRightTabs(key);
     }, [contextMenu, closeTab, closeAllTabs, closeOtherTabs, closeRightTabs]);
 
+    // ── 탭 드래그로 순서 변경 (Home 은 맨 앞 고정) ──
+    const handleDragStart = useCallback((e, key) => {
+        setDragKey(key);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', key); // Firefox 는 데이터가 있어야 드래그 시작
+    }, []);
+
+    const handleDragOver = useCallback((e, key) => {
+        if (!dragKey) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        // 탭 바 양 끝 근처면 자동 스크롤
+        const el = scrollRef.current;
+        if (el) {
+            const box = el.getBoundingClientRect();
+            if (e.clientX < box.left + DRAG_SCROLL_EDGE) el.scrollLeft -= DRAG_SCROLL_STEP;
+            else if (e.clientX > box.right - DRAG_SCROLL_EDGE) el.scrollLeft += DRAG_SCROLL_STEP;
+        }
+
+        // 탭 왼쪽 절반이면 앞, 오른쪽 절반이면 뒤 (Home 앞에는 못 놓음)
+        const rect = e.currentTarget.getBoundingClientRect();
+        const after = key === HOME_KEY || e.clientX > rect.left + rect.width / 2;
+        setDropTarget(prev => (prev?.key === key && prev.after === after ? prev : { key, after }));
+    }, [dragKey]);
+
+    const handleDrop = useCallback((e) => {
+        e.preventDefault();
+        if (dragKey && dropTarget) moveTab(dragKey, dropTarget.key, dropTarget.after);
+        setDragKey(null);
+        setDropTarget(null);
+    }, [dragKey, dropTarget, moveTab]);
+
+    const handleDragEnd = useCallback(() => {
+        setDragKey(null);
+        setDropTarget(null);
+    }, []);
+
     const ArrowButton = ({ direction, visible, onClick }) => (
         <button
             onClick={onClick}
@@ -118,13 +164,23 @@ export default function TabBar() {
                     <style>{`.tabbar-scroll::-webkit-scrollbar { display: none; }`}</style>
                     {tabs.map((tab) => {
                         const isActive = tab.key === activeKey;
+                        const draggable = tab.key !== HOME_KEY;
+                        const showDropBar = dragKey && dropTarget?.key === tab.key && dragKey !== tab.key;
                         return (
                             <button
                                 key={tab.key}
                                 data-active={isActive}
                                 onClick={() => switchTab(tab.key)}
                                 onContextMenu={(e) => handleContextMenu(e, tab)}
+                                draggable={draggable}
+                                onDragStart={draggable ? (e) => handleDragStart(e, tab.key) : undefined}
+                                onDragOver={(e) => handleDragOver(e, tab.key)}
+                                onDrop={handleDrop}
+                                onDragEnd={handleDragEnd}
+                                title={draggable ? '끌어서 위치 이동' : undefined}
                                 className={`group relative flex shrink-0 items-center gap-1.5 pl-4 pr-2.5 pb-2 pt-1.5 text-sm rounded-t-md transition-all duration-200 ease-out select-none ${
+                                    dragKey === tab.key ? 'opacity-40' : ''
+                                } ${
                                     isActive
                                         ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30'
                                         : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100/80 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/60'
@@ -140,6 +196,10 @@ export default function TabBar() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </span>
+                                )}
+                                {/* 드롭 위치 표시 막대 */}
+                                {showDropBar && (
+                                    <span className={`pointer-events-none absolute top-1 bottom-1 w-0.5 rounded-full bg-brand dark:bg-blue-400 ${dropTarget.after ? '-right-px' : '-left-px'}`} />
                                 )}
                                 {/* 하단 인디케이터 - 호버 시 미리보기, 활성 시 전체 표시 */}
                                 <span className={`absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-brand transition-all duration-200 ease-out origin-center dark:bg-blue-400 ${

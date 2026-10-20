@@ -195,8 +195,27 @@ export function TabProvider({ children }) {
         });
     }, [navigate]);
 
+    /** 탭 순서 변경 (드래그) — targetKey 탭의 앞(after=false)/뒤(after=true)로 이동, Home 은 맨 앞 고정 */
+    const moveTab = useCallback((fromKey, targetKey, after) => {
+        if (fromKey === HOME_TAB.key || fromKey === targetKey) return;
+
+        setTabs(prev => {
+            const moving = prev.find(t => t.key === fromKey);
+            if (!moving) return prev;
+
+            const rest = prev.filter(t => t.key !== fromKey);
+            const targetIdx = rest.findIndex(t => t.key === targetKey);
+            if (targetIdx === -1) return prev;
+
+            // Home 앞으로는 못 들어가게 최소 1번 자리
+            const insertIdx = Math.max(1, targetIdx + (after ? 1 : 0));
+            const next = [...rest.slice(0, insertIdx), moving, ...rest.slice(insertIdx)];
+            return next.every((t, i) => t.key === prev[i].key) ? prev : next;
+        });
+    }, []);
+
     return (
-        <TabContext.Provider value={{ tabs, activeKey, openTab, switchTab, closeTab, closeTabAndNavigate, closeAllTabs, closeOtherTabs, closeRightTabs }}>
+        <TabContext.Provider value={{ tabs, activeKey, openTab, switchTab, closeTab, closeTabAndNavigate, closeAllTabs, closeOtherTabs, closeRightTabs, moveTab }}>
             {children}
         </TabContext.Provider>
     );
