@@ -10,6 +10,7 @@ import InvestmentDetailModal, { FullDetailModal } from '@/pages/trade/popup/Inve
 import { GRADE_STYLE, GRADE_STYLE_DEFAULT, GRADE_EXCEL_ARGB } from '@/util/GradeStyleUtil';
 import { SIGNAL_STYLE, SignalDot } from '@/util/SignalStyleUtil';
 import { AlertTriangle } from 'lucide-react';
+import useEvaluationJob, { JOB_STATUS, JOB_STATUS_LABEL } from '@/pages/trade/useEvaluationJob';
 import ExcelJS from 'exceljs';
 
 // 세션 스토리지 키
@@ -499,6 +500,15 @@ const TABLE_COLUMNS = [
 /**
  * 투자판단 페이지
  */
+// 일괄 평가 작업 상태 배지 색 (적록색약 — 완료 sky · 중지/실패 orange · 중단 amber)
+const JOB_BADGE = {
+    [JOB_STATUS.RUNNING]: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
+    [JOB_STATUS.DONE]: 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-200',
+    [JOB_STATUS.CANCELLED]: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200',
+    [JOB_STATUS.INTERRUPTED]: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+    [JOB_STATUS.FAILED]: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200',
+};
+
 const InvestmentEvaluation = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const location = useLocation();
@@ -528,8 +538,15 @@ const InvestmentEvaluation = () => {
     const [resultData, setResultData] = useState(initialData.resultData);
     const [isLoading, setIsLoading] = useState(false);
 
-    // 대량조회 중 세션 유지
-    useSessionKeepAlive(isLoading);
+    // 일괄 평가(2종목 이상)는 서버 작업 — 받은 결과를 표에 이어 붙임 (화면을 막지 않음)
+    const evalJob = useEvaluationJob(useCallback((rows, replace) => {
+        setResultData((prev) => (replace ? rows : [...prev, ...rows]));
+    }, []));
+    const { start: startJob, cancel: cancelJob, loadLast: loadLastJob } = evalJob;
+    const [removedDuplicates, setRemovedDuplicates] = useState(0);
+
+    // 조회 중 세션 유지
+    useSessionKeepAlive(isLoading || evalJob.isRunning);
 
     const [recentQueries, setRecentQueries] = useState([]);
     const [alertConfig, setAlertConfig] = useState({ open: false, message: '', onConfirm: null });
@@ -540,11 +557,9 @@ const InvestmentEvaluation = () => {
     const [detailModal, setDetailModal] = useState({ open: false, data: null });
     const [fullDetailModal, setFullDetailModal] = useState({ open: false, data: null });
     const [tooltip, setTooltip] = useState({ visible: false, text: '', x: 0, y: 0, rich: false });
-    const [progress, setProgress] = useState({ current: 0, total: 0, status: '', waiting: false, remainingSeconds: 0, removedDuplicates: 0 });
 
     const inFlight = useRef({ fetch: false });
     const dropdownClosingRef = useRef(false);
-    const abortRef = useRef(false);
 
     // 입력된 티커 정보 계산 (중복 감지 포함)
     const symbolInfo = useMemo(() => {
@@ -673,27 +688,7 @@ const InvestmentEvaluation = () => {
             .filter((s) => s.length > 0);
     };
 
-    // 배열을 n개씩 청크로 나누기
-    const chunkArray = (arr, size) => {
-        const chunks = [];
-        for (let i = 0; i < arr.length; i += size) {
-            chunks.push(arr.slice(i, i + size));
-        }
-        return chunks;
-    };
-
-    // 대기 함수 (카운트다운 포함)
-    const waitWithCountdown = async (seconds) => {
-        for (let i = seconds; i > 0; i--) {
-            if (abortRef.current) return false;
-            setProgress((prev) => ({ ...prev, waiting: true, remainingSeconds: i }));
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-        setProgress((prev) => ({ ...prev, waiting: false, remainingSeconds: 0 }));
-        return true;
-    };
-
-    // 분석 실행 (50개씩 분할)
+    // 분석 실행 — 1종목은 바로 조회, 2종목 이상은 서버 일괄 평가 작업
     // inputOverride: 다른 화면에서 넘겨받은 심볼 문자열 (버튼 클릭 시엔 이벤트 객체가 오므로 문자열일 때만 사용)
     const handleAnalyze = useCallback(async (inputOverride) => {
         const allSymbols = parseSymbols(typeof inputOverride === 'string' ? inputOverride : symbolInput);
@@ -708,89 +703,50 @@ const InvestmentEvaluation = () => {
 
         if (inFlight.current.fetch) return;
         inFlight.current.fetch = true;
-        abortRef.current = false;
 
-        // 최근 조회 내역 저장 (전체 심볼 리스트, 배치 분할 전)
+        // 최근 조회 내역 저장 (전체 심볼 리스트)
         send('/dart/main/evaluate/recent-queries', { symbols }, 'POST')
             .then(() => loadRecentQueries())
             .catch(() => {});
 
-        const BATCH_SIZE = 50;
-        const WAIT_SECONDS = 15;
-        const chunks = chunkArray(symbols, BATCH_SIZE);
-        const totalChunks = chunks.length;
-
-        setIsLoading(true);
-        setResultData([]);
-        setProgress({ current: 0, total: totalChunks, status: '', waiting: false, remainingSeconds: 0, removedDuplicates: removedCount });
-
-        const allResults = [];
-
         try {
-            for (let i = 0; i < chunks.length; i++) {
-                if (abortRef.current) {
-                    setProgress((prev) => ({ ...prev, status: '중지됨' }));
-                    break;
+            // 2종목 이상: 서버 작업 시작 (같은 계정에서 진행 중이면 서버가 거부)
+            if (symbols.length > 1) {
+                const { error } = await startJob(symbols);
+                if (error) {
+                    openAlert(error);
+                    return;
                 }
-
-                const chunk = chunks[i];
-                const startIdx = i * BATCH_SIZE + 1;
-                const endIdx = Math.min((i + 1) * BATCH_SIZE, symbols.length);
-
-                setProgress((prev) => ({
-                    ...prev,
-                    current: i + 1,
-                    status: `${startIdx}~${endIdx}번째 조회 중...`,
-                    waiting: false,
-                }));
-
-                try {
-                    const { data, error } = await send('/dart/main/evaluate/stocks', { symbols: chunk }, 'POST');
-
-                    if (!error && data && data.response) {
-                        const list = Array.isArray(data.response) ? data.response : [];
-                        allResults.push(...list);
-                        setResultData([...allResults]);
-                    }
-                } catch (e) {
-                    // 개별 청크 실패 시 계속 진행
-                }
-
-                // 마지막 청크가 아니고 중지되지 않았으면 대기
-                if (i < chunks.length - 1 && !abortRef.current) {
-                    const shouldContinue = await waitWithCountdown(WAIT_SECONDS);
-                    if (!shouldContinue) {
-                        setProgress((prev) => ({ ...prev, status: '중지됨', waiting: false }));
-                        break;
-                    }
-                }
+                setRemovedDuplicates(removedCount);
+                setResultData([]);
+                return;
             }
 
-            if (!abortRef.current) {
-                setProgress((prev) => ({ ...prev, status: '완료', waiting: false }));
-            }
-
-            if (allResults.length === 0) {
-                openAlert('분석 결과가 없습니다.');
-            }
-        } catch (e) {
+            // 1종목: 바로 조회
+            setIsLoading(true);
+            const { data, error } = await send('/dart/main/evaluate/stocks', { symbols }, 'POST');
+            const list = !error && Array.isArray(data?.response) ? data.response : [];
+            setResultData(list);
+            if (list.length === 0) openAlert(error || '분석 결과가 없습니다.');
+        } catch {
             openAlert('요청 처리 중 오류가 발생했습니다.');
         } finally {
             setIsLoading(false);
             inFlight.current.fetch = false;
-            loadRecentQueries();
-            // 2초 후 진행상태 초기화
-            setTimeout(() => {
-                setProgress({ current: 0, total: 0, status: '', waiting: false, remainingSeconds: 0, removedDuplicates: 0 });
-            }, 2000);
         }
-    }, [symbolInput]);
+    }, [symbolInput, startJob]);
 
-    // 분석 중지
-    const handleStopAnalyze = useCallback(() => {
-        abortRef.current = true;
-        setProgress((prev) => ({ ...prev, status: '중지 중...', waiting: false }));
-    }, []);
+    // 일괄 평가 중지 (지금 평가 중인 종목까지 끝내고 멈춤)
+    const handleStopAnalyze = useCallback(async () => {
+        const { error } = await cancelJob();
+        if (error) openAlert(error);
+    }, [cancelJob]);
+
+    // 지난 일괄 평가 결과 불러오기
+    const handleLoadLastJob = useCallback(async () => {
+        const { error } = await loadLastJob();
+        if (error) openAlert(error);
+    }, [loadLastJob]);
 
     // URL 파라미터에서 symbol이 있으면 자동 조회
     // (화면이 이미 열려 있어 이전 결과가 있어도 넘겨받은 심볼로 새로 조회)
@@ -1325,50 +1281,35 @@ const InvestmentEvaluation = () => {
                                     ) : (
                                         <>{symbolInfo.total}개 입력</>
                                     )}
-                                    {symbolInfo.unique > 50 && (
-                                        <span className="ml-1 text-amber-600 dark:text-amber-400">
-                                            ({Math.ceil(symbolInfo.unique / 50)}회 분할조회)
+                                    {symbolInfo.unique > 1 && (
+                                        <span className="ml-1 text-slate-500 dark:text-slate-400">
+                                            (서버에서 평가 · 그동안 다른 작업 가능)
                                         </span>
                                     )}
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
-                                {isLoading && progress.total > 1 && (
+                                {evalJob.isRunning && (
                                     <button
                                         type="button"
                                         onClick={handleStopAnalyze}
-                                        disabled={progress.status === '중지 중...'}
-                                        className={`px-3 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                                            progress.status === '중지 중...'
+                                        disabled={!!evalJob.job?.cancelling}
+                                        className={`px-3 py-2 rounded-lg font-medium transition-colors ${
+                                            evalJob.job?.cancelling
                                                 ? 'bg-slate-400 text-white cursor-not-allowed'
                                                 : 'bg-orange-500 text-white hover:bg-orange-600'
                                         }`}
                                     >
-                                        {progress.status === '중지 중...' ? (
-                                            <>
-                                                <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                중지 중...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                                중지
-                                            </>
-                                        )}
+                                        {evalJob.job?.cancelling ? '중지 중...' : '중지'}
                                     </button>
                                 )}
                                 <button
                                     type="button"
                                     onClick={handleAnalyze}
-                                    disabled={isLoading || !symbolInput.trim()}
+                                    disabled={isLoading || evalJob.isRunning || !symbolInput.trim()}
                                     className="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
-                                    {isLoading ? (
+                                    {isLoading || evalJob.isRunning ? (
                                         <>
                                             <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -1416,47 +1357,59 @@ const InvestmentEvaluation = () => {
                             </div>
                         )}
 
-                        {/* 진행 상태 표시 */}
-                        {progress.total > 1 && (
+                        {/* 일괄 평가 진행 상태 (서버 작업) */}
+                        {evalJob.job && (
                             <div className="mt-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                                            진행 상황: {progress.current} / {progress.total} 배치
+                                            일괄 평가 {evalJob.job.done} / {evalJob.job.total} 종목
                                         </span>
-                                        {progress.removedDuplicates > 0 && (
+                                        {evalJob.isRunning && removedDuplicates > 0 && (
                                             <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200">
-                                                중복 {progress.removedDuplicates}개 제거됨
+                                                중복 {removedDuplicates}개 제거됨
                                             </span>
                                         )}
+                                        {evalJob.job.startedAt && <span className="text-xs text-slate-500 dark:text-slate-400">{evalJob.job.startedAt} 시작</span>}
                                     </div>
-                                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                                        progress.status === '완료' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-200' :
-                                        progress.status === '중지됨' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200' :
-                                        'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
-                                    }`}>
-                                        {progress.waiting ? `대기 중... ${progress.remainingSeconds}초` : progress.status}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-xs font-medium px-2 py-0.5 rounded ${JOB_BADGE[evalJob.job.status] ?? JOB_BADGE[JOB_STATUS.RUNNING]}`}>
+                                            {evalJob.isRunning && evalJob.job.cancelling ? '중지 중...' : (JOB_STATUS_LABEL[evalJob.job.status] ?? evalJob.job.status)}
+                                        </span>
+                                        {!evalJob.isRunning && (
+                                            <button type="button" onClick={evalJob.dismiss} className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">닫기</button>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="w-full bg-slate-200 rounded-full h-2 dark:bg-slate-600">
                                     <div
                                         className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                        style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                                        style={{ width: `${evalJob.job.total ? (evalJob.job.done / evalJob.job.total) * 100 : 0}%` }}
                                     ></div>
                                 </div>
-                                {progress.waiting && (
-                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                        API 제한으로 인해 다음 배치 요청 전 대기 중입니다...
-                                    </p>
-                                )}
+                                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                    {evalJob.isRunning
+                                        ? '서버에서 진행 중입니다. 결과는 끝난 종목부터 표에 쌓이고, 다른 화면으로 이동하거나 새로고침해도 계속됩니다.'
+                                        : (evalJob.job.message || (evalJob.job.finishedAt ? `${evalJob.job.finishedAt} 종료` : ''))}
+                                </p>
+                            </div>
+                        )}
+                        {!evalJob.job && evalJob.lastJob && (
+                            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg border border-slate-200 bg-white text-sm dark:border-slate-600 dark:bg-slate-800">
+                                <span className="text-slate-600 dark:text-slate-300">
+                                    지난 일괄 평가 · {JOB_STATUS_LABEL[evalJob.lastJob.status] ?? evalJob.lastJob.status} · {evalJob.lastJob.done}/{evalJob.lastJob.total}종목 · {evalJob.lastJob.finishedAt || evalJob.lastJob.startedAt}
+                                </span>
+                                <button type="button" onClick={handleLoadLastJob} className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">
+                                    결과 불러오기
+                                </button>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* 분할 조회 시에는 진행 상태 표시로 대체 */}
-            <Loading show={isLoading && progress.total <= 1} />
+            {/* 1종목 조회 중 */}
+            <Loading show={isLoading} />
 
             {/* 분석 결과 테이블 */}
             {resultData.length > 0 && (
