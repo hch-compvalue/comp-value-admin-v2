@@ -195,7 +195,7 @@ export default function CoinStrategyPanel({ header }) {
                             <Row label="BTC 수량" value={fmtBtc(modeLedger.btcUnits)} />
                             <div className="mt-2 mb-1 flex justify-between text-sm">
                                 <span className="text-slate-500 dark:text-slate-400">현재 BTC 비중</span>
-                                <span className="font-semibold">{fmtPct(modeLedger.btcWeight)}</span>
+                                <span className="font-semibold text-slate-800 dark:text-slate-100">{fmtPct(modeLedger.btcWeight)}</span>
                             </div>
                             <WeightBar weight={modeLedger.btcWeight} />
                             <Row label="전략 수익률" value={fmtSignedPct(modeLedger.returnPct)} accent={returnAccent(modeLedger.returnPct)} />

@@ -263,7 +263,7 @@ export default function StockStrategyPanel({ header }) {
                             <Row label="현금" value={fmtKrw(modeLedger.cashKrw)} />
                             <div className="mt-2 mb-1 flex justify-between text-sm">
                                 <span className="text-slate-500 dark:text-slate-400">주식 투자 비중</span>
-                                <span className="font-semibold">{fmtPct(modeLedger.investedWeight)}</span>
+                                <span className="font-semibold text-slate-800 dark:text-slate-100">{fmtPct(modeLedger.investedWeight)}</span>
                             </div>
                             <WeightBar weight={modeLedger.investedWeight} />
                             <Row label="전략 수익률" value={fmtSignedPct(modeLedger.returnPct)} accent={returnAccent(modeLedger.returnPct)} />
