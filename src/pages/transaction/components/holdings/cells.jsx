@@ -1,5 +1,4 @@
-import { fmtDate } from '../../utils/formatters';
-import { Money, SymbolCell, CurPriceCell, EvalAmountCell, PnlCell, MemoCell } from './parts';
+import { Money, SymbolCell, CurPriceCell, EvalAmountCell, PnlCell, MemoCell, BuyDateCell } from './parts';
 
 /**
  * 컬럼 key → 셀 렌더러 (constants TABLE_COLUMNS 의 key 와 1:1)
@@ -13,6 +12,6 @@ export const CELL_RENDERERS = {
     curPrice: (m, ctx) => <CurPriceCell m={m} ctx={ctx} />,
     evalAmount: (m, ctx) => <EvalAmountCell m={m} ctx={ctx} />,
     pnl: (m, ctx) => <PnlCell m={m} ctx={ctx} />,
-    buyDate: (m) => <span className="text-slate-500 dark:text-slate-400">{fmtDate(m.buyDate)}</span>,
+    buyDate: (m) => <BuyDateCell m={m} />,
     memo: (m, ctx) => <MemoCell m={m} ctx={ctx} />,
 };

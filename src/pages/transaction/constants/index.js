@@ -26,7 +26,7 @@ export const TABLE_COLUMNS = [
     { key: 'curPrice', label: '현재가', width: 'w-40', align: 'right', sortKey: SORT_KEYS.CUR_PRICE },
     { key: 'evalAmount', label: '평가금액', width: 'w-36', align: 'right', sortKey: SORT_KEYS.EVAL_AMOUNT },
     { key: 'pnl', label: '손익', width: 'w-48', align: 'right', sortKey: SORT_KEYS.PNL },
-    { key: 'buyDate', label: '매수일', width: 'w-28', align: 'center', sortKey: SORT_KEYS.BUY_DATE },
+    { key: 'buyDate', label: '매수일·기한', width: 'w-40', align: 'center', sortKey: SORT_KEYS.BUY_DATE },
     { key: 'memo', label: '메모', width: 'w-40', align: 'left', sortKey: null },
 ];
 

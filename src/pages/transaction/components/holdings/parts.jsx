@@ -1,5 +1,6 @@
 import { FmtAmount } from '../TableCells';
-import { fmtMoney } from '../../utils/formatters';
+import { fmtMoney, fmtDate } from '../../utils/formatters';
+import { HOLD_DEADLINE_MONTHS } from '@/util/TradingRule';
 
 /** 손익 방향 색 — 국내 관행(상승 빨강 / 하락 파랑), 적록색약도 구분 가능한 조합 */
 const TONE = {
@@ -124,6 +125,40 @@ export function CurPriceCell({ m, ctx }) {
             {m.kind !== 'lot' && <DayChange pct={m.dayChangePct} />}
             <Money usd={m.curPrice} ctx={ctx} />
         </span>
+    );
+}
+
+/** 기한 줄 색 — 지남/임박만 호박색(목표 도달 표시와 같은 '매도 검토' 신호), 나머지 회색 */
+function deadlineTone(hold) {
+    if (hold.expired) return 'font-semibold text-amber-600 dark:text-amber-400';
+    if (hold.soon) return 'text-amber-600 dark:text-amber-400';
+    return 'text-slate-400 dark:text-slate-500';
+}
+
+function deadlineText(hold) {
+    if (hold.expired) return `기한 지남 · ${fmtDate(hold.deadline)}`;
+    if (hold.soon) return `기한 ${fmtDate(hold.deadline)} (D-${hold.daysLeft})`;
+    return `기한 ${fmtDate(hold.deadline)}`;
+}
+
+/**
+ * 매수일 + 경과 개월 / 매도 기한(매수 후 HOLD_DEADLINE_MONTHS개월)
+ * - 합계 행: 가장 먼저 산 건 기준 (가장 먼저 기한이 옴)
+ */
+export function BuyDateCell({ m }) {
+    const { hold } = m;
+    const isGroup = m.kind === 'group';
+    return (
+        <div
+            className="leading-tight"
+            title={hold ? `매수 후 ${HOLD_DEADLINE_MONTHS}개월이 지나면 목표가 미도달이어도 매도 검토${isGroup ? ' (가장 먼저 산 건 기준)' : ''}` : undefined}
+        >
+            <div className="text-slate-500 dark:text-slate-400">
+                {isGroup ? (hold ? `최초 ${fmtDate(m.holdFrom)}` : '') : fmtDate(m.buyDate)}
+                {hold && <span className="ml-1 text-xs text-slate-400 dark:text-slate-500">({hold.months}개월)</span>}
+            </div>
+            {hold && <div className={`mt-0.5 text-xs ${deadlineTone(hold)}`}>{deadlineText(hold)}</div>}
+        </div>
     );
 }
 

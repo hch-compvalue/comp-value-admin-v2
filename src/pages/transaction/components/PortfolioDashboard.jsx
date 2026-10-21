@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { fmtUsd } from '../utils/formatters';
 import { FmtAmount } from './TableCells';
+import { TRADING_RULE_TITLE, TRADING_RULE_STEPS, TRADING_RULE_NOTES } from '@/util/TradingRule';
 
 /**
  * 포트폴리오 요약 대시보드 (테이블 상단 배치)
  */
 export function PortfolioDashboard({ buySum, curSum, diff, diffPct, fx, fxUpdatedAt, lastUpdated }) {
     const [showInfo, setShowInfo] = useState(false);
+    const [showRule, setShowRule] = useState(false);
     const isProfit = diff >= 0;
 
     return (
@@ -69,6 +71,33 @@ export function PortfolioDashboard({ buySum, curSum, diff, diffPct, fx, fxUpdate
                         {fxUpdatedAt ? `갱신: ${fxUpdatedAt.toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}` : ''}
                     </div>
                 </div>
+            </div>
+
+            {/* 매매 원칙 토글 (참고용, util/TradingRule) */}
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                <button
+                    onClick={() => setShowRule(!showRule)}
+                    aria-expanded={showRule}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                >
+                    <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    <span className="font-medium">{TRADING_RULE_TITLE}</span>
+                    <svg className={`w-4 h-4 ml-auto transition-transform ${showRule ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                {showRule && (
+                    <div className="px-4 pb-3 text-xs text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-700 pt-2">
+                        <ol className="list-decimal pl-4 space-y-0.5 text-slate-700 dark:text-slate-300">
+                            {TRADING_RULE_STEPS.map((step) => <li key={step}>{step}</li>)}
+                        </ol>
+                        <ul className="mt-2 space-y-0.5">
+                            {TRADING_RULE_NOTES.map((note) => <li key={note}>• {note}</li>)}
+                        </ul>
+                    </div>
+                )}
             </div>
 
             {/* 정보 안내 토글 */}

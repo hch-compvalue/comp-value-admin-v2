@@ -1,4 +1,5 @@
 import { toNum } from './formatters';
+import { calcHoldPeriod, earliestBuyDate } from './holdPeriod';
 
 /** 전일 대비 보합으로 볼 등락률 절대값(%) */
 const DAY_CHANGE_FLAT_PCT = 0.005;
@@ -26,7 +27,7 @@ export function calcDayChangePct(cur, prevClose) {
  * 행 표시 모델 — 개별 매수 건과 종목 합계를 같은 셀 렌더러로 그리기 위한 공통 형태
  * kind: 'single'(단일 매수) | 'group'(종목 합계) | 'lot'(그룹 안 개별 매수)
  */
-function buildModel({ kind, key, symbol, companyName, qty, buyPrice, curPrice, prevClose, buyAmount, evalAmount, targetPrice, buyDate, rmk, source, lotCount = 0, lotIndex = 0 }) {
+function buildModel({ kind, key, symbol, companyName, qty, buyPrice, curPrice, prevClose, buyAmount, evalAmount, targetPrice, buyDate, holdFrom = buyDate, rmk, source, lotCount = 0, lotIndex = 0 }) {
     const pnl = evalAmount - buyAmount;
     return {
         kind, key, symbol, companyName, qty, buyPrice, curPrice, buyAmount, evalAmount, targetPrice, buyDate, rmk, source, lotCount, lotIndex,
@@ -35,6 +36,8 @@ function buildModel({ kind, key, symbol, companyName, qty, buyPrice, curPrice, p
         dayChangePct: calcDayChangePct(curPrice, prevClose),
         targetProgress: calcTargetProgress(buyPrice, curPrice, targetPrice),
         isHit: targetPrice > 0 && curPrice >= targetPrice,
+        holdFrom,
+        hold: calcHoldPeriod(holdFrom),
     };
 }
 
@@ -77,6 +80,7 @@ export function groupToModel(group) {
         evalAmount: group.curSumUSD,
         targetPrice: group.targetAvgUSD,
         buyDate: '',
+        holdFrom: earliestBuyDate(group.groupRows),   // 합계 행 기한 = 가장 먼저 산 건 기준
         rmk: '',
         source: group,
         lotCount: group.groupRows.length,
