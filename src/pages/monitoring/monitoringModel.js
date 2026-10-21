@@ -31,7 +31,8 @@ const SERVICE_META = [
 export const EXTERNAL_API_DESC = {
     FMP: '미국 주식 시세·재무',
     DART: '국내 공시',
-    OpenAI: 'AI 요약',
+    Upbit: '코인 시세',
+    OpenAI: '기업명 영문 번역',
 };
 
 /** 화면 연결도 노드 id(헬스체크 이름) → 한글 이름 */
@@ -142,6 +143,13 @@ export function buildServiceRows(services = [], resources = null) {
         .map(({ r }) => r);
 }
 
+/**
+ * 외부 API 상태 (백엔드 ExternalApiHealthService 와 같은 값)
+ * - NOT_CONFIGURED(키 없음)·DISABLED(대시보드에서 끔)는 오류가 아님 → 요약 숫자·주의 목록에서 제외
+ */
+export const API_STATUS = { UP: 'UP', DOWN: 'DOWN', NOT_CONFIGURED: 'NOT_CONFIGURED', DISABLED: 'DISABLED' };
+export const isMonitoredApi = (a) => a.status === API_STATUS.UP || a.status === API_STATUS.DOWN;
+
 /** 외부 API 응답 시간 → { text, ms } ("123ms" 가 uptime 필드로 들어옴) */
 export function apiResponse(api) {
     const ms = parseInt(api.uptime, 10);
@@ -168,8 +176,8 @@ export function buildIssues(rows, externalApis = [], recentErrorCount = 0) {
         });
     });
     externalApis.forEach((a) => {
-        if (a.status !== 'UP') {
-            issues.push({ level: LEVEL.DOWN, tag: '중단', title: `외부 API ${a.name} 응답 없음`, detail: a.version === 'No API Key' ? 'API 키 미설정' : '' });
+        if (a.status === API_STATUS.DOWN) {
+            issues.push({ level: LEVEL.DOWN, tag: '중단', title: `외부 API ${a.name} 응답 없음`, detail: '' });
         }
     });
     if (recentErrorCount > 0) {

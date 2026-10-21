@@ -3,7 +3,7 @@ import useSessionKeepAlive from '@/hooks/useSessionKeepAlive';
 import PageTitle from '@/component/common/display/PageTitle';
 import Button from '@/component/common/button/Button';
 import useMonitoringSSE from './hooks/useMonitoringSSE';
-import { LEVEL, WARN_PCT, buildServiceRows, buildIssues, countRecentErrors, formatAgo } from './monitoringModel';
+import { LEVEL, WARN_PCT, API_STATUS, isMonitoredApi, buildServiceRows, buildIssues, countRecentErrors, formatAgo } from './monitoringModel';
 import { Panel, StatusDot } from './components/MonitoringUi';
 import StatusSummary from './components/StatusSummary';
 import ServiceTable from './components/ServiceTable';
@@ -45,12 +45,21 @@ export default function MonitoringDashboard() {
     const issues = useMemo(() => buildIssues(rows, externalApis, recentErrors), [rows, externalApis, recentErrors]);
 
     const upServices = services.filter((s) => s.status === 'UP').length;
-    const upApis = externalApis.filter((a) => a.status === 'UP').length;
+    // 미설정·사용 안 함은 확인 대상에서 제외
+    const monitoredApis = externalApis.filter(isMonitoredApi);
+    const upApis = monitoredApis.filter((a) => a.status === API_STATUS.UP).length;
+    const excludedApis = externalApis.length - monitoredApis.length;
     const hotRows = rows.filter((r) => [r.cpu?.pct, r.mem?.pct].some((p) => p != null && p >= WARN_PCT)).length;
 
     const kpis = [
         { label: '서비스', value: `${upServices} / ${services.length}`, sub: upServices === services.length ? '정상' : `${services.length - upServices}개 이상`, level: levelOf(upServices < services.length), anchor: 'services' },
-        { label: '외부 API', value: `${upApis} / ${externalApis.length}`, sub: upApis === externalApis.length ? '정상' : `${externalApis.length - upApis}개 이상`, level: levelOf(upApis < externalApis.length), anchor: 'external-apis' },
+        {
+            label: '외부 API',
+            value: `${upApis} / ${monitoredApis.length}`,
+            sub: `${upApis === monitoredApis.length ? '정상' : `${monitoredApis.length - upApis}개 이상`}${excludedApis ? ` · ${excludedApis}개 제외` : ''}`,
+            level: levelOf(upApis < monitoredApis.length),
+            anchor: 'external-apis',
+        },
         { label: '오류 응답 (5xx)', value: `${recentErrors}건`, sub: '최근 5분', level: levelOf(recentErrors > 0), anchor: 'request-log' },
         { label: '리소스 주의', value: `${hotRows}개`, sub: `사용률 ${WARN_PCT}% 이상`, level: levelOf(hotRows > 0, true), anchor: 'services' },
     ];
