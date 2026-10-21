@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import useModalAnimation from '@/hooks/useModalAnimation';
 import { send, API_ENDPOINTS } from '@/util/ClientUtil';
-import { calcFxPnl, calcTotalPnlKrw } from '@/util/SellRecordUtil';
+import { calcFxPnl, calcPriceGainKrw, calcTotalPnlKrw, formatSignedKrw } from '@/util/SellRecordUtil';
 import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 
@@ -87,8 +87,11 @@ export default function SellRecordDetailModal({ isOpen, data, fxRate, onClose })
     const sellAmount = data.sellPrice * data.sellQty;
     // 매도당시환율 우선, 없으면 현재환율 사용
     const sellRate = data.sellExchangeRateAtTrade || fxRate;
+    const priceGain = calcPriceGainKrw(data, fxRate);
     const fxPnl = calcFxPnl(data);
     const totalPnl = calcTotalPnlKrw(data, fxRate);
+    // 매수원가($) = 매도금액 − 실현손익 (환차손익 계산식 표시용)
+    const buyCostUsd = sellAmount - data.realizedPnl;
 
     return (
         <>
@@ -219,28 +222,20 @@ export default function SellRecordDetailModal({ isOpen, data, fxRate, onClose })
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">환차손익</label>
-                            {fxPnl === null ? (
-                                <div className="text-lg font-semibold text-slate-400 dark:text-slate-500">-</div>
-                            ) : (
-                                <div className={`text-lg font-bold ${fxPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                                    {fxPnl >= 0 ? '+' : ''}₩{Math.round(fxPnl).toLocaleString()}
+                        {/* 손익 구성 (원화): 가격손익 + 환차손익 = 총손익 */}
+                        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                            <div className="mb-3 text-sm font-medium text-slate-600 dark:text-slate-400">손익 구성 (원화)</div>
+                            <dl className="space-y-2.5 text-sm">
+                                <PnlLine label="가격손익" hint="주가 변동" value={priceGain}
+                                    formula={priceGain === null ? null : `$${data.realizedPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} × 매도환율 ₩${sellRate.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${data.sellExchangeRateAtTrade ? '' : ' (현재 환율)'}`} />
+                                <PnlLine label="환차손익" hint="환율 변동" value={fxPnl}
+                                    formula={fxPnl === null ? '매수·매도 환율이 없어 계산하지 않음' : `매수원가 $${buyCostUsd.toLocaleString('en-US', { maximumFractionDigits: 2 })} × (매도환율 − 매수환율 ₩${data.buyExchangeRateAtTrade.toLocaleString('ko-KR', { maximumFractionDigits: 2 })})`} />
+                                <div className="border-t border-slate-200 pt-2.5 dark:border-slate-700">
+                                    <PnlLine label="총손익" value={totalPnl} strong
+                                        formula={totalPnl === null ? null : `${formatSignedKrw(priceGain)} ${fxPnl === null ? '' : `${fxPnl >= 0 ? '+' : '−'} ₩${Math.abs(Math.round(fxPnl)).toLocaleString()}`}`.trim()} />
                                 </div>
-                            )}
+                            </dl>
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">총손익 (가격손익 + 환차손익)</label>
-                            {totalPnl === null ? (
-                                <div className="text-xl font-bold text-slate-400 dark:text-slate-500">-</div>
-                            ) : (
-                                <div className={`text-xl font-bold ${totalPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                                    {totalPnl >= 0 ? '+' : ''}₩{Math.round(totalPnl).toLocaleString()}
-                                </div>
-                            )}
-                        </div>
-
                         {data.rmk && (
                             <div>
                                 <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">비고</label>
@@ -342,5 +337,23 @@ export default function SellRecordDetailModal({ isOpen, data, fxRate, onClose })
                 onClose={handleCloseAlert}
             />
         </>
+    );
+}
+
+/** 손익 구성 한 줄 — 이름(설명) · 계산식 · 금액 */
+function PnlLine({ label, hint, value, formula, strong = false }) {
+    const color = value === null ? 'text-slate-400 dark:text-slate-500' : value >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400';
+    return (
+        <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+                <dt className={`${strong ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                    {label}{hint && <span className="ml-1.5 text-xs text-slate-400 dark:text-slate-500">{hint}</span>}
+                </dt>
+                {formula && <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{formula}</div>}
+            </div>
+            <dd className={`shrink-0 ${strong ? 'text-xl font-bold' : 'text-base font-semibold'} ${color}`}>
+                {value === null ? '-' : formatSignedKrw(value)}
+            </dd>
+        </div>
     );
 }

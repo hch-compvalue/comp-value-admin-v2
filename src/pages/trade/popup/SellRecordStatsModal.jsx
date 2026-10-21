@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import useModalAnimation from '@/hooks/useModalAnimation';
 import { useTheme } from '@/context/ThemeContext';
-import { calcFxPnl, calcTotalPnlKrw } from '@/util/SellRecordUtil';
+import { calcFxPnl, calcPriceGainKrw, calcTotalPnlKrw } from '@/util/SellRecordUtil';
 import { SLATE } from '@/config/themeColors';
 
 // 손익 방향(diverging) 팔레트 — 국내 주식 관행(상승=로즈/하락=파랑), 적록색약 무관(로즈↔파랑 조합)
@@ -40,8 +40,7 @@ export default function SellRecordStatsModal({ isOpen, onClose, records = [], fx
     const stats = useMemo(() => {
         // 레코드별 파생값 계산
         const enriched = records.map(r => {
-            const sellRate = r.sellExchangeRateAtTrade || fxRate;
-            const priceGainKrw = sellRate ? r.realizedPnl * sellRate : null;
+            const priceGainKrw = calcPriceGainKrw(r, fxRate);
             const fxPnl = calcFxPnl(r);
             const totalPnl = calcTotalPnlKrw(r, fxRate);
             return { ...r, priceGainKrw, fxPnl, totalPnl };

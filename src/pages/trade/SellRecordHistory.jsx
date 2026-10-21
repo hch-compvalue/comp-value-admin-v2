@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { send } from '@/util/ClientUtil';
-import { calcFxPnl, calcTotalPnlKrw } from '@/util/SellRecordUtil';
+import { calcFxPnl, calcPriceGainKrw, calcTotalPnlKrw, formatSignedKrw } from '@/util/SellRecordUtil';
 import PageTitle from '@/component/common/display/PageTitle';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import Button from '@/component/common/button/Button';
@@ -20,11 +20,21 @@ const COLUMN_WIDTHS = {
     realizedPnl: 'w-28',            // 실현손익
     buyExchangeRateAtTrade: 'w-20', // 매수당시환율
     sellExchangeRateAtTrade: 'w-20',// 매도당시환율
+    priceGainKrw: 'w-28',           // 가격손익(₩)
     fxPnl: 'w-24',                  // 환차손익
     totalPnl: 'w-28',               // 총손익
     rmk: 'w-30',                    // 비고
     manage: 'w-25',                 // 관리
 };
+
+// 손익 색 (상승 rose / 하락 blue)
+const pnlClass = (v) => (v >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400');
+
+/** 원화 손익 칸 — 값 없으면 '-' */
+function KrwPnlCell({ value, bold = false }) {
+    if (value === null) return <span className="text-slate-400 dark:text-slate-500">-</span>;
+    return <span className={`${bold ? 'font-bold' : 'font-medium'} ${pnlClass(value)}`}>{formatSignedKrw(value)}</span>;
+}
 
 export default function SellRecordHistory() {
     const [records, setRecords] = useState([]);
@@ -253,6 +263,9 @@ export default function SellRecordHistory() {
         totalRecords: filteredRecords.length,
         totalRealizedPnl: filteredRecords.reduce((sum, r) => sum + (r.realizedPnl || 0), 0),
         totalSellAmount: filteredRecords.reduce((sum, r) => sum + (r.sellPrice * r.sellQty || 0), 0),
+        // 가격손익 + 환차손익 = 총손익 (기록마다 계산해 합산 — 카드끼리 정확히 맞음)
+        totalPriceGainKrw: filteredRecords.reduce((sum, r) => sum + (calcPriceGainKrw(r, fxRate) || 0), 0),
+        totalFxPnl: filteredRecords.reduce((sum, r) => sum + (calcFxPnl(r) || 0), 0),
         totalPnlKrw: filteredRecords.reduce((sum, r) => sum + (calcTotalPnlKrw(r, fxRate) || 0), 0),
     };
 
@@ -345,21 +358,10 @@ export default function SellRecordHistory() {
                     </div>
 
                     {/* 통계 카드 */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                         <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
                             <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">총 매도 건수</div>
                             <div className="text-xl font-bold text-slate-900 dark:text-white">{stats.totalRecords}건</div>
-                        </div>
-                        <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">총 실현 손익</div>
-                            <div className={`text-xl font-bold ${stats.totalRealizedPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                                ${stats.totalRealizedPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </div>
-                            {avgSellExchangeRate > 0 && (
-                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    (₩{Math.round(stats.totalRealizedPnl * avgSellExchangeRate).toLocaleString()})
-                                </div>
-                            )}
                         </div>
                         <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
                             <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">총 매도 금액</div>
@@ -372,11 +374,22 @@ export default function SellRecordHistory() {
                                 </div>
                             )}
                         </div>
-                        <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">총손익 (가격+환차)</div>
-                            <div className={`text-xl font-bold ${stats.totalPnlKrw >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                                {stats.totalPnlKrw >= 0 ? '+' : ''}₩{Math.round(stats.totalPnlKrw).toLocaleString()}
+                        <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800" title="주가가 오르내려 생긴 손익 = 실현손익($) × 매도당시환율">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">가격손익</div>
+                            <div className={`text-xl font-bold ${pnlClass(stats.totalPriceGainKrw)}`}>{formatSignedKrw(stats.totalPriceGainKrw)}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                (${stats.totalRealizedPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                             </div>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800" title="환율이 달라져 생긴 손익 = 매수원가($) × (매도환율 − 매수환율)">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">환차손익</div>
+                            <div className={`text-xl font-bold ${pnlClass(stats.totalFxPnl)}`}>{formatSignedKrw(stats.totalFxPnl)}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">환율 정보 없는 기록은 제외</div>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">총손익</div>
+                            <div className={`text-xl font-bold ${pnlClass(stats.totalPnlKrw)}`}>{formatSignedKrw(stats.totalPnlKrw)}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">= 가격손익 + 환차손익</div>
                         </div>
                     </div>
                 </div>
@@ -410,7 +423,8 @@ export default function SellRecordHistory() {
                                         <SortableHeader field="realizedPnl" label="실현손익" sortConfig={sortConfig} onSort={handleSort} width={COLUMN_WIDTHS.realizedPnl} />
                                         <th className={`px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap ${COLUMN_WIDTHS.buyExchangeRateAtTrade}`}>매수당시환율</th>
                                         <th className={`px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap ${COLUMN_WIDTHS.sellExchangeRateAtTrade}`}>매도당시환율</th>
-                                        <th className={`px-4 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap ${COLUMN_WIDTHS.fxPnl}`}>환차손익</th>
+                                        <th className={`px-4 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap ${COLUMN_WIDTHS.priceGainKrw}`} title="실현손익($) × 매도당시환율">가격손익</th>
+                                        <th className={`px-4 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap ${COLUMN_WIDTHS.fxPnl}`} title="매수원가($) × (매도환율 − 매수환율)">환차손익</th>
                                         <th className={`px-4 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap ${COLUMN_WIDTHS.totalPnl}`}>총손익</th>
                                         <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap ${COLUMN_WIDTHS.rmk}`}>비고</th>
                                         <th className={`px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap ${COLUMN_WIDTHS.manage}`}>관리</th>
@@ -476,28 +490,9 @@ export default function SellRecordHistory() {
                                             <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300 text-center">
                                                 {record.sellExchangeRateAtTrade ? `₩${record.sellExchangeRateAtTrade.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}` : '-'}
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-right">
-                                                {(() => {
-                                                    const fxPnl = calcFxPnl(record);
-                                                    if (fxPnl === null) return <span className="text-slate-400 dark:text-slate-500">-</span>;
-                                                    return (
-                                                        <span className={`font-medium ${fxPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                                                            {fxPnl >= 0 ? '+' : ''}₩{Math.round(fxPnl).toLocaleString()}
-                                                        </span>
-                                                    );
-                                                })()}
-                                            </td>
-                                            <td className="px-4 py-3 text-sm text-right">
-                                                {(() => {
-                                                    const totalPnl = calcTotalPnlKrw(record, fxRate);
-                                                    if (totalPnl === null) return <span className="text-slate-400 dark:text-slate-500">-</span>;
-                                                    return (
-                                                        <span className={`font-bold ${totalPnl >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                                                            {totalPnl >= 0 ? '+' : ''}₩{Math.round(totalPnl).toLocaleString()}
-                                                        </span>
-                                                    );
-                                                })()}
-                                            </td>
+                                            <td className="px-4 py-3 text-sm text-right"><KrwPnlCell value={calcPriceGainKrw(record, fxRate)} /></td>
+                                            <td className="px-4 py-3 text-sm text-right"><KrwPnlCell value={calcFxPnl(record)} /></td>
+                                            <td className="px-4 py-3 text-sm text-right"><KrwPnlCell value={calcTotalPnlKrw(record, fxRate)} bold /></td>
                                             <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 max-w-xs truncate">
                                                 {record.rmk || '-'}
                                             </td>
