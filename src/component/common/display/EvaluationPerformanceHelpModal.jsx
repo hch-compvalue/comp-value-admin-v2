@@ -47,6 +47,21 @@ export default function EvaluationPerformanceHelpModal({ isOpen, onClose }) {
                         </div>
                     </section>
 
+                    {/* 핵심 질문 */}
+                    <section>
+                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">맨 위 핵심 질문 4개</h4>
+                        <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300">
+                            <li><strong>매수 대상이 나았나?</strong> — 종목 발굴 기본 목록(투자 순위 상위 20% · 가치 B 이상 · 목표가 미도달 · 금융 제외)의 중앙값 − 후보 전체 중앙값</li>
+                            <li><strong>순위 상위 20% &gt; 하위 20%?</strong> — 투자 순위가 실제로 좋은 종목을 위로 올리는지</li>
+                            <li><strong>가치 B 이상 &gt; C 이하?</strong> — 매수 대상 거름망(가치등급)이 맞는지</li>
+                            <li><strong>후보 전체 vs SPY</strong> — 추천 후보 자체가 지수보다 나은지</li>
+                        </ul>
+                        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                            배지: <strong>나음 ▲</strong>(차이 +0.5%p 초과) · <strong>못함 ▼</strong>(−0.5%p 미만) · <strong>비슷</strong> · <strong>판단 보류</strong>(경과 4주 미만 또는 종목 10개 미만).
+                            백테스트 기준 보유기간은 6~12개월이라, 몇 주 결과는 방향만 참고하세요. 상세 표는 기본 4개 열만 보이며 "모든 열 보기"로 전부 펼칠 수 있습니다.
+                        </p>
+                    </section>
+
                     {/* 계산 방식 */}
                     <section>
                         <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">수익률 계산 방식</h4>
@@ -56,7 +71,7 @@ export default function EvaluationPerformanceHelpModal({ isOpen, onClose }) {
                             </code>
                         </div>
                         <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300">
-                            <li><strong>기준일</strong>: 내가 선택한 날짜의 평가 스냅샷 (기본값은 7일 전)</li>
+                            <li><strong>기준일</strong>: 내가 선택한 날짜의 평가 스냅샷 (마지막으로 조회한 날짜를 기억, 처음엔 2026-10-15). 빠른 선택 버튼으로 순위 시작일·매수 대상 시작일·4주 전·12주 전을 바로 조회</li>
                             <li><strong>비교 시점</strong>: 항상 <strong>가장 최근 평가일</strong>. 즉 "기준일 → 오늘까지"의 성과입니다</li>
                             <li>가격은 일별 평가가 이미 저장해 둔 값을 그대로 사용합니다 — <strong>조회 시 외부 시세 API를 다시 호출하지 않습니다</strong> (그래서 빠르고 FMP 호출량도 늘지 않음)</li>
                             <li>기준일 또는 최신일 스냅샷에 가격이 없거나 기준가가 0 이하인 종목은 집계에서 제외됩니다 — 제외된 수는 <strong>추적불가</strong> 컬럼에 표시됩니다</li>
