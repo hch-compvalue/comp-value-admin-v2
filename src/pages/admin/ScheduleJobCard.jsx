@@ -6,6 +6,7 @@ import {
     parseSimpleCron, buildSimpleCron, describeCron, isNightHour,
 } from '@/util/CronUtil';
 import { SCHEDULE_AFFECTED_SCREENS } from '@/config/scheduleAffectedScreens';
+import { jobMetaOf } from '@/config/scheduleJobMeta';
 import StatusBadge from '@/pages/admin/ScheduleStatusBadge';
 import { formatDateTime, formatDuration } from '@/pages/admin/scheduleFormat';
 
@@ -45,6 +46,13 @@ const AffectedScreens = ({ jobKey }) => {
             </ul>
         </div>
     );
+};
+
+/** 이름 앞 시장 꼬리표 (미국주식·국내주식) */
+export const MarketChip = ({ jobKey }) => {
+    const { market } = jobMetaOf(jobKey);
+    if (!market) return null;
+    return <span className={`inline-flex rounded px-1.5 py-0.5 text-xs font-semibold ${market.className}`}>{market.label}</span>;
 };
 
 const toTimeText = (hour, minute) => `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
@@ -149,6 +157,7 @@ const ScheduleJobCard = ({ job, history, saving, onToggle, onSave, onRun }) => (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
+                    <MarketChip jobKey={job.jobKey} />
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{job.label}</h2>
                     {job.running
                         ? <StatusBadge status="RUNNING" />

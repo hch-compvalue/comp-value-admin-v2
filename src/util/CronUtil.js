@@ -25,14 +25,18 @@ const MAX_HOUR = 23;
 const MAX_MINUTE = 59;
 const SIMPLE_CRON = /^0 (\d{1,2}) (\d{1,2}) \* \* (\S+)$/;
 const DAY_TOKEN = /^[0-7](-[0-7])?$/;
+// Spring 이 받는 영문 요일 이름 (예: "MON-FRI") → 번호
+const DAY_NAMES = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
+const DAY_NAME_PATTERN = new RegExp(Object.keys(DAY_NAMES).join('|'), 'g');
 
 const normalizeDay = (d) => (d === SUNDAY_ALT ? 0 : d);
 
-/** 요일 필드("*", "1-5", "0,6", "MON" 미지원) → 요일 번호 배열, 해석 불가면 null */
+/** 요일 필드("*", "1-5", "0,6", "MON-FRI") → 요일 번호 배열, 해석 불가면 null */
 const parseDayField = (field) => {
     if (field === '*' || field === '?') return [...ALL_DAYS];
+    const numeric = field.toUpperCase().replace(DAY_NAME_PATTERN, (name) => String(DAY_NAMES[name]));
     const days = new Set();
-    for (const token of field.split(',')) {
+    for (const token of numeric.split(',')) {
         if (!DAY_TOKEN.test(token)) return null;
         const [from, to = from] = token.split('-').map(Number);
         if (from > to) return null;

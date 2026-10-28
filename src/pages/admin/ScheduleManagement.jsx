@@ -5,7 +5,8 @@ import PageTitle from '@/component/common/display/PageTitle';
 import Loading from '@/component/common/display/Loading';
 import Button from '@/component/common/button/Button';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
-import ScheduleJobCard from '@/pages/admin/ScheduleJobCard';
+import ScheduleJobCard, { MarketChip } from '@/pages/admin/ScheduleJobCard';
+import { jobMetaOf } from '@/config/scheduleJobMeta';
 import ExternalSchedules from '@/pages/admin/ExternalSchedules';
 
 const JOBS_URL = '/dart/schd/jobs';
@@ -85,6 +86,7 @@ const ScheduleManagement = () => {
     const isMaxCountValid = /^\d+$/.test(maxCountInput);
     const openRunModal = useCallback((job) => { setRunTarget(job); setMaxCountInput('0'); setIsRunModalOpen(true); }, []);
     const closeRunModal = () => setIsRunModalOpen(false);
+    const runMeta = jobMetaOf(runTarget?.jobKey);
 
     const handleRun = useCallback(async () => {
         if (!runTarget || !isMaxCountValid) return;
@@ -143,8 +145,11 @@ const ScheduleManagement = () => {
                         className={`w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-800 animate__animated ${isRunModalClosing ? 'animate__fadeOut' : 'animate__fadeIn'}`} style={{ animationDuration: '0.25s' }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-white">{runTarget?.label} 지금 실행</h3>
-                        <label className="mb-2 block text-sm text-slate-700 dark:text-slate-300">처리 건수 (프로파일별)</label>
+                        <h3 className="mb-4 flex flex-wrap items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
+                            <MarketChip jobKey={runTarget?.jobKey} />
+                            {runTarget?.label} 지금 실행
+                        </h3>
+                        <label className="mb-2 block text-sm text-slate-700 dark:text-slate-300">{runMeta.countLabel}</label>
                         <input
                             type="text"
                             inputMode="numeric"
@@ -156,7 +161,7 @@ const ScheduleManagement = () => {
                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">0: 전체 실행 / 그 외: 테스트용 (지정 건수만 처리)</p>
                         {maxCountInput === '0' && (
                             <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                                전체 실행은 약 4시간 걸리고 FMP 호출을 많이 씁니다. 실행 중에는 백엔드 배포를 하지 마세요.
+                                {runMeta.fullRunWarning}
                             </p>
                         )}
                         <div className="mt-5 flex justify-end gap-2">
