@@ -17,7 +17,12 @@ export const SCHEDULE_JOB_META = {
     KR_DAILY_PRICE: {
         market: SCHEDULE_MARKET.KR,
         countLabel: '처리 건수 (일봉 받을 종목 수)',
-        fullRunWarning: '첫 실행은 약 70분, 이후는 약 5분 걸립니다(KIS 사용). 실행 중에는 백엔드 배포를 하지 마세요.',
+        fullRunWarning: '첫 실행은 약 90분, 이후는 약 7분 걸립니다(KIS 사용). 실행 중에는 백엔드 배포를 하지 마세요.',
+    },
+    KR_FINANCIAL: {
+        market: SCHEDULE_MARKET.KR,
+        countLabel: '처리 건수 (받을 보고서 수)',
+        fullRunWarning: '전체 실행은 실행당 최대 15,000건, 첫 적재는 약 4일에 걸쳐 나눠 받습니다(OpenDart 사용). 실행 중에는 백엔드 배포를 하지 마세요.',
     },
 };
 

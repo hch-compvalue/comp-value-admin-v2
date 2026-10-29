@@ -211,38 +211,61 @@ const ScheduleJobCard = ({ job, history, saving, onToggle, onSave, onRun }) => (
             <ScheduleEditor job={job} saving={saving} onSave={onSave} />
         </div>
 
-        <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-700">
-            <h3 className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">최근 실행 이력</h3>
-            <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-                <table className="min-w-full text-sm">
-                    <thead className="bg-slate-50 dark:bg-slate-900">
-                        <tr>
-                            {['시작', '구분', '상태', '소요', '결과'].map((h) => (
-                                <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">{h}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {history.length === 0 && (
-                            <tr><td colSpan={5} className="px-3 py-6 text-center text-slate-400">실행 이력이 없습니다.</td></tr>
-                        )}
-                        {history.map((h) => (
-                            <tr key={h.id} className="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/50">
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">{formatDateTime(h.startedAt)}</td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">
-                                    {TRIGGER_LABEL[h.triggerType] || h.triggerType}
-                                    {h.triggerType === 'MANUAL' && h.maxCount > 0 && <span className="ml-1 text-xs text-slate-400">({h.maxCount}건)</span>}
-                                </td>
-                                <td className="px-3 py-2"><StatusBadge status={h.status} /></td>
-                                <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">{formatDuration(h.startedAt, h.endedAt)}</td>
-                                <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{h.message || '-'}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <RunHistory history={history} />
     </section>
 );
+
+/**
+ * 최근 실행 이력 — 기본 접힘 (마지막 실행은 카드 위쪽에 이미 표시)
+ */
+const RunHistory = ({ history }) => {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-700">
+            <button
+                type="button"
+                aria-expanded={open}
+                onClick={() => setOpen((v) => !v)}
+                className="flex w-full items-center gap-2 text-left text-sm font-medium text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            >
+                <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className={`h-4 w-4 text-slate-400 transition-transform ${open ? 'rotate-90' : ''}`}>
+                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.17 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z" clipRule="evenodd" />
+                </svg>
+                최근 실행 이력
+                <span className="text-xs font-normal text-slate-400">{history.length}건</span>
+            </button>
+            {open && (
+                <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                    <table className="min-w-full text-sm">
+                        <thead className="bg-slate-50 dark:bg-slate-900">
+                            <tr>
+                                {['시작', '구분', '상태', '소요', '결과'].map((h) => (
+                                    <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">{h}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {history.length === 0 && (
+                                <tr><td colSpan={5} className="px-3 py-6 text-center text-slate-400">실행 이력이 없습니다.</td></tr>
+                            )}
+                            {history.map((h) => (
+                                <tr key={h.id} className="border-t border-slate-100 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/50">
+                                    <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">{formatDateTime(h.startedAt)}</td>
+                                    <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">
+                                        {TRIGGER_LABEL[h.triggerType] || h.triggerType}
+                                        {h.triggerType === 'MANUAL' && h.maxCount > 0 && <span className="ml-1 text-xs text-slate-400">({h.maxCount}건)</span>}
+                                    </td>
+                                    <td className="px-3 py-2"><StatusBadge status={h.status} /></td>
+                                    <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">{formatDuration(h.startedAt, h.endedAt)}</td>
+                                    <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{h.message || '-'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+    );
+};
 
 export default ScheduleJobCard;
