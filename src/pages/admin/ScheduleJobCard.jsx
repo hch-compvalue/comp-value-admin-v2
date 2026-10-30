@@ -79,7 +79,9 @@ const ScheduleEditor = ({ job, saving, onSave }) => {
 
     const [hour, minute] = time.split(':').map(Number);
     const nextCron = advanced ? rawCron.trim() : buildSimpleCron({ hour, minute, days });
-    const isChanged = nextCron !== job.cronExpression;
+    // 서버 값도 같은 형식으로 다시 만들어 비교 ("MON-FRI" 와 "1,2,3,4,5" 는 같은 주기)
+    const currentCron = !advanced && parsed ? buildSimpleCron(parsed) : job.cronExpression;
+    const isChanged = nextCron !== currentCron;
     const canSave = isChanged && (advanced ? nextCron.length > 0 : days.length > 0 && time);
     const nightWarning = advanced ? isNightHour(parseSimpleCron(nextCron)?.hour ?? NaN) : isNightHour(hour);
 
