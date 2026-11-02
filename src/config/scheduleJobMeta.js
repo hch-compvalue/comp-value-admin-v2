@@ -24,6 +24,11 @@ export const SCHEDULE_JOB_META = {
         countLabel: '처리 건수 (받을 보고서 수)',
         fullRunWarning: '하루 최대 15,000건(수동·자동 실행 합산)까지 받고, 첫 적재는 약 4일에 걸쳐 나눠 받습니다(OpenDart 사용). 실행 중에는 백엔드 배포를 하지 마세요.',
     },
+    KR_RECOMMEND: {
+        market: SCHEDULE_MARKET.KR,
+        countLabel: '처리 건수 (계산할 종목 수)',
+        fullRunWarning: '전 종목 계산·평가로 수 분~십여 분 걸립니다(외부 API 없음). 국내 일봉·재무 수집이 끝난 뒤 실행하세요. 실행 중에는 백엔드 배포를 하지 마세요.',
+    },
 };
 
 /** 등록 안 된 작업용 기본값 */
