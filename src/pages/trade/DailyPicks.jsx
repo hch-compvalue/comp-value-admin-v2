@@ -11,7 +11,7 @@ import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal
 import { GRADE_STYLE } from '@/util/GradeStyleUtil';
 import { SIGNAL_STYLE, SignalDot } from '@/util/SignalStyleUtil';
 import { AlertTriangle } from 'lucide-react';
-import { PENDING_LABEL, VERIFIED_LABEL, RANK_PENDING_NOTE, SELL_RULE_NOTE, DIVERSIFY_NOTE, PENDING_BADGE, VERIFIED_BADGE } from '@/util/ValidationGuide';
+import { PENDING_LABEL, VERIFIED_LABEL, RANK_PENDING_NOTE, KR_FAIR_VALUE_NOTE, KR_RANK_NOTE, SELL_RULE_NOTE, DIVERSIFY_NOTE, PENDING_BADGE, VERIFIED_BADGE } from '@/util/ValidationGuide';
 import { BUY_TARGET_LABEL, BUY_TARGET_NOTE, FINANCIAL_SECTOR, topRankSymbols, buyExcludeReasons } from '@/util/BuyTargetUtil';
 
 const SIGNAL_ORDER = ['매수 후보', '관심목록', '관망'];
@@ -118,11 +118,18 @@ const DailyPicks = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-    const [signalFilter, setSignalFilter] = useState(BUY_TARGETS);  // 기본: 매수 대상을 투자 순위순으로
+    const [signalFilter, setSignalFilter] = useState(isKr ? ALL_SIGNALS : BUY_TARGETS);  // 기본: 매수 대상을 투자 순위순으로 (국내는 전체를 가치점수순 — 국내 백테스트 순위 불통과)
     const [excludeFinancial, setExcludeFinancial] = useState(true);
     const [profileFilter, setProfileFilter] = useState(ALL_PROFILES);
-    const [sortKey, setSortKey] = useState('rankScore');
+    const [sortKey, setSortKey] = useState(isKr ? 'valueScore' : 'rankScore');
     const [sortDir, setSortDir] = useState('desc');
+
+    // 시장 전환 시 시장별 기본 목록·정렬로 되돌림
+    useEffect(() => {
+        setSignalFilter(isKr ? ALL_SIGNALS : BUY_TARGETS);
+        setSortKey(isKr ? 'valueScore' : 'rankScore');
+        setSortDir('desc');
+    }, [isKr]);
     const [showValueModal, setShowValueModal] = useState(false);
     const [compValueData, setCompValueData] = useState({});
     const [valueLoadingSymbol, setValueLoadingSymbol] = useState(null);
@@ -304,12 +311,13 @@ const DailyPicks = () => {
                 ))}
             </div>
 
-            {/* 국내 결과는 6단계(국내 백테스트) 전까지 검증 전 — 미국과 같은 계산식·기준을 적용한 참고값 */}
+            {/* 국내 6단계 백테스트: 적정가 통과, 투자 순위·매수 대상 불통과 */}
             {isKr && (
                 <div className="mb-4 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
                     <span className={`${PENDING_BADGE} mr-1.5`}>{PENDING_LABEL}</span>
-                    국내 결과는 미국과 같은 계산식·평가 기준을 국내 공시(OpenDart)·시세(KIS)에 적용한 값이며, 국내 데이터로 검증하기 전입니다.
-                    지주회사·시가총액 1,000억 원 미만 종목은 매수후보에서 관심목록으로 낮춥니다.
+                    {KR_RANK_NOTE}
+                    <div className="mt-1"><span className={`${VERIFIED_BADGE} mr-1.5`}>{VERIFIED_LABEL}</span>{KR_FAIR_VALUE_NOTE}</div>
+                    <div className="mt-1">지주회사·시가총액 1,000억 원 미만 종목은 매수후보에서 관심목록으로 낮춥니다.</div>
                 </div>
             )}
 
@@ -319,7 +327,7 @@ const DailyPicks = () => {
                     {hasRank
                         ? <>
                             <span className={`${PENDING_BADGE} mr-1.5`}>{PENDING_LABEL}</span>
-                            투자 순위 = 후보 안에서 <strong>수익성(ROE) · 가치점수 · 최근 1주 눌림</strong>의 상위 비율을 같은 비중으로 합친 점수입니다. {RANK_PENDING_NOTE}
+                            투자 순위 = 후보 안에서 <strong>수익성(ROE) · 가치점수 · 최근 1주 눌림</strong>의 상위 비율을 같은 비중으로 합친 점수입니다. {isKr ? '국내에서는 근거가 없어 참고용입니다(위 안내).' : RANK_PENDING_NOTE}
                             <div className="mt-1">{SELL_RULE_NOTE} <span className={`${VERIFIED_BADGE} ml-1`}>{VERIFIED_LABEL}</span></div>
                             <div className="mt-1">{BUY_TARGET_NOTE}</div>
                             <div className="mt-1">{DIVERSIFY_NOTE}</div>

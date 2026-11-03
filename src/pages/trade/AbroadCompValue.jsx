@@ -7,7 +7,7 @@ import PageTitle from '@/component/common/display/PageTitle';
 import { useMarket } from '@/context/MarketContext';
 import { MARKET } from '@/util/MarketUtil';
 import { searchStocks, fetchCompValue } from '@/util/StockApi';
-import { PENDING_BADGE, PENDING_LABEL } from '@/util/ValidationGuide';
+import { VERIFIED_BADGE, VERIFIED_LABEL, KR_FAIR_VALUE_NOTE } from '@/util/ValidationGuide';
 
 // 국내 계산 제외 종목은 결과 메시지가 이 문구로 시작한다 (적정가 없음)
 const EXCLUDED_PREFIX = '계산 제외';
@@ -165,11 +165,11 @@ const AbroadCompValue = () => {
                 {isKr ? '종목명 또는 6자리 종목코드로 검색하고' : '심볼을 검색하고'} 행을 클릭하면 기업가치 계산 결과를 확인할 수 있습니다.
             </p>
 
-            {/* 국내 결과는 6단계(국내 백테스트) 전까지 검증 전 */}
+            {/* 국내 적정가는 6단계 국내 백테스트 통과(금융 미검증) */}
             {isKr && (
-                <div className="mb-4 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
-                    <span className={`${PENDING_BADGE} mr-1.5`}>{PENDING_LABEL}</span>
-                    국내 결과는 미국과 같은 계산식·평가 기준을 국내 공시(OpenDart)·시세(KIS, 전 거래일 종가)에 적용한 값이며, 국내 데이터로 검증하기 전입니다. 국내 뉴스는 아직 제공하지 않습니다.
+                <div className="mb-4 rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
+                    <span className={`${VERIFIED_BADGE} mr-1.5`}>{VERIFIED_LABEL}</span>
+                    {KR_FAIR_VALUE_NOTE} 값은 국내 공시(OpenDart)·시세(KIS, 전 거래일 종가) 기준이며, 국내 뉴스는 아직 제공하지 않습니다.
                 </div>
             )}
 
