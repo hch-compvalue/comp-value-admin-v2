@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { send, API_ENDPOINTS } from '@/util/ClientUtil';
+import { send } from '@/util/ClientUtil';
+import { fetchCompValue } from '@/util/StockApi';
+import { useMarket } from '@/context/MarketContext';
+import { MARKET, fmtPrice } from '@/util/MarketUtil';
 import { STOCK_ANALYSIS_PATH, SUB_TAB } from '@/config/menuPaths';
 import PageTitle from '@/component/common/display/PageTitle';
 import DailyPicksHelpModal from '@/component/common/display/DailyPicksHelpModal';
@@ -101,7 +104,6 @@ const RankBar = ({ score }) => (
     )
 );
 
-const fmtPrice = (v) => (v == null ? '-' : `$${Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
 
 /**
  * 오늘의 매수후보 (2-2)
@@ -109,6 +111,8 @@ const fmtPrice = (v) => (v == null ? '-' : `$${Number(v).toLocaleString('en-US',
  */
 const DailyPicks = () => {
     const navigate = useNavigate();
+    const { market } = useMarket();
+    const isKr = market === MARKET.KR;
     const [rows, setRows] = useState([]);
     const [baseDate, setBaseDate] = useState('');
     const [loading, setLoading] = useState(false);
@@ -127,7 +131,7 @@ const DailyPicks = () => {
     const fetchData = useCallback(async () => {
         setLoading(true);
         setError('');
-        const { data, error } = await send('/dart/main/evaluation/daily', null, 'GET');
+        const { data, error } = await send(`/dart/main/evaluation/daily?market=${market}`, null, 'GET');
         if (error) {
             setError(error);
             setRows([]);
@@ -137,7 +141,7 @@ const DailyPicks = () => {
             setBaseDate(list.length > 0 ? (list[0].snapshotDate || '') : '');
         }
         setLoading(false);
-    }, []);
+    }, [market]);
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -148,7 +152,7 @@ const DailyPicks = () => {
         setValueLoadingSymbol(symbol);
         setError('');
         try {
-            const { data, error } = await send(API_ENDPOINTS.ABROAD_COMP_VALUE(symbol), {}, 'GET');
+            const { data, error } = await fetchCompValue(symbol, market);
             if (!error && data?.response && Object.keys(data.response).length > 0) {
                 setCompValueData(data.response);
                 setShowValueModal(true);
@@ -159,7 +163,7 @@ const DailyPicks = () => {
             setValueLoadingSymbol(null);
             valueInFlight.current = false;
         }
-    }, []);
+    }, [market]);
 
     // 프로파일별 종목 수 (태그 등장 순서 = 프로파일 정렬순). 태그 없는 옛 스냅샷이면 빈 배열
     const profileCounts = useMemo(() => {
@@ -225,7 +229,7 @@ const DailyPicks = () => {
         const query = new URLSearchParams({ symbol: filtered.map((r) => r.symbol).join(',') });
         navigate(`${STOCK_ANALYSIS_PATH}?${query}`, { state: { subTab: SUB_TAB.EVALUATE } });
     };
-    const canHandoff = filtered.length > 0 && filtered.length <= MAX_HANDOFF_SYMBOLS;
+    const canHandoff = !isKr && filtered.length > 0 && filtered.length <= MAX_HANDOFF_SYMBOLS;
 
     const handleSort = (key) => {
         if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -235,7 +239,7 @@ const DailyPicks = () => {
     // 적정가·매수적정가는 상세(더블클릭)에서 확인 — V9 적정가는 보수적 추정이라 표에서 현재가와 바로 비교하면 오해 소지
     const COLUMNS = [
         { key: 'rankScore', label: '순위', num: true },
-        { key: 'symbol', label: '심볼' },
+        { key: 'symbol', label: isKr ? '종목코드' : '심볼' },
         { key: 'companyName', label: '기업명' },
         { key: 'rankScore', label: '투자 순위 점수', num: true, id: 'rankScoreBar' },
         { key: 'roePct', label: '근거' },
@@ -300,6 +304,15 @@ const DailyPicks = () => {
                 ))}
             </div>
 
+            {/* 국내 결과는 6단계(국내 백테스트) 전까지 검증 전 — 미국과 같은 계산식·기준을 적용한 참고값 */}
+            {isKr && (
+                <div className="mb-4 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
+                    <span className={`${PENDING_BADGE} mr-1.5`}>{PENDING_LABEL}</span>
+                    국내 결과는 미국과 같은 계산식·평가 기준을 국내 공시(OpenDart)·시세(KIS)에 적용한 값이며, 국내 데이터로 검증하기 전입니다.
+                    지주회사·시가총액 1,000억 원 미만 종목은 매수후보에서 관심목록으로 낮춥니다.
+                </div>
+            )}
+
             {/* 투자 순위 안내 — 순위 점수 없는 옛 스냅샷이면 대체 정렬 안내 */}
             {rows.length > 0 && (
                 <div className="mb-4 rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
@@ -345,7 +358,9 @@ const DailyPicks = () => {
 
             <div className="flex items-center justify-between mb-3">
                 <div className="text-sm text-slate-500 dark:text-slate-400">
-                    {baseDate && `평가 기준일: ${baseDate}`} · 매일 오전 10시 자동 전수평가 결과 · 행 더블클릭 시 기업가치 계산
+                    {baseDate && `평가 기준일: ${baseDate}`} · {isKr
+                        ? '평일 17:30 자동 전수평가 결과 (가격은 전 거래일 종가)'
+                        : '매일 오전 10시 자동 전수평가 결과 · 행 더블클릭 시 기업가치 계산'}
                     {valueLoadingSymbol && <span className="ml-2 text-blue-600 dark:text-blue-400">({valueLoadingSymbol} 계산 중…)</span>}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -353,7 +368,7 @@ const DailyPicks = () => {
                         type="button"
                         onClick={handleEvaluateVisible}
                         disabled={!canHandoff}
-                        title={filtered.length > MAX_HANDOFF_SYMBOLS
+                        title={isKr ? '국내 종목 일괄 평가는 준비 중입니다' : filtered.length > MAX_HANDOFF_SYMBOLS
                             ? `한 번에 ${MAX_HANDOFF_SYMBOLS}종목까지 넘길 수 있습니다. 투자판정·프로파일로 범위를 좁혀주세요.`
                             : '표에 보이는 종목을 종목 분석 > 일괄 평가에서 실시간으로 다시 평가합니다'}
                         className="px-3 py-1.5 text-sm rounded-lg border border-blue-600 text-blue-700 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-blue-300 dark:border-blue-500 dark:hover:bg-slate-800"
@@ -397,7 +412,7 @@ const DailyPicks = () => {
                             <tr><td colSpan={COLUMNS.length} className="px-4 py-8 text-center text-slate-400">
                                 {activeFilter === BUY_TARGETS && rows.length > 0
                                     ? `오늘은 ${BUY_TARGET_LABEL}이 없습니다. 전체 목록에서 빠진 이유를 확인하세요.`
-                                    : '데이터가 없습니다. (매일 오전 10시 스케줄 실행 후 표시됩니다)'}
+                                    : `데이터가 없습니다. (${isKr ? '평일 17:30' : '매일 오전 10시'} 스케줄 실행 후 표시됩니다)`}
                             </td></tr>
                         )}
                         {filtered.map((r) => (
@@ -405,7 +420,7 @@ const DailyPicks = () => {
                                 key={r.symbol}
                                 onDoubleClick={() => handleRowDoubleClick(r.symbol)}
                                 title="더블클릭: 기업가치 계산 결과 보기"
-                                className={`border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer select-none ${
+                                className={`border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 select-none cursor-pointer ${
                                     valueLoadingSymbol === r.symbol ? 'opacity-60' : ''
                                 }`}
                             >
@@ -424,7 +439,7 @@ const DailyPicks = () => {
                                     <span className="ml-1 text-xs text-slate-400">{r.valueScore != null ? Number(r.valueScore).toFixed(0) : ''}</span>
                                 </td>
                                 <td className={`px-4 py-2.5 text-center ${TIMING_STYLE[r.timingSignal] || ''}`}>{r.timingSignal || '-'}</td>
-                                <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-300">{fmtPrice(r.currentPrice)}</td>
+                                <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-300">{fmtPrice(r.currentPrice, market)}</td>
                                 <td className="px-4 py-2.5 text-left text-slate-500 dark:text-slate-400 whitespace-nowrap">{r.sector || '-'}</td>
                                 <td className="px-4 py-2.5 text-left whitespace-nowrap">
                                     {parseProfiles(r.sourceProfiles).length === 0 ? <span className="text-slate-400">-</span> : (

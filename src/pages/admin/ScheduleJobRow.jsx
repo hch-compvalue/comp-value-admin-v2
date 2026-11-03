@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import Button from '@/component/common/button/Button';
+import Switch from '@/component/common/button/Switch';
 import {
     WEEKDAYS, ALL_DAYS, BUSINESS_DAYS,
     parseSimpleCron, buildSimpleCron, describeCron, isNightHour,
@@ -9,6 +11,7 @@ import { SCHEDULE_AFFECTED_SCREENS } from '@/config/scheduleAffectedScreens';
 import { jobMetaOf } from '@/config/scheduleJobMeta';
 import StatusBadge from '@/pages/admin/ScheduleStatusBadge';
 import { formatDateTime, formatDuration } from '@/pages/admin/scheduleFormat';
+import { typicalDurationMinutes, formatMinutes } from '@/pages/admin/scheduleTimelineModel';
 
 const TRIGGER_LABEL = { AUTO: '자동', MANUAL: '수동' };
 
@@ -151,70 +154,111 @@ const ScheduleEditor = ({ job, saving, onSave }) => {
     );
 };
 
+/** 목록 머리줄과 행이 같이 쓰는 칸 배치 (펼침 화살표 · 작업 · 주기 · 다음 자동 실행 · 마지막 실행 · 자동 · 지금 실행) */
+export const JOB_GRID = 'md:grid md:grid-cols-[1.25rem_minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1.6fr)_2.75rem_5.5rem] md:items-center md:gap-3';
+
+/** 목록 머리줄 (md 이상에서만) */
+export const ScheduleJobHeader = () => (
+    <div className={`hidden border-b border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 ${JOB_GRID}`}>
+        <span />
+        <span>작업</span>
+        <span>주기</span>
+        <span>다음 자동 실행</span>
+        <span>마지막 실행</span>
+        <span className="text-center">자동</span>
+        <span />
+    </div>
+);
+
+const stop = (fn) => (e) => { e.stopPropagation(); fn(); };
+
 /**
- * 스케줄 작업 카드 — 상태, 사용 여부, 실행 주기, 지금 실행, 최근 이력
+ * 스케줄 작업 한 줄 — 요약(주기·다음 실행·마지막 결과·자동 실행 스위치·지금 실행), 누르면 상세(설명·영향 화면·주기 변경·이력)
  */
-const ScheduleJobCard = ({ job, history, saving, onToggle, onSave, onRun }) => (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
+const ScheduleJobRow = ({ job, history, saving, onToggle, onSave, onRun }) => {
+    const [open, setOpen] = useState(false);
+    const typical = typicalDurationMinutes(history);
+    const toggleOpen = () => setOpen((v) => !v);
+
+    return (
+        <li className={open ? 'bg-row-nested' : ''}>
+            <div
+                onClick={toggleOpen}
+                className={`cursor-pointer space-y-2 px-4 py-3 text-sm hover:bg-row-hover md:space-y-0 ${JOB_GRID}`}
+            >
+                <button
+                    type="button"
+                    aria-expanded={open}
+                    aria-label={`${job.label} 상세 ${open ? '접기' : '펼치기'}`}
+                    onClick={stop(toggleOpen)}
+                    className="hidden text-slate-400 hover:text-slate-700 md:block dark:hover:text-slate-200"
+                >
+                    <ChevronRight aria-hidden="true" className={`h-4 w-4 transition-transform ${open ? 'rotate-90' : ''}`} />
+                </button>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <MarketChip jobKey={job.jobKey} />
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{job.label}</h2>
-                    {job.running
-                        ? <StatusBadge status="RUNNING" />
-                        : <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${job.enabled
-                            ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300'
-                            : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'}`}>
-                            {job.enabled ? '자동 실행 켜짐' : '자동 실행 꺼짐'}
-                        </span>}
+                    <span className="font-medium text-slate-900 dark:text-white">{job.label}</span>
                 </div>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{job.description}</p>
+                <Cell label="주기">{describeCron(job.cronExpression)}</Cell>
+                <Cell label="다음 자동 실행">{job.enabled ? formatDateTime(job.nextRunAt) : <span className="text-slate-400">꺼짐</span>}</Cell>
+                <Cell label="마지막 실행">
+                    {job.running
+                        ? <span className="flex flex-wrap items-center gap-2"><StatusBadge status="RUNNING" /><span className="text-xs text-slate-500 dark:text-slate-400">{formatDuration(job.lastRun?.startedAt)} 경과</span></span>
+                        : job.lastRun
+                            ? <span className="flex flex-wrap items-center gap-2">{formatDateTime(job.lastRun.startedAt)} <StatusBadge status={job.lastRun.status} /></span>
+                            : <span className="text-slate-400">이력 없음</span>}
+                </Cell>
+                <div className="flex items-center gap-3 md:contents">
+                    <span className="flex items-center gap-2 md:justify-center">
+                        <span className="text-xs text-slate-500 md:hidden dark:text-slate-400">자동 실행</span>
+                        <Switch
+                            checked={job.enabled}
+                            disabled={saving}
+                            label={`자동 실행 ${job.enabled ? '끄기' : '켜기'}`}
+                            onChange={stop(() => onToggle(job))}
+                        />
+                    </span>
+                    <Button size="sm" variant="secondary" disabled={job.running} onClick={stop(() => onRun(job))} className="ml-auto md:ml-0">
+                        {job.running ? '실행 중' : '지금 실행'}
+                    </Button>
+                    <button type="button" onClick={stop(toggleOpen)} className="text-xs text-blue-600 md:hidden dark:text-blue-400">
+                        {open ? '접기' : '상세'}
+                    </button>
+                </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-                <Button variant="secondary" size="sm" disabled={saving} onClick={() => onToggle(job)}>
-                    {job.enabled ? '자동 실행 끄기' : '자동 실행 켜기'}
-                </Button>
-                <Button size="sm" disabled={job.running} onClick={() => onRun(job)}>
-                    {job.running ? '실행 중' : '지금 실행'}
-                </Button>
-            </div>
-        </div>
 
-        {job.running && (
-            <p className="mt-3 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                실행 중입니다 ({formatDuration(job.lastRun?.startedAt)} 경과). 끝날 때까지 백엔드 배포를 미뤄주세요 — 재시작되면 작업이 중단됩니다.
-            </p>
-        )}
+            {open && (
+                <div className="border-t border-slate-100 px-4 pb-5 pt-3 md:pl-12 dark:border-slate-700">
+                    <p className="text-sm text-slate-600 dark:text-slate-300">{job.description}</p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        평소 소요 {formatMinutes(typical)}{typical != null && ' (최근 성공 실행 중앙값)'}
+                    </p>
+                    {job.running && (
+                        <p className="mt-3 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                            실행 중입니다 ({formatDuration(job.lastRun?.startedAt)} 경과). 끝날 때까지 백엔드 배포를 미뤄주세요 — 재시작되면 작업이 중단됩니다.
+                        </p>
+                    )}
 
-        <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
-            <div>
-                <dt className="text-xs font-medium text-slate-500 dark:text-slate-400">실행 주기</dt>
-                <dd className="mt-0.5 text-slate-900 dark:text-white">{describeCron(job.cronExpression)}</dd>
-            </div>
-            <div>
-                <dt className="text-xs font-medium text-slate-500 dark:text-slate-400">다음 자동 실행</dt>
-                <dd className="mt-0.5 text-slate-900 dark:text-white">{job.enabled ? formatDateTime(job.nextRunAt) : '꺼짐'}</dd>
-            </div>
-            <div>
-                <dt className="text-xs font-medium text-slate-500 dark:text-slate-400">마지막 실행</dt>
-                <dd className="mt-0.5 flex items-center gap-2 text-slate-900 dark:text-white">
-                    {job.lastRun
-                        ? <>{formatDateTime(job.lastRun.startedAt)} <StatusBadge status={job.lastRun.status} /></>
-                        : '이력 없음'}
-                </dd>
-            </div>
-        </dl>
+                    <AffectedScreens jobKey={job.jobKey} />
 
-        <AffectedScreens jobKey={job.jobKey} />
+                    <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-700">
+                        <h3 className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">실행 주기 변경</h3>
+                        <ScheduleEditor job={job} saving={saving} onSave={onSave} />
+                    </div>
 
-        <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-700">
-            <h3 className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">실행 주기 변경</h3>
-            <ScheduleEditor job={job} saving={saving} onSave={onSave} />
-        </div>
+                    <RunHistory history={history} />
+                </div>
+            )}
+        </li>
+    );
+};
 
-        <RunHistory history={history} />
-    </section>
+/** 요약 칸 — 좁은 화면에서는 라벨을 앞에 붙여 한 줄씩 */
+const Cell = ({ label, children }) => (
+    <div className="flex min-w-0 items-baseline gap-2 text-slate-700 dark:text-slate-300">
+        <span className="w-24 shrink-0 text-xs text-slate-500 md:hidden dark:text-slate-400">{label}</span>
+        <span className="min-w-0">{children}</span>
+    </div>
 );
 
 // 접었을 때도 보여줄 최근 이력 수
@@ -266,7 +310,7 @@ const RunHistory = ({ history }) => {
                                 </td>
                                 <td className="px-3 py-2"><StatusBadge status={h.status} /></td>
                                 <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">{formatDuration(h.startedAt, h.endedAt)}</td>
-                                <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{h.message || '-'}</td>
+                                <td className="max-w-md truncate px-3 py-2 text-slate-600 dark:text-slate-400" title={h.message || ''}>{h.message || '-'}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -276,4 +320,4 @@ const RunHistory = ({ history }) => {
     );
 };
 
-export default ScheduleJobCard;
+export default ScheduleJobRow;

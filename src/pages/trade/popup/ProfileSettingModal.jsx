@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useMarket } from '@/context/MarketContext';
+import { MARKET } from '@/util/MarketUtil';
 import useModalAnimation from '@/hooks/useModalAnimation';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import MultiSelect from '@/component/common/select/MultiSelect';
@@ -13,6 +15,8 @@ const DEFAULT_SECTOR_QUOTA_PCT = 30;
 
 const ProfileSettingModal = ({ isOpen, onClose, profiles, onRefresh, openAlert, isLoading, setIsLoading, send, filterOptions, filterOptionsLoading }) => {
     const { shouldRender, isAnimatingOut } = useModalAnimation(isOpen, 250);
+    const { market } = useMarket();
+    const isKr = market === MARKET.KR;
     const [selectedProfile, setSelectedProfile] = useState(null);
     const [isCreating, setIsCreating] = useState(false);
     const [formData, setFormData] = useState(null);
@@ -37,7 +41,7 @@ const ProfileSettingModal = ({ isOpen, onClose, profiles, onRefresh, openAlert, 
         isActivelyTrading: 'Y',
         excludeNonCommonStock: 'Y',
         sectorQuotaPct: DEFAULT_SECTOR_QUOTA_PCT,
-        exchange: ['NASDAQ', 'NYSE'],
+        exchange: isKr ? [] : ['NASDAQ', 'NYSE'],
         sector: [],
         industry: [],
         country: [],
@@ -180,6 +184,7 @@ const ProfileSettingModal = ({ isOpen, onClose, profiles, onRefresh, openAlert, 
 
             const dataToSend = {
                 ...formData,
+                market: isCreating ? market : formData.market,   // 새 프로파일은 지금 보고 있는 시장으로
                 exchange: arrayToString(formData.exchange),
                 sector: arrayToString(formData.sector),
                 industry: arrayToString(formData.industry),
@@ -358,6 +363,7 @@ const ProfileSettingModal = ({ isOpen, onClose, profiles, onRefresh, openAlert, 
                                     setIsCreating(false);
                                 }}
                                 isLoading={isLoading}
+                                isKr={isKr}
                                 filterOptions={filterOptions}
                                 filterOptionsLoading={filterOptionsLoading}
                             />
@@ -414,7 +420,10 @@ const formatKoreanNumber = (num) => {
     return (number < 0 ? '-' : '') + result.join(' ');
 };
 
-const ProfileForm = ({ formData, onChange, isCreating, onSave, onDelete, onCancel, isLoading, filterOptions, filterOptionsLoading }) => {
+/** 국내 거래소 (KR_RECOMMEND 1차 필터의 exchange 값) */
+const KR_EXCHANGES = ['KOSPI', 'KOSDAQ'];
+
+const ProfileForm = ({ formData, onChange, isCreating, onSave, onDelete, onCancel, isLoading, isKr, filterOptions, filterOptionsLoading }) => {
     return (
         <div className="space-y-4 md:space-y-6">
             {/* 프로파일 기본 정보 */}
@@ -460,7 +469,7 @@ const ProfileForm = ({ formData, onChange, isCreating, onSave, onDelete, onCance
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <DualRangeSlider
                         label="시가총액"
-                        description="Market Cap (USD)"
+                        description={isKr ? '시가총액 (원)' : 'Market Cap (USD)'}
                         min={0}
                         max={5000000000000}
                         step={1000000000}
@@ -474,7 +483,7 @@ const ProfileForm = ({ formData, onChange, isCreating, onSave, onDelete, onCance
                     />
                     <DualRangeSlider
                         label="주가"
-                        description="Price (USD)"
+                        description={isKr ? '주가 (원)' : 'Price (USD)'}
                         min={0}
                         max={1000000}
                         step={100}
@@ -499,6 +508,8 @@ const ProfileForm = ({ formData, onChange, isCreating, onSave, onDelete, onCance
                         enabled={formData.betaEnabled}
                         onToggle={() => onChange('betaEnabled', !formData.betaEnabled)}
                     />
+                    {/* 거래량·ETF·펀드·활성거래·비일반주식·국가·산업군은 FMP 스크리너 조건 — 국내 1차 필터는 쓰지 않음(국내 목록은 보통주만) */}
+                    {!isKr && (<>
                     <DualRangeSlider
                         label="거래량"
                         description="Volume"
@@ -549,14 +560,15 @@ const ProfileForm = ({ formData, onChange, isCreating, onSave, onDelete, onCance
                         loading={filterOptionsLoading?.countries}
                         placeholder="국가 선택"
                     />
+                    </>)}
                     <FormMultiSelect
                         label="거래소 (exchange)"
                         value={formData.exchange || []}
                         onChange={(v) => onChange('exchange', v)}
-                        options={filterOptions?.exchanges || []}
-                        loading={filterOptionsLoading?.exchanges}
-                        placeholder="거래소 선택"
-                        required
+                        options={isKr ? KR_EXCHANGES : (filterOptions?.exchanges || [])}
+                        loading={!isKr && filterOptionsLoading?.exchanges}
+                        placeholder={isKr ? '전체 (선택 안 하면 코스피·코스닥 모두)' : '거래소 선택'}
+                        required={!isKr}
                     />
                     <FormMultiSelect
                         label="섹터 (sector)"
@@ -566,22 +578,26 @@ const ProfileForm = ({ formData, onChange, isCreating, onSave, onDelete, onCance
                         loading={filterOptionsLoading?.sectors}
                         placeholder="섹터 선택"
                     />
-                    <FormMultiSelect
-                        label="산업군 (industry)"
-                        value={formData.industry || []}
-                        onChange={(v) => onChange('industry', v)}
-                        options={filterOptions?.industries || []}
-                        loading={filterOptionsLoading?.industries}
-                        placeholder="산업군 선택"
-                    />
-                    <FormInput
-                        label="스크리너 조회 제한 건수 (screenerLimit)"
-                        type="number"
-                        value={formData.screenerLimit}
-                        onChange={(v) => onChange('screenerLimit', v)}
-                        placeholder="10000"
-                        required
-                    />
+                    {!isKr && (
+                        <FormMultiSelect
+                            label="산업군 (industry)"
+                            value={formData.industry || []}
+                            onChange={(v) => onChange('industry', v)}
+                            options={filterOptions?.industries || []}
+                            loading={filterOptionsLoading?.industries}
+                            placeholder="산업군 선택"
+                        />
+                    )}
+                    {!isKr && (
+                        <FormInput
+                            label="스크리너 조회 제한 건수 (screenerLimit)"
+                            type="number"
+                            value={formData.screenerLimit}
+                            onChange={(v) => onChange('screenerLimit', v)}
+                            placeholder="10000"
+                            required
+                        />
+                    )}
                     <FormInput
                         label="섹터 쿼터 % (sectorQuotaPct)"
                         type="number"

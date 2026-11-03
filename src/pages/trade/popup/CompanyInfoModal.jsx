@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import useModalAnimation from '@/hooks/useModalAnimation';
 import { send } from '@/util/ClientUtil';
+import { useMarket } from '@/context/MarketContext';
+import { MARKET, fmtPrice, fmtAmount } from '@/util/MarketUtil';
+import { companyProfileUrl } from '@/util/StockApi';
 
 export default function CompanyInfoModal({ isOpen, onClose, symbol, zIndex = 70 }) {
+    const { market } = useMarket();
+    const isKr = market === MARKET.KR;
 
     const [companyInfo, setCompanyInfo] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -18,7 +23,7 @@ export default function CompanyInfoModal({ isOpen, onClose, symbol, zIndex = 70 
     const fetchCompanyInfo = async () => {
         setLoading(true);
         try {
-            const url = `/dart/abroad/company/search/profile?symbol=${encodeURIComponent(symbol)}`;
+            const url = companyProfileUrl(symbol, market);
 
             const { data, error } = await send(url, {}, 'GET');
 
@@ -63,6 +68,7 @@ export default function CompanyInfoModal({ isOpen, onClose, symbol, zIndex = 70 
 
     const formatMarketCap = (marketCap) => {
         if (!marketCap) return '-';
+        if (isKr) return fmtAmount(marketCap, MARKET.KR);
         const billion = marketCap / 1000000000;
         return `$${billion.toFixed(2)}B`;
     };
@@ -121,13 +127,13 @@ export default function CompanyInfoModal({ isOpen, onClose, symbol, zIndex = 70 
                                 <div>
                                     <div className="text-xs text-slate-500 dark:text-slate-400">현재가</div>
                                     <div className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
-                                        ${companyInfo.price?.toFixed(2) || '-'}
+                                        {isKr ? fmtPrice(companyInfo.price, MARKET.KR) : `$${companyInfo.price?.toFixed(2) || '-'}`}
                                     </div>
                                 </div>
                                 <div>
                                     <div className="text-xs text-slate-500 dark:text-slate-400">변동</div>
                                     <div className={`mt-1 text-lg font-semibold ${companyInfo.change >= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                                        {companyInfo.change >= 0 ? '+' : ''}{companyInfo.change?.toFixed(2)} ({companyInfo.changePercentage?.toFixed(2)}%)
+                                        {companyInfo.change >= 0 ? '+' : ''}{isKr ? companyInfo.change?.toLocaleString('ko-KR') : companyInfo.change?.toFixed(2)} ({companyInfo.changePercentage?.toFixed(2)}%)
                                     </div>
                                 </div>
                                 <div>

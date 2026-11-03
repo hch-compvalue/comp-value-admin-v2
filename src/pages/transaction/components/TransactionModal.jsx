@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
 import { send } from '@/util/ClientUtil';
+import { useMarket } from '@/context/MarketContext';
+import { MARKET, fmtKrw, fmtAmount } from '@/util/MarketUtil';
+import { companyProfileUrl } from '@/util/StockApi';
 import useModalAnimation from '@/hooks/useModalAnimation';
 import { SYNC_TITLE, SYNC_ON_HINT, SYNC_OFF_HINT } from '@/util/SellTargetGuide';
 
 export default function TransactionModal({ isOpen, mode, data, onClose, onSave }) {
+    const { market } = useMarket();
+    const isKr = market === MARKET.KR;      // 국내: 원화 가격, 환율 입력 없음
     const [formData, setFormData] = useState({
         symbol: '',
         companyName: '',
@@ -21,10 +26,11 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
     const [fxRate, setFxRate] = useState(null);
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && !isKr) {
             fetchFxRate();
         }
-    }, [isOpen]);
+        if (isKr) setFxRate(null);
+    }, [isOpen, isKr]);
 
     const fetchFxRate = async () => {
         try {
@@ -85,9 +91,11 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
 
         setLoadingProfile(true);
         try {
-            const { data, error } = await send(`/dart/abroad/company/search/profile?symbol=${encodeURIComponent(symbol)}`, {}, 'GET');
-            if (!error && data?.success && data?.response && data.response.length > 0) {
-                const profile = data.response[0];
+            const { data, error } = await send(companyProfileUrl(symbol, market), {}, 'GET');
+            // 미국은 배열, 국내는 객체 1건
+            const profiles = Array.isArray(data?.response) ? data.response : data?.response ? [data.response] : [];
+            if (!error && data?.success && profiles.length > 0) {
+                const profile = profiles[0];
                 setCompanyProfile(profile);
                 // 기업명 자동 입력 (항상 업데이트)
                 setFormData(prev => ({ ...prev, companyName: profile.companyName || '' }));
@@ -105,7 +113,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
     const handleSubmit = async () => {
         // 유효성 검사
         if (!formData.symbol.trim()) {
-            alert('티커를 입력해주세요.');
+            alert(isKr ? '종목코드를 입력해주세요.' : '티커를 입력해주세요.');
             return;
         }
         if (!formData.companyName.trim()) {
@@ -134,7 +142,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
             totalBuyAmount: formData.totalBuyAmount,
             targetPrice: formData.targetPrice || '',
             targetPriceSync: formData.targetPriceSync,
-            buyExchangeRateAtTrade: formData.buyExchangeRateAtTrade || '',
+            buyExchangeRateAtTrade: isKr ? '' : formData.buyExchangeRateAtTrade || '',
             rmk: formData.rmk.trim() || '',
         });
         setSaving(false);
@@ -189,14 +197,14 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                         {/* 티커 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                티커 <span className="text-orange-500">*</span>
+                                {isKr ? '종목코드' : '티커'} <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 value={formData.symbol}
                                 onChange={(e) => handleChange('symbol', e.target.value.toUpperCase())}
                                 onBlur={handleSymbolBlur}
-                                placeholder="AAPL"
+                                placeholder={isKr ? '005930' : 'AAPL'}
                                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                             />
                             {loadingProfile && (
@@ -213,7 +221,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                                 type="text"
                                 value={formData.companyName}
                                 onChange={(e) => handleChange('companyName', e.target.value)}
-                                placeholder="Apple Inc."
+                                placeholder={isKr ? '삼성전자' : 'Apple Inc.'}
                                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                             />
                         </div>
@@ -234,14 +242,14 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                         {/* 매수가 */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                매수가 ($) <span className="text-orange-500">*</span>
+                                매수가 ({isKr ? '₩' : '$'}) <span className="text-orange-500">*</span>
                             </label>
                             <input
                                 type="number"
                                 step="0.01"
                                 value={formData.buyPrice}
                                 onChange={(e) => handleChange('buyPrice', e.target.value)}
-                                placeholder="150.50"
+                                placeholder={isKr ? '61000' : '150.50'}
                                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                             />
                             {fxRate && formData.buyPrice && parseFloat(formData.buyPrice) > 0 && (
@@ -269,7 +277,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                         <div>
                             <div className="flex items-center justify-between mb-2">
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    목표가 ($)
+                                    목표가 ({isKr ? '₩' : '$'})
                                 </label>
                                 <button
                                     type="button"
@@ -294,7 +302,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                                     step="0.01"
                                     value={formData.targetPrice}
                                     onChange={(e) => handleChange('targetPrice', e.target.value)}
-                                    placeholder="200.00"
+                                    placeholder={isKr ? '80000' : '200.00'}
                                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                 />
                             )}
@@ -306,8 +314,8 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                             )}
                         </div>
 
-                        {/* 매수당시환율 */}
-                        <div>
+                        {/* 매수당시환율 (국내 없음) */}
+                        {!isKr && <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                 매수당시환율 (₩)
                             </label>
@@ -324,7 +332,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                                     1 USD = ₩{parseFloat(formData.buyExchangeRateAtTrade).toLocaleString('ko-KR', { maximumFractionDigits: 2 })}
                                 </div>
                             )}
-                        </div>
+                        </div>}
                     </div>
 
                     {/* 비고 */}
@@ -362,7 +370,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                                 {companyProfile.price && (
                                     <div>
                                         <div className="text-slate-600 dark:text-slate-400">현재가</div>
-                                        <div className="font-semibold text-slate-900 dark:text-white">${companyProfile.price.toFixed(2)}</div>
+                                        <div className="font-semibold text-slate-900 dark:text-white">{isKr ? fmtKrw(companyProfile.price) : `$${companyProfile.price.toFixed(2)}`}</div>
                                     </div>
                                 )}
                                 {companyProfile.beta && (
@@ -375,7 +383,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                                     <div>
                                         <div className="text-slate-600 dark:text-slate-400">시가총액</div>
                                         <div className="font-semibold text-slate-900 dark:text-white">
-                                            ${(companyProfile.marketCap / 1e9).toFixed(2)}B
+                                            {isKr ? fmtAmount(companyProfile.marketCap, MARKET.KR) : `$${(companyProfile.marketCap / 1e9).toFixed(2)}B`}
                                         </div>
                                     </div>
                                 )}
@@ -395,7 +403,7 @@ export default function TransactionModal({ isOpen, mode, data, onClose, onSave }
                             <span className="text-slate-600 dark:text-slate-400">매수 금액 (매수가 × 수량)</span>
                             <div className="text-right">
                                 <span className="text-lg font-bold text-slate-900 dark:text-white">
-                                    ${totalBuyValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    {isKr ? fmtKrw(totalBuyValue) : `$${totalBuyValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                 </span>
                                 {fxRate && totalBuyValue > 0 && (
                                     <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">

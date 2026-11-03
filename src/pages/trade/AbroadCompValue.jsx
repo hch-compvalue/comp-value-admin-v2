@@ -1,28 +1,25 @@
 import Loading from '@/component/common/display/Loading';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import PageTitle from '@/component/common/display/PageTitle';
-import { send, API_ENDPOINTS } from '@/util/ClientUtil';
+import { useMarket } from '@/context/MarketContext';
+import { MARKET } from '@/util/MarketUtil';
+import { searchStocks, fetchCompValue } from '@/util/StockApi';
+import { PENDING_BADGE, PENDING_LABEL } from '@/util/ValidationGuide';
 
-// ----------------------------------------------
-// 유틸리티: URL 빌더 (중복 제거)
-// ----------------------------------------------
-const buildUrl = (base, params) => {
-    const usp = new URLSearchParams();
-    Object.entries(params).forEach(([k, v]) => {
-        if (v !== undefined && v !== null) usp.append(k, String(v));
-    });
-    return `${base}?${usp.toString()}`;
-};
+// 국내 계산 제외 종목은 결과 메시지가 이 문구로 시작한다 (적정가 없음)
+const EXCLUDED_PREFIX = '계산 제외';
 
 const INITIAL_COMP_LIST = [];
 
 /**
- * 해외 기업 가치 계산
+ * 기업 가치 계산 — 종목 검색 (미국/국내, 상단 시장 토글)
  */
 const AbroadCompValue = () => {
+    const { market } = useMarket();
+    const isKr = market === MARKET.KR;
     const [isLoading, setIsLoading] = useState(false);
     const [compName, setCompName] = useState('');
     const [compNameData, setCompNameData] = useState(INITIAL_COMP_LIST);
@@ -43,19 +40,26 @@ const AbroadCompValue = () => {
     const inFlight = useRef({ search: false, calc: false });
     const latestSearchReqId = useRef(0);
 
+    // 시장을 바꾸면 이전 시장의 검색 결과를 비운다 (진행 중 검색 응답도 무시)
+    useEffect(() => {
+        latestSearchReqId.current += 1;
+        setCompNameData(INITIAL_COMP_LIST);
+        setIsLoading(false);
+    }, [market]);
+
     const resultCount = useMemo(() => (Array.isArray(compNameData) ? compNameData.length : 0), [compNameData]);
 
     const tableHead = useMemo(() => (
         <thead className="sticky top-0 z-10 bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
             <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold">심볼</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold">{isKr ? '종목코드' : '심볼'}</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold">기업명</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold">통화</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold">거래소</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold">시장</th>
             </tr>
         </thead>
-    ), []);
+    ), [isKr]);
 
     const EmptyState = ({ message }) => (
         <tr>
@@ -84,18 +88,11 @@ const AbroadCompValue = () => {
         const reqId = ++latestSearchReqId.current;
 
         try {
-            const q = compName.trim();
-            const sendUrl = buildUrl('/dart/abroad/company/search/symbol', { cn: q, symbol: q });
-            const { data, error } = await send(sendUrl, {}, 'GET');
+            const { list, error } = await searchStocks(compName.trim(), market);
 
             if (reqId !== latestSearchReqId.current) return;
 
-            if (!error && data && data.response) {
-                const list = Array.isArray(data.response) ? data.response : [];
-                setCompNameData(list);
-            } else {
-                setCompNameData([]);
-            }
+            setCompNameData(error ? [] : list);
         } catch (e) {
             if (reqId !== latestSearchReqId.current) return;
             setCompNameData([]);
@@ -103,7 +100,7 @@ const AbroadCompValue = () => {
             if (reqId === latestSearchReqId.current) setIsLoading(false);
             inFlight.current.search = false;
         }
-    }, [compName]);
+    }, [compName, market]);
 
     const compValueCal = useCallback(
         async (row) => {
@@ -123,11 +120,14 @@ const AbroadCompValue = () => {
 
             setIsLoading(true);
             try {
-                const sendUrl = API_ENDPOINTS.ABROAD_COMP_VALUE(symbol);
-                const { data, error } = await send(sendUrl, {}, 'GET');
+                const { data, error } = await fetchCompValue(symbol, market);
 
                 const hasValid = !error && data && data.response && Object.keys(data.response).length > 0;
-                if (hasValid) {
+                const excluded = hasValid && isKr && data.response.결과메시지?.startsWith(EXCLUDED_PREFIX);
+                if (excluded) {
+                    setCompValueData({});
+                    openAlert(`${row.name || symbol}: ${data.response.결과메시지}`);
+                } else if (hasValid) {
                     setCompValueData(data.response);
                     setShowPopup(true);
                 } else {
@@ -142,7 +142,7 @@ const AbroadCompValue = () => {
                 inFlight.current.calc = false;
             }
         },
-        [compNameData]
+        [compNameData, market, isKr]
     );
 
     const onKeyDown = useCallback(
@@ -161,7 +161,17 @@ const AbroadCompValue = () => {
             {/* <div className="px-2 py-8 md:px-4"> */}
             {/* 헤더 */}
 
-            <p className="mb-6 text-sm text-slate-600 dark:text-slate-300">심볼을 검색하고 행을 클릭하면 기업가치 계산 결과를 확인할 수 있습니다.</p>
+            <p className="mb-6 text-sm text-slate-600 dark:text-slate-300">
+                {isKr ? '종목명 또는 6자리 종목코드로 검색하고' : '심볼을 검색하고'} 행을 클릭하면 기업가치 계산 결과를 확인할 수 있습니다.
+            </p>
+
+            {/* 국내 결과는 6단계(국내 백테스트) 전까지 검증 전 */}
+            {isKr && (
+                <div className="mb-4 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
+                    <span className={`${PENDING_BADGE} mr-1.5`}>{PENDING_LABEL}</span>
+                    국내 결과는 미국과 같은 계산식·평가 기준을 국내 공시(OpenDart)·시세(KIS, 전 거래일 종가)에 적용한 값이며, 국내 데이터로 검증하기 전입니다. 국내 뉴스는 아직 제공하지 않습니다.
+                </div>
+            )}
 
             <Loading show={isLoading} />
 
@@ -174,9 +184,9 @@ const AbroadCompValue = () => {
                             value={compName}
                             onChange={(e) => setCompName(e.target.value)}
                             onKeyDown={onKeyDown}
-                            placeholder="심볼 또는 회사명으로 검색"
+                            placeholder={isKr ? '종목명 또는 종목코드로 검색 (예: 삼성전자, 005930)' : '심볼 또는 회사명으로 검색'}
                             className="flex-1 min-w-0 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                            aria-label="심볼/회사명 검색"
+                            aria-label={isKr ? '종목명/종목코드 검색' : '심볼/회사명 검색'}
                             disabled={isLoading}
                         />
                         <button

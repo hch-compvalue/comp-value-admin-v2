@@ -20,9 +20,57 @@ import SellModal from './components/SellModal';
 import TransactionModal from './components/TransactionModal';
 import TransactionDetailModal from './components/TransactionDetailModal';
 import PageTitle from '@/component/common/display/PageTitle';
-import { send, API_ENDPOINTS } from '@/util/ClientUtil';
+import { fetchCompValue } from '@/util/StockApi';
+import { useMarket } from '@/context/MarketContext';
+import { MARKET, fmtKrw } from '@/util/MarketUtil';
+
+// 국내 모드: 금액이 이미 원화 — 테이블 통화 KRW·환산 배율 1 (환율 없음)
+const KR_TABLE_CTX = { currency: 'KRW', fx: 1 };
+
+/**
+ * 국내 보유종목 엑셀 (원화, 환율 열 없음)
+ */
+function exportKrExcel(sortedRows, exportTime) {
+    const krw = (v) => Math.round(v || 0).toLocaleString('ko-KR');
+    let buySum = 0;
+    let curSum = 0;
+    const excelData = sortedRows.map((row) => {
+        const buyAmount = (row.buyPrice || 0) * (row.totalBuyAmount || 0);
+        const curAmount = (row.currentPrice || 0) * (row.totalBuyAmount || 0);
+        buySum += buyAmount;
+        curSum += curAmount;
+        return {
+            '매수일자': row.buyDate || '',
+            '종목코드': row.symbol || '',
+            '종목명': row.companyName || '',
+            '매수가(₩)': krw(row.buyPrice),
+            '수량': row.totalBuyAmount || 0,
+            '매수금액(₩)': krw(buyAmount),
+            '현재가(₩)': krw(row.currentPrice),
+            '평가금액(₩)': krw(curAmount),
+            '손익(₩)': krw(curAmount - buyAmount),
+            '손익률(%)': row.buyPrice ? (((row.currentPrice - row.buyPrice) / row.buyPrice) * 100).toFixed(2) : '0.00',
+        };
+    });
+    const summaryRow = {
+        '매수일자': '', '종목코드': '', '종목명': '전체 합계', '매수가(₩)': '', '수량': '',
+        '매수금액(₩)': krw(buySum), '현재가(₩)': '', '평가금액(₩)': krw(curSum), '손익(₩)': krw(curSum - buySum),
+        '손익률(%)': buySum > 0 ? (((curSum - buySum) / buySum) * 100).toFixed(2) : '0.00',
+    };
+    const worksheet = XLSX.utils.aoa_to_sheet([]);
+    XLSX.utils.sheet_add_aoa(worksheet, [['내보내기 시간:', exportTime], ['시장:', '국내주식 (원화)'], []], { origin: 'A1' });
+    XLSX.utils.sheet_add_json(worksheet, [...excelData, {}, summaryRow], { origin: 'A4' });
+    worksheet['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 20 }, { wch: 12 }, { wch: 8 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 10 }];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '거래내역(국내)');
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    XLSX.writeFile(workbook, `거래내역_국내_${dateStr}.xlsx`);
+}
 
 export default function TransactionOverview() {
+    const { market } = useMarket();
+    const isKr = market === MARKET.KR;
     const [alertConfig, setAlertConfig] = useState({ open: false, message: '', onConfirm: null, onAfterClose: null });
     const [sortConfig, setSortConfig] = useState({ column: null, direction: 'asc' });
     const [searchText, setSearchText] = useState('');
@@ -53,9 +101,10 @@ export default function TransactionOverview() {
         processSell,
         refetchTransactions,
         refreshSyncTarget,
-    } = useTransactions(openAlert);
+    } = useTransactions(openAlert, market);
 
-    const { fxRate, fxUpdatedAt, refreshFxRate } = useFxRate();
+    const { fxRate: usdKrwRate, fxUpdatedAt, refreshFxRate } = useFxRate({ enabled: !isKr });
+    const fxRate = isKr ? null : usdKrwRate;      // 국내는 환율을 쓰지 않는다
     const [showCompValueModal, setShowCompValueModal] = useState(false);
     const [compValueData, setCompValueData] = useState({});
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -102,10 +151,10 @@ export default function TransactionOverview() {
         setIsRefreshing(true);
         try {
             await mergePricesBySymbols(rows.map((r) => r.symbol));
-            await refreshFxRate();
+            if (!isKr) await refreshFxRate();
             setLastRefreshedAt(new Date());
         } catch (e) {
-            openAlert('현재가격/환율 갱신에 실패했습니다.');
+            openAlert(isKr ? '현재가격 갱신에 실패했습니다.' : '현재가격/환율 갱신에 실패했습니다.');
         } finally {
             setIsRefreshing(false);
         }
@@ -195,8 +244,7 @@ export default function TransactionOverview() {
         }
 
         try {
-            const url = API_ENDPOINTS.ABROAD_COMP_VALUE(symbol.trim());
-            const { data, error } = await send(url, {}, 'GET');
+            const { data, error } = await fetchCompValue(symbol.trim(), market);
 
             if (!error && data && data.response && Object.keys(data.response).length > 0) {
                 setCompValueData(data.response);
@@ -264,7 +312,7 @@ export default function TransactionOverview() {
         const result = await processSell(sellData, sellModalData.targetRows);
         if (result.success) {
             setSellModalData({ open: false, data: null, targetRows: [] });
-            openAlert(`매도가 완료되었습니다.\n실현손익: $ ${result.realizedPnl?.toFixed(2) || 0}`);
+            openAlert(`매도가 완료되었습니다.\n실현손익: ${isKr ? fmtKrw(result.realizedPnl || 0) : `$ ${result.realizedPnl?.toFixed(2) || 0}`}`);
         }
     };
 
@@ -296,6 +344,11 @@ export default function TransactionOverview() {
             const dateB = b.buyDate ? new Date(b.buyDate) : new Date(0);
             return dateA - dateB;
         });
+
+        if (isKr) {
+            exportKrExcel(sortedData, exportTime);
+            return;
+        }
 
         const excelData = sortedData.map((row) => {
             const buyPriceRate = row.buyExchangeRateAtTrade || fxRate;
@@ -406,6 +459,7 @@ export default function TransactionOverview() {
                 fx={fxRate}
                 fxUpdatedAt={fxUpdatedAt}
                 lastUpdated={lastUpdated}
+                isKr={isKr}
             />
 
             <div className="px-2 py-8 md:px-4">
@@ -426,13 +480,13 @@ export default function TransactionOverview() {
                     uniqueSymbols={uniqueSymbols}
                     totalRows={rows.length}
                     currency={currency}
-                    onCurrencyChange={setCurrency}
+                    onCurrencyChange={isKr ? null : setCurrency}
                     fxAvailable={fxRate > 0}
                 />
 
                 <HoldingsTable
                     displayRows={displayRows}
-                    ctx={{ currency, fx: fxRate, expandedSymbols, onToggleGroup: handleToggleGroup, getMemo }}
+                    ctx={{ ...(isKr ? KR_TABLE_CTX : { currency, fx: fxRate }), expandedSymbols, onToggleGroup: handleToggleGroup, getMemo }}
                     sortConfig={sortConfig}
                     onSort={handleSort}
                     onRowClick={handleRowClick}

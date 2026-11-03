@@ -12,6 +12,7 @@ import TransactionOverview from '@/pages/transaction/TransactionOverview'
 import AbroadCompValue from '@/pages/trade/AbroadCompValue'
 import RecommendProfileSettings from '@/pages/trade/RecommendProfileSettings'
 import SellRecordHistory from '@/pages/trade/SellRecordHistory'
+import KrSellRecordHistory from '@/pages/trade/KrSellRecordHistory'
 import InvestmentEvaluation from '@/pages/trade/InvestmentEvaluation'
 import DailyPicks from '@/pages/trade/DailyPicks'
 import EvaluationPerformance from '@/pages/trade/EvaluationPerformance'
@@ -34,6 +35,10 @@ import SubTabPage from '@/component/common/layout/SubTabPage'
 import LegacyRedirect from '@/component/common/layout/LegacyRedirect'
 import { STOCK_DISCOVER_PATH, STOCK_ANALYSIS_PATH, PORTFOLIO_PATH, SCHEDULE_MANAGEMENT_PATH, TRADE_DASHBOARD_PATH, MONITORING_PATH, SUB_TAB } from '@/config/menuPaths'
 
+import { MarketProvider } from '@/context/MarketContext';
+import MarketToggle from '@/component/common/market/MarketToggle';
+import UsOnlyPanel from '@/component/common/market/UsOnlyPanel';
+import MarketSwitch from '@/component/common/market/MarketSwitch';
 import { SECTIONS } from '@/component/layouts/common/SideBar001';
 import {
     Home as HomeIcon, List, BarChart3, Pencil, Telescope, Briefcase,
@@ -63,18 +68,20 @@ const routes = {
     "CompValue": { section: '기업분석(국내)', show: false, label: '기업분석', path: '/compvalue', element: <CompValue />, icon: BarChart3 },
     "CompValueCustom": { section: '기업분석(국내)', show: false, label: '기업분석(수동)', path: '/compvalue/custom', element: <CompValueCustom />, icon: Pencil },
 
-    /* 미국주식 — 발굴(매수후보·성과·프로파일 설정) / 분석(단건·일괄) / 포트폴리오(보유·매도) */
+    /* 주식 — 발굴(매수후보·성과·프로파일 설정, 미국/국내 토글) / 분석(단건 미국/국내 토글, 일괄은 미국만) / 포트폴리오(보유·매도, 미국/국내 토글) */
     "StockDiscover": {
         section: SECTIONS[1],
         label: '종목 발굴',
         path: STOCK_DISCOVER_PATH,
         icon: Telescope,
         element: (
-            <SubTabPage basePath={STOCK_DISCOVER_PATH} section={SECTIONS[1]} label='종목 발굴' tabs={[
-                { key: SUB_TAB.DAILY_PICKS, label: '오늘의 매수후보', element: <DailyPicks /> },
-                { key: SUB_TAB.PERFORMANCE, label: '성과 추적', element: <EvaluationPerformance /> },
-                { key: SUB_TAB.PROFILE_SETTINGS, label: '프로파일 설정', element: <RecommendProfileSettings />, accessRoles: ['ROLE_SUPER_ADMIN'] },
-            ]} />
+            <MarketProvider storageKey="discover">
+                <SubTabPage basePath={STOCK_DISCOVER_PATH} section={SECTIONS[1]} label='종목 발굴' toolbar={<MarketToggle />} tabs={[
+                    { key: SUB_TAB.DAILY_PICKS, label: '오늘의 매수후보', element: <DailyPicks /> },
+                    { key: SUB_TAB.PERFORMANCE, label: '성과 추적', element: <EvaluationPerformance /> },
+                    { key: SUB_TAB.PROFILE_SETTINGS, label: '프로파일 설정', element: <RecommendProfileSettings />, accessRoles: ['ROLE_SUPER_ADMIN'] },
+                ]} />
+            </MarketProvider>
         ),
     },
     "StockAnalysis": {
@@ -83,10 +90,16 @@ const routes = {
         path: STOCK_ANALYSIS_PATH,
         icon: BarChart3,
         element: (
-            <SubTabPage basePath={STOCK_ANALYSIS_PATH} section={SECTIONS[1]} label='종목 분석' tabs={[
-                { key: SUB_TAB.SEARCH, label: '종목 검색', element: <AbroadCompValue /> },
-                { key: SUB_TAB.EVALUATE, label: '일괄 평가', element: <InvestmentEvaluation /> },
-            ]} />
+            <MarketProvider storageKey="analysis">
+                <SubTabPage basePath={STOCK_ANALYSIS_PATH} section={SECTIONS[1]} label='종목 분석' toolbar={<MarketToggle />} tabs={[
+                    { key: SUB_TAB.SEARCH, label: '종목 검색', element: <AbroadCompValue /> },
+                    { key: SUB_TAB.EVALUATE, label: '일괄 평가', element: (
+                        <UsOnlyPanel krMessage="국내 종목 일괄 평가는 준비 중입니다. 국내 전 종목은 매일 평일 17:30 자동 평가되어 종목 발굴 > 오늘의 매수후보(국내)에서 볼 수 있습니다.">
+                            <InvestmentEvaluation />
+                        </UsOnlyPanel>
+                    ) },
+                ]} />
+            </MarketProvider>
         ),
     },
     "Portfolio": {
@@ -95,10 +108,12 @@ const routes = {
         path: PORTFOLIO_PATH,
         icon: Briefcase,
         element: (
-            <SubTabPage basePath={PORTFOLIO_PATH} section={SECTIONS[1]} label='포트폴리오' tabs={[
-                { key: SUB_TAB.HOLDINGS, label: '보유종목', element: <TransactionOverview /> },
-                { key: SUB_TAB.SELL_RECORD, label: '매도기록', element: <SellRecordHistory /> },
-            ]} />
+            <MarketProvider storageKey="portfolio">
+                <SubTabPage basePath={PORTFOLIO_PATH} section={SECTIONS[1]} label='포트폴리오' toolbar={<MarketToggle />} tabs={[
+                    { key: SUB_TAB.HOLDINGS, label: '보유종목', element: <TransactionOverview /> },
+                    { key: SUB_TAB.SELL_RECORD, label: '매도기록', element: <MarketSwitch us={<SellRecordHistory />} kr={<KrSellRecordHistory />} /> },
+                ]} />
+            </MarketProvider>
         ),
     },
 

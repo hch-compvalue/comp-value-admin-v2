@@ -154,7 +154,7 @@ export async function fetchFxRate() {
 // 티커 기준 현재가 조회 (백단 연동 지점)
 // - 실제 구현 시 서버 API 호출로 교체하세요.
 // - 반환 형식: [{ symbol: 'AAPL', currentPrice: 123.45, updatedAt: 'iso-string' }, ...]
-export async function fetchCurrentPricesBySymbols(symbols = []) {
+export async function fetchCurrentPricesBySymbols(symbols = [], market = 'US') {
     await delay(120);
 
     // MOCK: 심볼별 임의 가격 생성 (실서버에서는 제거)
@@ -168,7 +168,7 @@ export async function fetchCurrentPricesBySymbols(symbols = []) {
     //     }));
 
     const sendUrl = `/dart/tranrecord/price`;
-    const { data, error } = await send(sendUrl, { "symbols": symbols }, "POST");
+    const { data, error } = await send(sendUrl, { "symbols": symbols, market }, "POST");
 
     if (error == null && data && data.success) {
         // 백엔드의 response 배열만 반환
@@ -201,9 +201,9 @@ export async function saveSymbolMemo(symbol, memo) {
 }
 
 // 동기화 목표매도가 재계산 (캐시 만료 종목) → { symbol, targetPrice, targetPriceCached }
-export async function syncTargetPrice(symbol) {
+export async function syncTargetPrice(symbol, market = 'US') {
     const sendUrl = `/dart/tranrecord/sync-target`;
-    const { data, error } = await send(sendUrl, { symbol }, "POST");
+    const { data, error } = await send(sendUrl, { symbol, market }, "POST");
 
     if (error == null && data && data.success) {
         return data.response;

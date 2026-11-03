@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { send } from '@/util/ClientUtil';
+import Switch from '@/component/common/button/Switch';
 import { LEVEL, API_STATUS, EXTERNAL_API_DESC, API_SLOW_MS, API_VERY_SLOW_MS, apiResponse } from '../monitoringModel';
 import { Panel, StatusDot } from './MonitoringUi';
 import { LEVEL_TEXT } from './levelStyles';
@@ -95,24 +96,5 @@ export default function ExternalApiList({ id, apis = [] }) {
                 </ul>
             )}
         </Panel>
-    );
-}
-
-function Switch({ checked, disabled, label, onChange }) {
-    return (
-        <button
-            type="button"
-            role="switch"
-            aria-checked={checked}
-            aria-label={label}
-            title={label}
-            disabled={disabled}
-            onClick={onChange}
-            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-                checked ? 'bg-brand' : 'bg-slate-300 dark:bg-slate-600'
-            }`}
-        >
-            <span aria-hidden="true" className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0.5'}`} />
-        </button>
     );
 }

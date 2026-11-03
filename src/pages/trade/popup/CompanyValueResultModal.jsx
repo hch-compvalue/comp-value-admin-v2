@@ -7,7 +7,9 @@ import InvestmentDetailModal, { FullDetailModal } from './InvestmentDetailModal'
 import { hasPriceRange } from './priceRangeUtil';
 import PriceGuideBar from './PriceGuideBar';
 import { SELL_TARGET_GUIDE } from '@/util/SellTargetGuide';
-import { send } from '@/util/ClientUtil';
+import { fetchEvaluation } from '@/util/StockApi';
+import { useMarket, usePriceFormatter } from '@/context/MarketContext';
+import { MARKET } from '@/util/MarketUtil';
 import { SignalDot } from '@/util/SignalStyleUtil';
 import { AlertTriangle } from 'lucide-react';
 
@@ -22,6 +24,7 @@ const SIGNAL_BANNER_STYLE = {
  * 기업가치 계산 결과 모달 컴포넌트
  */
 const CompanyValueResultModal = ({ isOpen, onClose, data, fromInvestmentDetail = false }) => {
+    const { market } = useMarket();
     const popupRef = useRef(null);
     const [toast, setToast] = useState(null);
     const [overlays, setOverlays] = useState({
@@ -70,9 +73,9 @@ const CompanyValueResultModal = ({ isOpen, onClose, data, fromInvestmentDetail =
         let cancelled = false;
         (async () => {
             try {
-                const { data: responseData, error } = await send('/dart/main/evaluate/stocks', { symbols: [sym] }, 'POST');
-                if (!cancelled && !error && responseData?.response?.length > 0) {
-                    setInvestmentData(responseData.response[0]);
+                const { evaluation, error } = await fetchEvaluation(sym, market);
+                if (!cancelled && !error && evaluation) {
+                    setInvestmentData(evaluation);
                 }
             } catch {
                 // 자동 조회 실패는 무시
@@ -80,7 +83,7 @@ const CompanyValueResultModal = ({ isOpen, onClose, data, fromInvestmentDetail =
         })();
 
         return () => { cancelled = true; };
-    }, [isOpen, data, investmentData]);
+    }, [isOpen, data, investmentData, market]);
 
     // ESC key handler
     useEffect(() => {
@@ -147,20 +150,20 @@ const CompanyValueResultModal = ({ isOpen, onClose, data, fromInvestmentDetail =
 
         setInvestmentLoading(true);
         try {
-            const { data: responseData, error } = await send('/dart/main/evaluate/stocks', { symbols: [symbol] }, 'POST');
+            const { evaluation, message, error } = await fetchEvaluation(symbol, market);
 
-            if (!error && responseData && responseData.response && responseData.response.length > 0) {
-                setInvestmentData(responseData.response[0]);
+            if (!error && evaluation) {
+                setInvestmentData(evaluation);
                 setOverlays(prev => ({ ...prev, investmentDetail: true }));
             } else {
-                setToast('투자 판단 데이터를 불러올 수 없습니다.');
+                setToast(market === MARKET.KR && message?.startsWith('계산 제외') ? message : '투자 판단 데이터를 불러올 수 없습니다.');
             }
         } catch {
             setToast('투자 판단 데이터 조회 중 오류가 발생했습니다.');
         } finally {
             setInvestmentLoading(false);
         }
-    }, [investmentLoading, investmentData]);
+    }, [investmentLoading, investmentData, market]);
 
     // 투자 판단 전체 상세 모달 열기
     const handleOpenInvestmentFullDetail = useCallback((detailData) => {
@@ -498,6 +501,7 @@ const RecommendationBanner = ({ data, investmentData }) => {
  * 하이라이트 카드들
  */
 const HighlightCards = ({ data, investmentData }) => {
+    const formatUSD = usePriceFormatter(formatUsd);
     const { price, target, calculatedTarget, purchasePrice, sellTarget, stopLossPrice, upside } = usePriceMetrics(data);
 
     const priceNum = toNumber(price);
@@ -640,6 +644,7 @@ const HighlightCards = ({ data, investmentData }) => {
  * 고평가 경고 배너
  */
 const OvervaluationBanner = ({ data }) => {
+    const formatUSD = usePriceFormatter(formatUsd);
     const { price, target } = usePriceMetrics(data);
     const current = toNumber(price);
     const fair = toNumber(target);
@@ -652,7 +657,7 @@ const OvervaluationBanner = ({ data }) => {
         <div className="mt-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-800 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400" aria-hidden="true" />
             <div className="text-sm text-orange-800 dark:text-orange-200">
-                현재가(<span className="font-semibold">${formatNumber(current, 2)}</span>)가 적정가(<span className="font-semibold">${formatNumber(fair, 2)}</span>)보다 <span className="font-bold text-orange-600 dark:text-orange-300">{overPct}%</span> 높음 — <span className="font-bold">고평가 주의</span>
+                현재가(<span className="font-semibold">{formatUSD(current)}</span>)가 적정가(<span className="font-semibold">{formatUSD(fair)}</span>)보다 <span className="font-bold text-orange-600 dark:text-orange-300">{overPct}%</span> 높음 — <span className="font-bold">고평가 주의</span>
             </div>
         </div>
     );
@@ -815,6 +820,7 @@ const ActionButtons = ({ data, onCopy, onClose, onOpenChart, onOpenInvestmentDet
  * 해석 가이드 오버레이
  */
 const GuideOverlay = ({ onClose, data }) => {
+    const { market } = useMarket();
     const metrics = useCompanyMetrics(data);
     const 매출기반평가 = metrics.매출기반평가;
 
@@ -905,7 +911,7 @@ const GuideOverlay = ({ onClose, data }) => {
                                 <li><span className="font-semibold">가치 S/A/B + 타이밍 미흡(대기/하락/관망)</span> → <span className="inline-flex items-center gap-1.5"><SignalDot signal="관심목록" />관심목록</span></li>
                                 <li><span className="font-semibold">가치 C/D/F</span> → <span className="inline-flex items-center gap-1.5"><SignalDot signal="관망" />관망</span></li>
                             </ul>
-                            <div>초소형주(&lt;$300M)·극단 괴리(±200%)는 매수 후보에서 관심목록으로 강등, 채권/이상치는 관망</div>
+                            <div>초소형주(&lt;{market === MARKET.KR ? '시총 1,000억원' : '$300M'})·극단 괴리(±200%)는 매수 후보에서 관심목록으로 강등, 채권/이상치는 관망</div>
                         </div>
                     </div>
 
@@ -1274,7 +1280,8 @@ const formatNumber = (v, digits = 2) => {
     }
 };
 
-const formatUSD = (v, digits = 2) => (v == null ? '-' : `$${formatNumber(v, digits)}`);
+// 미국 가격 표시 (국내는 usePriceFormatter 가 원화로 바꾼다)
+const formatUsd = (v, digits = 2) => (v == null ? '-' : `$${formatNumber(v, digits)}`);
 
 const formatPercent = (ratio, digits = 1) => {
     const n = toNumber(ratio);

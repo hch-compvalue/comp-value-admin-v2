@@ -5,6 +5,8 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 import { fetchStockPriceVolume } from '@/util/ChartApi';
+import { useMarket, usePriceFormatter } from '@/context/MarketContext';
+import { MARKET } from '@/util/MarketUtil';
 import {
     calcSMA, calcEMA, calcBollingerBands, calcRSI, calcMACD, calcStochastic, getMaxLookback, minBarsForLine, INDICATOR_LOOKBACK,
 } from '@/util/technicalIndicators';
@@ -115,7 +117,13 @@ const tooltipStyle = {
 /**
  * 주식 가격 및 거래량 차트 모달
  */
+// 미국 가격 표시 (기존 그대로)
+const usdFixed2 = (v) => `$${v.toFixed(2)}`;
+
 const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 }) => {
+    const { market } = useMarket();
+    const isKr = market === MARKET.KR;
+    const fmtPx = usePriceFormatter(usdFixed2);
 
     const [rawData, setRawData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -165,7 +173,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
         const from = fetchFromDate(fetchDays);
 
         try {
-            const result = await fetchStockPriceVolume(symbol, from, to);
+            const result = await fetchStockPriceVolume(symbol, from, to, market);
 
             if (result.error) {
                 setError(result.error);
@@ -432,9 +440,9 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                         <YAxis
                                             tick={{ fontSize: 11, fill: SLATE[500] }}
                                             domain={priceDomain(zoomedData, overlayKeys)}
-                                            tickFormatter={(value) => `$${value.toFixed(value < 10 ? 2 : 0)}`}
+                                            tickFormatter={(value) => (isKr ? Math.round(value).toLocaleString('ko-KR') : `$${value.toFixed(value < 10 ? 2 : 0)}`)}
                                         />
-                                        <Tooltip content={<OhlcTooltip labelFmt={labelFmt} prefix="$" extraRows={overlayKeys.map((k) => ({ key: k, label: OVERLAY_LABELS[k] }))} />} />
+                                        <Tooltip content={<OhlcTooltip labelFmt={labelFmt} prefix="$" formatValue={isKr ? fmtPx : undefined} extraRows={overlayKeys.map((k) => ({ key: k, label: OVERLAY_LABELS[k] }))} />} />
 
                                         {/* 캔들 / 선(고가·저가 점선 + 종가) — Recharts 2 는 Fragment 안 요소를 못 찾으므로 개별 조건 렌더링 */}
                                         {isCandle && <Bar dataKey={candleRange} shape={<CandleShape />} isAnimationActive={false} />}
@@ -647,15 +655,15 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                         최근 거래일 ({new Date(latestData.date).toLocaleDateString('ko-KR')})
                                     </h3>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                                        <DataItem label="시가" value={`$${latestData.open.toFixed(2)}`} />
-                                        <DataItem label="고가" value={`$${latestData.high.toFixed(2)}`} />
-                                        <DataItem label="저가" value={`$${latestData.low.toFixed(2)}`} />
-                                        <DataItem label="종가" value={`$${latestData.close.toFixed(2)}`} />
+                                        <DataItem label="시가" value={fmtPx(latestData.open)} />
+                                        <DataItem label="고가" value={fmtPx(latestData.high)} />
+                                        <DataItem label="저가" value={fmtPx(latestData.low)} />
+                                        <DataItem label="종가" value={fmtPx(latestData.close)} />
                                         <DataItem label="거래량" value={latestData.volume.toLocaleString()} />
-                                        <DataItem label="VWAP" value={`$${latestData.vwap.toFixed(2)}`} />
+                                        <DataItem label="VWAP" value={fmtPx(latestData.vwap)} />
                                         <DataItem
                                             label="변동"
-                                            value={`${latestData.change >= 0 ? '+' : ''}${latestData.change.toFixed(2)}`}
+                                            value={`${latestData.change >= 0 ? '+' : ''}${isKr ? Math.round(latestData.change).toLocaleString('ko-KR') : latestData.change.toFixed(2)}`}
                                             valueClassName={changeColorCls(latestData.change)}
                                         />
                                         <DataItem

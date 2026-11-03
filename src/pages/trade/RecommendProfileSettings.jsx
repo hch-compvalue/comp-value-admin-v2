@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useMarket } from '@/context/MarketContext';
+import { MARKET } from '@/util/MarketUtil';
 import { useNavigate } from 'react-router-dom';
 import { send } from '@/util/ClientUtil';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
@@ -20,6 +22,7 @@ const RecommendProfileSettings = () => {
     const [alertConfig, setAlertConfig] = useState({ open: false, message: '', onConfirm: null });
     const [showProfileModal, setShowProfileModal] = useState(false);
     const navigate = useNavigate();
+    const { market } = useMarket();
 
     // 필터 옵션 조회 (거래소 등 - 프로파일 폼용)
     const { options: filterOptions, loading: filterOptionsLoading } = useFilterOptions();
@@ -38,7 +41,7 @@ const RecommendProfileSettings = () => {
     const fetchProfiles = useCallback(async () => {
         setIsLoading(true);
         try {
-            const { data, error } = await send('/dart/recommend/profile', {}, 'GET');
+            const { data, error } = await send(`/dart/recommend/profile?market=${market}`, {}, 'GET');
             if (!error && Array.isArray(data?.response)) {
                 setProfiles(data.response);
             } else {
@@ -48,7 +51,7 @@ const RecommendProfileSettings = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [openAlert]);
+    }, [openAlert, market]);
 
     useEffect(() => { fetchProfiles(); }, [fetchProfiles]);
 
@@ -63,7 +66,7 @@ const RecommendProfileSettings = () => {
             <PageTitle />
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <p className="text-sm text-slate-600 dark:text-slate-300">
-                    추천 스케줄이 <strong>활성 프로파일</strong> 조건으로 종목을 뽑고, 이어서 전수 평가합니다.
+                    {market === MARKET.KR ? '국내' : '미국'} 추천 스케줄이 <strong>활성 프로파일</strong> 조건으로 종목을 뽑고, 이어서 전수 평가합니다.
                     결과는 <strong>오늘의 매수후보</strong> 탭에서 프로파일별로 볼 수 있습니다.
                 </p>
                 <div className="flex items-center gap-2 shrink-0">

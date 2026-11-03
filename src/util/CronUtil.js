@@ -70,6 +70,14 @@ export const buildSimpleCron = ({ hour, minute, days }) => {
     return `0 ${minute} ${hour} * * ${dayField}`;
 };
 
+/** 요일 번호 배열 → "매일" / "평일" / "월·수·금" */
+export const describeDays = (days) => {
+    const set = new Set(days);
+    if (set.size === ALL_DAYS.length) return '매일';
+    if (set.size === BUSINESS_DAYS.length && BUSINESS_DAYS.every((d) => set.has(d))) return '평일';
+    return WEEKDAYS.filter((d) => set.has(d.value)).map((d) => d.label).join('·');
+};
+
 /**
  * 사람이 읽는 설명 (예: "매일 10:00", "평일 09:30", "월·수·금 14:00")
  */
@@ -77,12 +85,7 @@ export const describeCron = (cron) => {
     const parsed = parseSimpleCron(cron);
     if (!parsed) return `직접 설정 (${cron})`;
     const time = `${String(parsed.hour).padStart(2, '0')}:${String(parsed.minute).padStart(2, '0')}`;
-    const set = new Set(parsed.days);
-    let dayText;
-    if (set.size === ALL_DAYS.length) dayText = '매일';
-    else if (set.size === BUSINESS_DAYS.length && BUSINESS_DAYS.every((d) => set.has(d))) dayText = '평일';
-    else dayText = WEEKDAYS.filter((d) => set.has(d.value)).map((d) => d.label).join('·');
-    return `${dayText} ${time}`;
+    return `${describeDays(parsed.days)} ${time}`;
 };
 
 /** 야간(PC 꺼짐) 시간대 여부 */

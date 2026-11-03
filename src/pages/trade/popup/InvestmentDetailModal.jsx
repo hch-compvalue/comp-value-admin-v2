@@ -11,7 +11,14 @@ import PriceGuideBar from '@/pages/trade/popup/PriceGuideBar';
 import { SELL_TARGET_GUIDE } from '@/util/SellTargetGuide';
 import { RANGE_TITLE, hasPriceRange, fmtProb } from '@/pages/trade/popup/priceRangeUtil';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
-import { send, API_ENDPOINTS } from '@/util/ClientUtil';
+import { send } from '@/util/ClientUtil';
+import { fetchCompValue } from '@/util/StockApi';
+import { useMarket } from '@/context/MarketContext';
+import { MARKET, fmtPrice } from '@/util/MarketUtil';
+
+// 국내면 원화 정수, 미국이면 기존 표시(usText) 그대로
+const money = (isKr, v, usText) => (isKr ? fmtPrice(v, MARKET.KR) : usText);
+const useIsKr = () => useMarket().market === MARKET.KR;
 
 // 숫자를 천 단위 콤마 포맷으로 변환
 const formatNumberWithComma = (value) => {
@@ -278,6 +285,7 @@ const getSignalDotColor = (color) => {
  * 진입 타이밍 분석 섹션
  */
 const EntryTimingSection = ({ entryTiming, currentPrice, stopLoss }) => {
+    const isKr = useIsKr();
     const [showDetail, setShowDetail] = useState(false);
 
     if (!entryTiming) return null;
@@ -333,11 +341,11 @@ const EntryTimingSection = ({ entryTiming, currentPrice, stopLoss }) => {
                     <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border dark:border-slate-600">
                         <div className="text-xs">
                             <span className="text-slate-500 dark:text-slate-400">SMA5: </span>
-                            <span className="font-medium dark:text-slate-200">${entryTiming.sma5?.toFixed(2)}</span>
+                            <span className="font-medium dark:text-slate-200">{money(isKr, entryTiming.sma5, `$${entryTiming.sma5?.toFixed(2)}`)}</span>
                         </div>
                         <div className="text-xs">
                             <span className="text-slate-500 dark:text-slate-400">SMA20: </span>
-                            <span className="font-medium dark:text-slate-200">${entryTiming.sma20?.toFixed(2)}</span>
+                            <span className="font-medium dark:text-slate-200">{money(isKr, entryTiming.sma20, `$${entryTiming.sma20?.toFixed(2)}`)}</span>
                         </div>
                         <div className="text-xs">
                             <span className="text-slate-500 dark:text-slate-400">MACD: </span>
@@ -363,19 +371,19 @@ const EntryTimingSection = ({ entryTiming, currentPrice, stopLoss }) => {
                         </div>
                         <div className="text-xs">
                             <span className="text-slate-500 dark:text-slate-400">ATR: </span>
-                            <span className="font-medium dark:text-slate-200">${entryTiming.atr?.toFixed(2)}</span>
+                            <span className="font-medium dark:text-slate-200">{money(isKr, entryTiming.atr, `$${entryTiming.atr?.toFixed(2)}`)}</span>
                         </div>
                         <div className="text-xs">
                             <span className="text-slate-500 dark:text-slate-400">볼린저 상단: </span>
-                            <span className="font-medium dark:text-slate-200">${entryTiming.bollingerUpper?.toFixed(2)}</span>
+                            <span className="font-medium dark:text-slate-200">{money(isKr, entryTiming.bollingerUpper, `$${entryTiming.bollingerUpper?.toFixed(2)}`)}</span>
                         </div>
                         <div className="text-xs">
                             <span className="text-slate-500 dark:text-slate-400">볼린저 중단: </span>
-                            <span className="font-medium dark:text-slate-200">${entryTiming.bollingerMiddle?.toFixed(2)}</span>
+                            <span className="font-medium dark:text-slate-200">{money(isKr, entryTiming.bollingerMiddle, `$${entryTiming.bollingerMiddle?.toFixed(2)}`)}</span>
                         </div>
                         <div className="text-xs">
                             <span className="text-slate-500 dark:text-slate-400">볼린저 하단: </span>
-                            <span className="font-medium dark:text-slate-200">${entryTiming.bollingerLower?.toFixed(2)}</span>
+                            <span className="font-medium dark:text-slate-200">{money(isKr, entryTiming.bollingerLower, `$${entryTiming.bollingerLower?.toFixed(2)}`)}</span>
                         </div>
                     </div>
                 )}
@@ -388,6 +396,7 @@ const EntryTimingSection = ({ entryTiming, currentPrice, stopLoss }) => {
  * 트레이딩 가이드 섹션
  */
 const TradingGuideSection = ({ data }) => {
+    const isKr = useIsKr();
     const currentPrice = parseFloat(data.currentPrice);
 
     const getVal = (...keys) => {
@@ -413,7 +422,7 @@ const TradingGuideSection = ({ data }) => {
     // 유효한 가격이 하나도 없으면 표시하지 않음
     if (isNaN(currentPrice) || (isNaN(stopLoss) && isNaN(purchasePrice) && isNaN(sellTarget))) return null;
 
-    const formatUSD = (v) => isNaN(v) ? '-' : `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const formatUSD = (v) => isNaN(v) ? '-' : money(isKr, v, `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
     const pctDiff = (v) => {
         if (isNaN(v) || isNaN(currentPrice) || currentPrice === 0) return null;
         return ((v - currentPrice) / currentPrice * 100).toFixed(1);
@@ -612,6 +621,8 @@ const StockNewsSection = ({ symbol }) => {
  * 투자 판단 상세 모달 컴포넌트
  */
 const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex = 50, fromCompanyValue = false }) => {
+    const { market } = useMarket();
+    const isKr = market === MARKET.KR;
 
     const modalRef = useRef(null);
     const [companyInfoModal, setCompanyInfoModal] = useState({ open: false, symbol: null });
@@ -672,8 +683,7 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
 
         setCompanyValueLoading(true);
         try {
-            const sendUrl = API_ENDPOINTS.ABROAD_COMP_VALUE(symbol);
-            const { data: responseData, error } = await send(sendUrl, {}, 'GET');
+            const { data: responseData, error } = await fetchCompValue(symbol, market);
 
             const hasValid = !error && responseData && responseData.response && Object.keys(responseData.response).length > 0;
             if (hasValid) {
@@ -788,22 +798,22 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                         />
                         <HighlightCard
                             label="현재가"
-                            value={data.currentPrice ? `$${data.currentPrice}` : '-'}
+                            value={data.currentPrice ? money(isKr, data.currentPrice, `$${data.currentPrice}`) : '-'}
                             onClick={data.currentPrice ? handleOpenChart : null}
                             clickable={!!data.currentPrice}
                         />
                         <HighlightCard
                             label="적정가치"
-                            value={data.fairValue ? `$${data.fairValue}` : '-'}
+                            value={data.fairValue ? money(isKr, data.fairValue, `$${data.fairValue}`) : '-'}
                             subValue={(() => {
                                 const parts = [];
                                 if (data.resultDetail?.매수적정가 || data['매수적정가']) {
                                     const bp = data.resultDetail?.매수적정가 || data['매수적정가'];
-                                    if (bp) parts.push(`매수: $${bp}`);
+                                    if (bp) parts.push(`매수: ${money(isKr, bp, `$${bp}`)}`);
                                 }
                                 if (data.resultDetail?.목표매도가 || data['목표매도가']) {
                                     const st = data.resultDetail?.목표매도가 || data['목표매도가'];
-                                    if (st) parts.push(`매도: $${st}`);
+                                    if (st) parts.push(`매도: ${money(isKr, st, `$${st}`)}`);
                                 }
                                 if (parts.length > 0) return parts.join(' / ');
                                 const calculated = data.calFairValue;
@@ -811,7 +821,7 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                                     const calcNum = parseFloat(calculated);
                                     const fairNum = parseFloat(data.fairValue);
                                     if (!isNaN(calcNum) && (isNaN(fairNum) || Math.abs(calcNum - fairNum) > 0.01)) {
-                                        return `$${calculated}`;
+                                        return money(isKr, calculated, `$${calculated}`);
                                     }
                                 }
                                 return null;
@@ -830,7 +840,7 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                                 <div className="mb-4 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-800 flex items-start gap-2">
                                     <AlertTriangle className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400" aria-hidden="true" />
                                     <div className="text-sm text-orange-800 dark:text-orange-200 break-keep">
-                                        현재가(<span className="font-semibold">${data.currentPrice}</span>)가 적정가(<span className="font-semibold">${data.fairValue}</span>)보다 <span className="font-bold text-orange-600 dark:text-orange-300">{overPct}%</span> 높음 — <span className="font-bold">고평가 주의</span>
+                                        현재가(<span className="font-semibold">{money(isKr, data.currentPrice, `$${data.currentPrice}`)}</span>)가 적정가(<span className="font-semibold">{money(isKr, data.fairValue, `$${data.fairValue}`)}</span>)보다 <span className="font-bold text-orange-600 dark:text-orange-300">{overPct}%</span> 높음 — <span className="font-bold">고평가 주의</span>
                                     </div>
                                 </div>
                             );
@@ -930,12 +940,12 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                     {/* 트레이딩 가이드 */}
                     <TradingGuideSection data={data} />
 
-                    {/* 최근 뉴스 */}
-                    <StockNewsSection symbol={data.symbol} />
+                    {/* 최근 뉴스 (국내는 미연동 — 숨김) */}
+                    {!isKr && <StockNewsSection symbol={data.symbol} />}
 
                     {/* 가격 정보 */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                        <InfoCard label="가격차이" value={data.priceDifference ? `$${data.priceDifference}` : '-'} />
+                        <InfoCard label="가격차이" value={data.priceDifference ? money(isKr, data.priceDifference, `$${data.priceDifference}`) : '-'} />
                         <InfoCard label="가격차이율" value={data.priceGapPercent || '-'} />
                         <InfoCard label="PER" value={data.per ? parseFloat(data.per).toFixed(2) : '-'} />
                         <InfoCard label="PEG" value={data.peg || '-'} />

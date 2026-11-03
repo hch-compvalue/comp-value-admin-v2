@@ -10,6 +10,8 @@ export const DB_BACKUP_SCHEDULE = {
     label: 'DB 백업',
     description: 'PostgreSQL 전체 덤프 → GPG 암호화 → GitLab 저장소에 보관 (최근 3개 유지)',
     scheduleText: '매일 15:00',
+    startHour: 15,      // 타임라인 표시용 (scheduleText 와 같은 시각)
+    startMinute: 0,
     managedAt: 'gos 저장소 ncloud/backend/db/backup-cronjob.yml (수정 후 직접 push)',
     note: 'PC가 그 시각에 꺼져 있었으면 다음에 켜질 때 1회 실행됩니다.',
 };

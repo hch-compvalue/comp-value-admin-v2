@@ -6,11 +6,15 @@
  */
 import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { RANGE_TITLE, RANGE_SOURCE_NOTE, PCT, hasPriceRange, fmtProb, fmtUsd2 } from './priceRangeUtil';
+import { RANGE_TITLE, RANGE_SOURCE_NOTE, PCT, hasPriceRange, fmtProb, fmtUsd2 as fmtUsd } from './priceRangeUtil';
+import { useMarket, usePriceFormatter } from '@/context/MarketContext';
+import { MARKET } from '@/util/MarketUtil';
 
 
 /** 진입 타이밍 — 한 달 예상 움직임 (평이한 표현, 확률·용어는 '자세히 보기' 안) */
 export const PriceRangeBlock = ({ entryTiming: et, currentPrice, stopLoss }) => {
+    const fmtUsd2 = usePriceFormatter(fmtUsd);
+    const isKr = useMarket().market === MARKET.KR;
     const [showDetail, setShowDetail] = useState(false);
     if (!hasPriceRange(et)) return null;
     const price = isNaN(currentPrice) ? (et.rangeLow + et.rangeHigh) / 2 : currentPrice;
@@ -72,7 +76,7 @@ export const PriceRangeBlock = ({ entryTiming: et, currentPrice, stopLoss }) => 
                             </table>
                         </>
                     )}
-                    <div>{RANGE_SOURCE_NOTE}. 지지·저항선은 검증에서 근거가 없어 표시하지 않습니다.</div>
+                    <div>{RANGE_SOURCE_NOTE}{isKr ? '(국내 종목은 아직 검증 전)' : ''}. 지지·저항선은 검증에서 근거가 없어 표시하지 않습니다.</div>
                 </div>
             )}
         </div>

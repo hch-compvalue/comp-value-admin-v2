@@ -31,8 +31,9 @@ const saveTab = (basePath, key) => {
  * @param {string} label - 메뉴명 (브레드크럼 상위)
  * @param {{key: string, label: string, element: JSX.Element, accessRoles?: string[]}[]} tabs
  *        - 하위 탭 목록 (accessRoles가 있으면 해당 권한 보유자에게만 탭 노출)
+ * @param {JSX.Element} [toolbar] - 탭 줄 오른쪽에 둘 공통 도구 (예: 시장 토글 — 모든 하위 탭에 적용)
  */
-export default function SubTabPage({ basePath, section, label, tabs: allTabs }) {
+export default function SubTabPage({ basePath, section, label, tabs: allTabs, toolbar }) {
     const location = useLocation();
     const { roles: userRoles } = useAuth();
     const tabs = useMemo(() => allTabs.filter((t) => !t.accessRoles?.length || hasAnyRole(userRoles, t.accessRoles)), [allTabs, userRoles]);
@@ -70,7 +71,8 @@ export default function SubTabPage({ basePath, section, label, tabs: allTabs }) 
 
     return (
         <>
-            <div role="tablist" className="mb-4 flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-slate-200 dark:border-slate-700">
+            <div className="mb-4 flex flex-wrap-reverse items-end justify-between gap-2 border-b border-slate-200 dark:border-slate-700">
+            <div role="tablist" className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {tabs.map((tab) => {
                     const isActive = tab.key === activeKey;
                     return (
@@ -90,6 +92,8 @@ export default function SubTabPage({ basePath, section, label, tabs: allTabs }) 
                         </button>
                     );
                 })}
+            </div>
+            {toolbar && <div className="pb-2">{toolbar}</div>}
             </div>
 
             {tabs.map((tab) => {

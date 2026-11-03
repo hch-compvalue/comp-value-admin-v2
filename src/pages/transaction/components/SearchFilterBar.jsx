@@ -54,7 +54,8 @@ export function SearchFilterBar({ searchText, onSearchChange, filterMode, onFilt
                     <span className="mx-2 text-slate-300 dark:text-slate-600">|</span>
                     매수 <span className="font-semibold text-slate-800 dark:text-slate-100">{totalRows}</span>건
                 </span>
-                <CurrencyToggle value={currency} onChange={onCurrencyChange} fxAvailable={fxAvailable} />
+                {/* 국내(원화 전용)는 통화 토글 없음 — onCurrencyChange 를 넘기지 않음 */}
+                {onCurrencyChange && <CurrencyToggle value={currency} onChange={onCurrencyChange} fxAvailable={fxAvailable} />}
             </div>
         </div>
     );

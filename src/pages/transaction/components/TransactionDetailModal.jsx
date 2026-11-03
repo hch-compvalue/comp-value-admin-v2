@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import { send } from '@/util/ClientUtil';
 import useModalAnimation from '@/hooks/useModalAnimation';
 import { SYNC_TITLE, SYNC_ON_HINT, SYNC_OFF_HINT } from '@/util/SellTargetGuide';
-import { fetchCurrentPriceBySymbol } from '../services/TransactionService';
+import { fetchCurrentPricesBySymbols } from '../services/TransactionService';
+import { useMarket } from '@/context/MarketContext';
+import { MARKET, krwOr, fmtAmount } from '@/util/MarketUtil';
+import { companyProfileUrl } from '@/util/StockApi';
+
+const useIsKr = () => useMarket().market === MARKET.KR;
 
 /**
  * 금액 표시 – 정수부분 볼드, 소수부분 연하게
@@ -24,6 +29,7 @@ function BoldInt({ text }) {
  * 매수가, 현재가, 목표가를 시각적으로 비교
  */
 function PriceComparisonChart({ buyPrice, currentPrice, targetPrice }) {
+    const isKr = useIsKr();
     if (!buyPrice || buyPrice <= 0) return null;
 
     // 최대값 계산 (목표가가 없거나 0이면 현재가와 매수가 중 큰 값 기준)
@@ -52,7 +58,7 @@ function PriceComparisonChart({ buyPrice, currentPrice, targetPrice }) {
                         />
                         <div className="absolute inset-0 flex items-center justify-end pr-2">
                             <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
-                                ${buyPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                {krwOr(isKr, buyPrice, `$${buyPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`)}
                             </span>
                         </div>
                     </div>
@@ -70,7 +76,7 @@ function PriceComparisonChart({ buyPrice, currentPrice, targetPrice }) {
                         />
                         <div className="absolute inset-0 flex items-center justify-end pr-2">
                             <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
-                                ${currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                {krwOr(isKr, currentPrice, `$${currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`)}
                             </span>
                         </div>
                     </div>
@@ -89,7 +95,7 @@ function PriceComparisonChart({ buyPrice, currentPrice, targetPrice }) {
                             />
                             <div className="absolute inset-0 flex items-center justify-end pr-2">
                                 <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
-                                    ${targetPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                    {krwOr(isKr, targetPrice, `$${targetPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`)}
                                 </span>
                             </div>
                         </div>
@@ -158,6 +164,8 @@ export default function TransactionDetailModal({
     saving,
     isGroupRow = false, // 그룹 합계 행 여부
 }) {
+    const { market } = useMarket();
+    const isKr = market === MARKET.KR;      // 국내: 원화, 환율 없음
     const [formData, setFormData] = useState({});
     const [isEditing, setIsEditing] = useState(false);
     const [loadingProfile, setLoadingProfile] = useState(false);
@@ -194,7 +202,8 @@ export default function TransactionDetailModal({
             // 프로파일 + 현재가 자동 조회
             if (row.symbol) {
                 fetchCompanyProfile(row.symbol);
-                fetchCurrentPriceBySymbol(row.symbol).then((result) => {
+                fetchCurrentPricesBySymbols([row.symbol], market).then((list) => {
+                    const result = list?.[0];
                     if (result?.currentPrice) {
                         setFormData(prev => ({ ...prev, currentPrice: Number(result.currentPrice) }));
                     }
@@ -243,13 +252,11 @@ export default function TransactionDetailModal({
         if (!symbol) return;
         setLoadingProfile(true);
         try {
-            const { data, error } = await send(
-                `/dart/abroad/company/search/profile?symbol=${encodeURIComponent(symbol.trim())}`,
-                {},
-                'GET'
-            );
-            if (!error && data?.success && data?.response?.length > 0) {
-                setCompanyProfile(data.response[0]);
+            const { data, error } = await send(companyProfileUrl(symbol.trim(), market), {}, 'GET');
+            // 미국은 배열, 국내는 객체 1건
+            const profiles = Array.isArray(data?.response) ? data.response : data?.response ? [data.response] : [];
+            if (!error && data?.success && profiles.length > 0) {
+                setCompanyProfile(profiles[0]);
             }
         } catch (e) {
             console.error('프로파일 조회 실패:', e);
@@ -353,9 +360,9 @@ export default function TransactionDetailModal({
     const curPrice = parseFloat(formData.currentPrice) || 0;
     const targetPrice = parseFloat(formData.targetPrice) || 0;
     const buyExchangeRate = parseFloat(formData.buyExchangeRateAtTrade) || 0;
-    const fxRate = fx || 0;
+    const fxRate = isKr ? 0 : fx || 0;
     // 매수금액 원화 계산: 매수당시환율 우선, 없으면 현재환율
-    const buyPriceRate = buyExchangeRate || fxRate;
+    const buyPriceRate = isKr ? 0 : buyExchangeRate || fxRate;
 
     const totalBuy = buyPrice * qty;
     const totalCurrent = curPrice * qty;
@@ -448,7 +455,7 @@ export default function TransactionDetailModal({
                             <div>
                                 <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">매수금액</div>
                                 <div className="text-slate-900 dark:text-white">
-                                    <BoldInt text={`$${totalBuy.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
+                                    <BoldInt text={krwOr(isKr, totalBuy, `$${totalBuy.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)} />
                                 </div>
                                 {buyPriceRate > 0 && (
                                     <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -459,7 +466,7 @@ export default function TransactionDetailModal({
                             <div>
                                 <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">평가금액</div>
                                 <div className="text-slate-900 dark:text-white">
-                                    <BoldInt text={`$${totalCurrent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
+                                    <BoldInt text={krwOr(isKr, totalCurrent, `$${totalCurrent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)} />
                                 </div>
                                 {fxRate > 0 && (
                                     <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -470,7 +477,7 @@ export default function TransactionDetailModal({
                             <div>
                                 <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">손익금액</div>
                                 <div className={`${isProfit ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                                    <BoldInt text={`${isProfit ? '+' : ''}$${diff.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
+                                    <BoldInt text={krwOr(isKr, diff, `${isProfit ? '+' : ''}$${diff.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, { signed: true })} />
                                 </div>
                                 {fxRate > 0 && (
                                     <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -486,7 +493,7 @@ export default function TransactionDetailModal({
                         <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
                             <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">매수가</div>
                             <div className="text-slate-900 dark:text-white">
-                                <BoldInt text={`$${buyPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} />
+                                <BoldInt text={krwOr(isKr, buyPrice, `$${buyPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`)} />
                             </div>
                             {buyPriceRate > 0 && buyPrice > 0 && (
                                 <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -497,7 +504,7 @@ export default function TransactionDetailModal({
                         <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
                             <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">현재가</div>
                             <div className={`${isProfit ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                                <BoldInt text={`$${curPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} />
+                                <BoldInt text={krwOr(isKr, curPrice, `$${curPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`)} />
                             </div>
                             {fxRate > 0 && curPrice > 0 && (
                                 <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -513,7 +520,7 @@ export default function TransactionDetailModal({
                                 )}
                             </div>
                             <div className={`${isTargetHit ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}>
-                                {targetPrice > 0 ? <BoldInt text={`$${targetPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} /> : '-'}
+                                {targetPrice > 0 ? <BoldInt text={krwOr(isKr, targetPrice, `$${targetPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`)} /> : '-'}
                             </div>
                             {fxRate > 0 && targetPrice > 0 && (
                                 <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -525,12 +532,14 @@ export default function TransactionDetailModal({
                             <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">보유수량</div>
                             <div className="font-semibold text-slate-900 dark:text-white">{qty}주</div>
                         </div>
+                        {!isKr && (
                         <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 col-span-2">
                             <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">매수당시환율</div>
                             <div className="text-slate-900 dark:text-white">
                                 {buyExchangeRate > 0 ? <BoldInt text={`₩${buyExchangeRate.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}`} /> : '-'}
                             </div>
                         </div>
+                        )}
                     </div>
 
                     {/* 가격 비교 차트 */}
@@ -553,7 +562,7 @@ export default function TransactionDetailModal({
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">티커</label>
+                                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{isKr ? '종목코드' : '티커'}</label>
                                             <input
                                                 type="text"
                                                 value={formData.symbol}
@@ -572,7 +581,7 @@ export default function TransactionDetailModal({
                                         </div>
                                         <div>
                                             <div className="flex items-center justify-between mb-1">
-                                                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">목표가 ($)</label>
+                                                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">목표가 ({isKr ? '₩' : '$'})</label>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleChange('targetPriceSync', !formData.targetPriceSync)}
@@ -662,7 +671,7 @@ export default function TransactionDetailModal({
                                                 )}
                                             </span>
                                             <span className="text-slate-900 dark:text-white font-medium">
-                                                {formData.targetPrice ? `$${parseFloat(formData.targetPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '-'}
+                                                {formData.targetPrice ? krwOr(isKr, formData.targetPrice, `$${parseFloat(formData.targetPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })}`) : '-'}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
@@ -683,7 +692,7 @@ export default function TransactionDetailModal({
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">티커</label>
+                                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{isKr ? '종목코드' : '티커'}</label>
                                             <input
                                                 type="text"
                                                 value={formData.symbol}
@@ -710,7 +719,7 @@ export default function TransactionDetailModal({
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">매수가 ($)</label>
+                                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">매수가 ({isKr ? '₩' : '$'})</label>
                                             <input
                                                 type="number"
                                                 step="0.01"
@@ -730,7 +739,7 @@ export default function TransactionDetailModal({
                                         </div>
                                         <div>
                                             <div className="flex items-center justify-between mb-1">
-                                                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">목표가 ($)</label>
+                                                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">목표가 ({isKr ? '₩' : '$'})</label>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleChange('targetPriceSync', !formData.targetPriceSync)}
@@ -759,6 +768,7 @@ export default function TransactionDetailModal({
                                             )}
                                             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{formData.targetPriceSync ? SYNC_ON_HINT : SYNC_OFF_HINT}</div>
                                         </div>
+                                        {!isKr && (
                                         <div>
                                             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">매수당시환율 (₩)</label>
                                             <input
@@ -769,6 +779,7 @@ export default function TransactionDetailModal({
                                                 className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                             />
                                         </div>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">종목 메모</label>
@@ -841,12 +852,14 @@ export default function TransactionDetailModal({
                                             <span className="text-slate-500 dark:text-slate-400">매수일</span>
                                             <span className="text-slate-900 dark:text-white font-medium">{formData.buyDate || '-'}</span>
                                         </div>
+                                        {!isKr && (
                                         <div className="flex justify-between">
                                             <span className="text-slate-500 dark:text-slate-400">매수당시환율</span>
                                             <span className="text-slate-900 dark:text-white">
                                                 {formData.buyExchangeRateAtTrade ? <BoldInt text={`₩${parseFloat(formData.buyExchangeRateAtTrade).toLocaleString('ko-KR', { maximumFractionDigits: 2 })}`} /> : '-'}
                                             </span>
                                         </div>
+                                        )}
                                         <MemoLine label="종목 메모" value={formData.symbolMemo} />
                                         <MemoLine label="매수 비고" value={formData.rmk} />
                                     </div>
@@ -884,7 +897,7 @@ export default function TransactionDetailModal({
                                         <div>
                                             <div className="text-slate-500 dark:text-slate-400">시가총액</div>
                                             <div className="font-medium text-slate-900 dark:text-white">
-                                                ${(companyProfile.marketCap / 1e9).toFixed(2)}B
+                                                {isKr ? fmtAmount(companyProfile.marketCap, MARKET.KR) : `$${(companyProfile.marketCap / 1e9).toFixed(2)}B`}
                                             </div>
                                         </div>
                                     )}

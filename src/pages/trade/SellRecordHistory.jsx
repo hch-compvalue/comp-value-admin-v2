@@ -81,7 +81,8 @@ export default function SellRecordHistory() {
                 openAlert(error);
                 setRecords([]);
             } else if (data?.success && data?.response) {
-                setRecords(data.response);
+                // 미국 기록만 (국내는 KrSellRecordHistory, 기존 기록은 market 없음 → US)
+                setRecords(data.response.filter((r) => (r.market || 'US') === 'US'));
             } else {
                 setRecords([]);
             }

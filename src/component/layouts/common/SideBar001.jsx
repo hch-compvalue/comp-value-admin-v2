@@ -21,12 +21,12 @@ function useIsMobile(breakpoint = 768) {
     return isMobile;
 }
 
-export const SECTIONS = ['시작하기', '미국주식', '게시판', '자동매매', '유틸', '관리'];
+export const SECTIONS = ['시작하기', '주식', '게시판', '자동매매', '유틸', '관리'];
 
 // 섹션별 헤더 아이콘 (아코디언 헤더에 표시)
 const SECTION_ICONS = {
     '시작하기': HomeIcon,
-    '미국주식': Globe,
+    '주식': Globe,
     '게시판': MessageSquare,
     '자동매매': Bot,
     '유틸': Wrench,
@@ -36,10 +36,23 @@ const SECTION_ICONS = {
 // 아코디언 펼침 상태를 localStorage에 저장하는 키
 const OPEN_SECTIONS_KEY = 'sidebar.openSections';
 
+// 이전 섹션명 → 현재 섹션명 (2026-11 '미국주식' → '주식': 국내주식 추가) — 저장된 펼침 상태 유지
+const RENAMED_SECTIONS = { '미국주식': '주식' };
+
+function migrateSectionNames(saved) {
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return saved;
+    const result = { ...saved };
+    Object.entries(RENAMED_SECTIONS).forEach(([from, to]) => {
+        if (from in result && !(to in result)) result[to] = result[from];
+        delete result[from];
+    });
+    return result;
+}
+
 function loadOpenSections() {
     try {
         const raw = localStorage.getItem(OPEN_SECTIONS_KEY);
-        if (raw) return JSON.parse(raw);
+        if (raw) return migrateSectionNames(JSON.parse(raw));
     } catch {
         // 파싱 실패 시 기본값 사용
     }

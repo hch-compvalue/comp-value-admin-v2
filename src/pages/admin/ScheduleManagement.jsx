@@ -1,13 +1,17 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { send } from '@/util/ClientUtil';
 import useModalAnimation from '@/hooks/useModalAnimation';
 import PageTitle from '@/component/common/display/PageTitle';
 import Loading from '@/component/common/display/Loading';
 import Button from '@/component/common/button/Button';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
-import ScheduleJobCard, { MarketChip } from '@/pages/admin/ScheduleJobCard';
+import ScheduleJobRow, { MarketChip, ScheduleJobHeader } from '@/pages/admin/ScheduleJobRow';
 import { jobMetaOf } from '@/config/scheduleJobMeta';
 import ExternalSchedules from '@/pages/admin/ExternalSchedules';
+import ScheduleTimeline from '@/pages/admin/ScheduleTimeline';
+import useExternalSchedules from '@/pages/admin/useExternalSchedules';
+import { buildTimelineRows, sortJobsByStart } from '@/pages/admin/scheduleTimelineModel';
+import { formatDuration } from '@/pages/admin/scheduleFormat';
 
 const JOBS_URL = '/dart/schd/jobs';
 const HISTORY_LIMIT = 20;
@@ -16,6 +20,7 @@ const RUNNING_POLL_MS = 15 * 1000; // 실행 중일 때만 상태 자동 갱신
 /**
  * 스케줄 관리 (관리 > 스케줄 관리, 슈퍼관리자 전용)
  * - 백엔드 배치 작업의 실행 주기·자동 실행 여부 변경(재배포 없이 즉시 반영), 지금 실행, 실행 이력
+ * - 맨 위: 실행 중 안내 + 하루 타임라인(관리 작업 + 다른 곳 스케줄, 순서 경고)
  * - 하단: 다른 곳에서 관리되는 스케줄(자동매매 전략·DB 백업) 조회 전용
  */
 const ScheduleManagement = () => {
@@ -29,7 +34,7 @@ const ScheduleManagement = () => {
     const [maxCountInput, setMaxCountInput] = useState('0');
     const { shouldRender: renderRunModal, isAnimatingOut: isRunModalClosing } = useModalAnimation(isRunModalOpen, 250);
     const loadedOnce = useRef(false);
-    const externalRef = useRef(null);
+    const external = useExternalSchedules();
 
     const openAlert = useCallback((message) => setAlertConfig({ open: true, message }), []);
 
@@ -60,7 +65,12 @@ const ScheduleManagement = () => {
     useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
     // 실행 중인 작업이 있으면 주기적으로 상태 갱신 (끝나면 자동 중지)
-    const anyRunning = jobs.some((j) => j.running);
+    const runningJobs = jobs.filter((j) => j.running);
+    const anyRunning = runningJobs.length > 0;
+    const sortedJobs = useMemo(() => sortJobsByStart(jobs), [jobs]);
+    const timelineRows = useMemo(() => buildTimelineRows({
+        jobs, histories, strategies: external.strategies, backupHistory: external.backupHistory,
+    }), [jobs, histories, external.strategies, external.backupHistory]);
     useEffect(() => {
         if (!anyRunning) return undefined;
         const timer = setInterval(() => fetchJobs({ silent: true }), RUNNING_POLL_MS);
@@ -110,31 +120,51 @@ const ScheduleManagement = () => {
                 <p className="text-sm text-slate-600 dark:text-slate-300">
                     서버에서 정해진 시각에 자동으로 도는 작업입니다. 주기를 바꾸면 <strong>재배포 없이 바로</strong> 적용됩니다.
                 </p>
-                <Button variant="secondary" size="sm" disabled={isLoading} onClick={() => { fetchJobs(); externalRef.current?.refresh(); }}>새로고침</Button>
+                <Button variant="secondary" size="sm" disabled={isLoading} onClick={() => { fetchJobs(); external.refresh(); }}>새로고침</Button>
             </div>
 
             <Loading show={isLoading} />
 
-            <div className="space-y-4">
-                {jobs.length === 0 && loadedOnce.current && !isLoading && (
-                    <p className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 dark:border-slate-700 dark:bg-slate-800">
-                        관리 중인 스케줄이 없습니다.
-                    </p>
-                )}
-                {jobs.map((job) => (
-                    <ScheduleJobCard
-                        key={job.jobKey}
-                        job={job}
-                        history={histories[job.jobKey] || []}
-                        saving={savingKey === job.jobKey}
-                        onToggle={handleToggle}
-                        onSave={updateJob}
-                        onRun={openRunModal}
-                    />
-                ))}
-            </div>
+            {anyRunning && (
+                <div role="status" className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                    <strong>지금 실행 중:</strong>{' '}
+                    {runningJobs.map((j) => `${j.label} (${formatDuration(j.lastRun?.startedAt)} 경과)`).join(', ')}
+                    {' '}— 끝날 때까지 백엔드 배포를 미뤄주세요.
+                </div>
+            )}
 
-            <ExternalSchedules ref={externalRef} />
+            <ScheduleTimeline rows={timelineRows} />
+
+            <h2 className="mt-8 mb-3 text-base font-semibold text-slate-900 dark:text-white">이 화면에서 관리하는 작업</h2>
+            {jobs.length === 0 && loadedOnce.current && !isLoading ? (
+                <p className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 dark:border-slate-700 dark:bg-slate-800">
+                    관리 중인 스케줄이 없습니다.
+                </p>
+            ) : (
+                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                    <ScheduleJobHeader />
+                    <ul className="divide-y divide-slate-100 dark:divide-slate-700">
+                        {sortedJobs.map((job) => (
+                            <ScheduleJobRow
+                                key={job.jobKey}
+                                job={job}
+                                history={histories[job.jobKey] || []}
+                                saving={savingKey === job.jobKey}
+                                onToggle={handleToggle}
+                                onSave={updateJob}
+                                onRun={openRunModal}
+                            />
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            <ExternalSchedules
+                strategies={external.strategies}
+                lastRuns={external.lastRuns}
+                backupHistory={external.backupHistory}
+                errors={external.errors}
+            />
 
             <AlertModal open={alertConfig.open} message={alertConfig.message} onClose={() => setAlertConfig({ open: false, message: '' })} />
 

@@ -3,6 +3,8 @@ import Button from '@/component/common/button/Button';
 import { fmtUsd } from '../utils/formatters';
 import { FmtAmount } from './TableCells';
 import useModalAnimation from '@/hooks/useModalAnimation';
+import { useMarket } from '@/context/MarketContext';
+import { MARKET, fmtKrw } from '@/util/MarketUtil';
 
 /**
  * 매도 정보 입력 모달
@@ -15,6 +17,7 @@ export default function SellModal({
     fx,
     saving,
 }) {
+    const isKr = useMarket().market === MARKET.KR;     // 국내: 원화, 환율 입력 없음
     const [sellPrice, setSellPrice] = useState('');
     const [sellQty, setSellQty] = useState('');
     const [buyExchangeRate, setBuyExchangeRate] = useState('');
@@ -100,7 +103,7 @@ export default function SellModal({
                         <div>
                             <span className="text-slate-500 dark:text-slate-400">매수가격</span>
                             <p className="font-medium dark:text-white">
-                                <FmtAmount text={`$ ${fmtUsd(buyPrice)}`} />
+                                <FmtAmount text={isKr ? fmtKrw(buyPrice) : `$ ${fmtUsd(buyPrice)}`} />
                                 {buyPriceRate && <span className="text-xs text-slate-400 ml-1">(₩{Math.round(buyPrice * buyPriceRate).toLocaleString()})</span>}
                             </p>
                         </div>
@@ -111,21 +114,23 @@ export default function SellModal({
                         <div className="col-span-2">
                             <span className="text-slate-500 dark:text-slate-400">현재가격</span>
                             <p className="font-medium dark:text-white">
-                                <FmtAmount text={`$ ${fmtUsd(currentPrice)}`} />
+                                <FmtAmount text={isKr ? fmtKrw(currentPrice) : `$ ${fmtUsd(currentPrice)}`} />
                                 {fx && <span className="text-xs text-slate-400 ml-1">(₩{Math.round(currentPrice * fx).toLocaleString()})</span>}
                             </p>
                         </div>
                     </div>
+                    {!isKr && (
                     <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                         * 매수가격 원화는 매수당시 환율 기준, 현재가격 원화는 현재 환율 기준입니다.
                     </div>
+                    )}
                 </div>
 
                 {/* 매도 정보 입력 */}
                 <div className="space-y-4 mb-5">
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                            매도 가격 (USD)
+                            매도 가격 ({isKr ? 'KRW' : 'USD'})
                         </label>
                         <input
                             type="number"
@@ -166,8 +171,8 @@ export default function SellModal({
                         </div>
                     </div>
 
-                    {/* 환율 입력 필드 */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* 환율 입력 필드 (국내 없음) */}
+                    {!isKr && <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                                 매수당시환율 (₩)
@@ -196,7 +201,7 @@ export default function SellModal({
                                 disabled={saving}
                             />
                         </div>
-                    </div>
+                    </div>}
                 </div>
 
                 {/* 예상 실현손익 표시 */}
@@ -206,10 +211,10 @@ export default function SellModal({
                         {(() => {
                             const pnl = (parseFloat(sellPrice) - buyPrice) * parseInt(sellQty || 0, 10);
                             const isPositive = pnl >= 0;
-                            const sellRate = parseFloat(sellExchangeRate) || fx;
+                            const sellRate = isKr ? null : parseFloat(sellExchangeRate) || fx;
                             return (
                                 <p className={`text-lg font-bold ${isPositive ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                                    <FmtAmount text={`${isPositive ? '+' : ''}$ ${fmtUsd(pnl)}`} />
+                                    <FmtAmount text={isKr ? fmtKrw(pnl, { signed: true }) : `${isPositive ? '+' : ''}$ ${fmtUsd(pnl)}`} />
                                     {sellRate && (
                                         <span className="text-sm font-normal ml-2">
                                             (₩{Math.round(pnl * sellRate).toLocaleString()})

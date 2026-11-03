@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     fetchTransactions,
     createTransaction,
@@ -33,27 +33,36 @@ function mergePreservedPrices(r, prevPriceBySym) {
 
 /**
  * 거래 목록 관리 커스텀 훅
+ * @param {string} market 보는 시장 (US/KR) — 목록은 이 시장 기록만, 시장을 바꾸면 다시 조회
  */
-export function useTransactions(openAlert = (msg) => alert(msg)) {
+export function useTransactions(openAlert = (msg) => alert(msg), market = 'US') {
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [lastUpdated, setLastUpdated] = useState(null);
 
-    // 최초 로드 시 목록 조회 + 실시간 현재가 갱신
+    // 현재 시장 — 늦게 도착한 이전 시장 응답도 지금 시장 기준으로 거른다
+    const marketRef = useRef(market);
+    marketRef.current = market;
+    const onlyMarket = (list) => (list || []).filter((r) => (r.market || 'US') === marketRef.current);
+
+    // 최초 로드·시장 변경 시 목록 조회 + 실시간 현재가 갱신
     useEffect(() => {
+        setRows([]);
         loadTransactions().then((list) => {
             if (list && list.length > 0) {
                 const symbols = Array.from(new Set(list.map((r) => r.symbol).filter(Boolean)));
                 mergePricesBySymbols(symbols);
             }
         });
-    }, []);
+        // 조회 함수는 매 렌더 새로 생성되므로 시장만 기준 (포함 시 반복 호출)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [market]);
 
     const loadTransactions = async () => {
         setLoading(true);
         try {
-            const list = await fetchTransactions();
+            const list = onlyMarket(await fetchTransactions());
             setRows(sortRowsBySymbolAndDate(list));
             setLastUpdated(new Date());
             return list;
@@ -68,7 +77,7 @@ export function useTransactions(openAlert = (msg) => alert(msg)) {
         setLoading(true);
         try {
             const prevPriceBySym = buildPrevPriceMap(rows);
-            const list = await fetchTransactions();
+            const list = onlyMarket(await fetchTransactions());
             const merged = list.map((r) => mergePreservedPrices(r, prevPriceBySym));
             const sorted = sortRowsBySymbolAndDate(merged);
             setRows(sorted);
@@ -93,10 +102,10 @@ export function useTransactions(openAlert = (msg) => alert(msg)) {
             const prevPriceBySym = buildPrevPriceMap(rows);
 
             // 등록
-            await createTransaction(payload);
+            await createTransaction({ ...payload, market: marketRef.current });
 
             // 목록 재조회 + 기존 가격 머지
-            const list = await fetchTransactions();
+            const list = onlyMarket(await fetchTransactions());
             const merged = list.map((r) => mergePreservedPrices(r, prevPriceBySym));
             setRows(sortRowsBySymbolAndDate(merged));
 
@@ -173,7 +182,7 @@ export function useTransactions(openAlert = (msg) => alert(msg)) {
             const prevPriceBySym = buildPrevPriceMap(rows);
 
             await deleteTransaction(id);
-            const list = await fetchTransactions();
+            const list = onlyMarket(await fetchTransactions());
             const merged = list.map((r) => mergePreservedPrices(r, prevPriceBySym));
             setRows(sortRowsBySymbolAndDate(merged));
             setLastUpdated(new Date());
@@ -192,7 +201,7 @@ export function useTransactions(openAlert = (msg) => alert(msg)) {
         );
         if (unique.length === 0) return;
 
-        const priceList = await fetchCurrentPricesBySymbols(unique);
+        const priceList = await fetchCurrentPricesBySymbols(unique, marketRef.current);
         const bySym = new Map(priceList.map((p) => [String(p.symbol).toUpperCase(), p]));
 
         setRows((prev) =>
@@ -212,7 +221,7 @@ export function useTransactions(openAlert = (msg) => alert(msg)) {
 
     // 동기화 목표가 재계산 후 같은 심볼의 동기화 ON 행에 반영 (상세 모달 진입 시 캐시 만료 종목)
     const refreshSyncTarget = async (symbol) => {
-        const res = await syncTargetPrice(symbol);
+        const res = await syncTargetPrice(symbol, marketRef.current);
         const target = res?.targetPrice;
         if (!(target > 0)) return null;
 
@@ -255,6 +264,7 @@ export function useTransactions(openAlert = (msg) => alert(msg)) {
 
             const sellRecord = {
                 symbol,
+                market: marketRef.current,
                 companyName,
                 sellDate: new Date().toISOString().split('T')[0],
                 sellPrice,
@@ -311,7 +321,7 @@ export function useTransactions(openAlert = (msg) => alert(msg)) {
 
             // 6. 백그라운드에서 목록 갱신 시도 (실패해도 무시)
             try {
-                const list = await fetchTransactions();
+                const list = onlyMarket(await fetchTransactions());
                 const prevPriceBySym = buildPrevPriceMap(rows);
                 const merged = list.map((r) => mergePreservedPrices(r, prevPriceBySym));
                 setRows(sortRowsBySymbolAndDate(merged));

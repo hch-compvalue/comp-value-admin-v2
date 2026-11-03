@@ -5,11 +5,12 @@ const PRICE_DIGITS = 2;
  * @param labelFmt    날짜 라벨 포매터 (봉 단위별)
  * @param extraRows   [{ key, label }] 함께 보여줄 값 (오버레이 지표 등)
  * @param prefix      가격 앞 기호 (주식 '$', 지수 '')
+ * @param formatValue 가격 표시 함수 (지정 시 prefix 대신 사용 — 국내 원화 등)
  */
-export function OhlcTooltip({ active, payload, label, labelFmt, extraRows = [], prefix = '' }) {
+export function OhlcTooltip({ active, payload, label, labelFmt, extraRows = [], prefix = '', formatValue }) {
     if (!active || !payload?.length) return null;
     const d = payload[0].payload;
-    const fmt = (v) => (v == null ? '-' : `${prefix}${Number(v).toLocaleString('en-US', { minimumFractionDigits: PRICE_DIGITS, maximumFractionDigits: PRICE_DIGITS })}`);
+    const fmt = formatValue || ((v) => (v == null ? '-' : `${prefix}${Number(v).toLocaleString('en-US', { minimumFractionDigits: PRICE_DIGITS, maximumFractionDigits: PRICE_DIGITS })}`));
     const rows = [
         { key: 'open', label: '시가' }, { key: 'high', label: '고가' }, { key: 'low', label: '저가' }, { key: 'close', label: '종가' },
         ...extraRows,
