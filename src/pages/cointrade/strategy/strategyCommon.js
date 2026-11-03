@@ -11,6 +11,8 @@ export const EMERGENCY_CONFIRM_WORD = '매도';
 export const TOAST_MS = 3000;
 export const COLOR_STRATEGY = '#3b82f6';
 export const COLOR_BTC = '#f59e0b';
+/** 기본 비중 그대로 보유했을 때 비교선 (코인 BTC 보유선과 같은 색) */
+export const COLOR_HOLD = COLOR_BTC;
 
 export const STRATEGY_COIN = 'btc_trend';
 export const STRATEGY_STOCK = 'etf3_trend_v1';

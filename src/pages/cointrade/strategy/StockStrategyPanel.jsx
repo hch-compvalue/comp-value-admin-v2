@@ -7,7 +7,7 @@ import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import { Card, Row, WeightBar, ModeSelector, ErrorBanner, RefreshButton } from './StrategyUi';
 import useStrategyData from './useStrategyData';
 import {
-    RUN_LIMIT, MIN_CAPITAL_KRW, EMERGENCY_CONFIRM_WORD, COLOR_STRATEGY, STRATEGY_STOCK, MODES,
+    RUN_LIMIT, MIN_CAPITAL_KRW, EMERGENCY_CONFIRM_WORD, COLOR_STRATEGY, COLOR_HOLD, STRATEGY_STOCK, MODES,
     modeLabel, hourRange, fmtKrw, fmtPct, fmtSignedPct, returnAccent, fmtShares, fmtDateTime, INPUT_CLASS,
 } from './strategyCommon';
 import { SLATE, withAlpha } from '@/config/themeColors';
@@ -37,6 +37,20 @@ const RUN_HEADERS = ['', '실행일', '모드', '구분', '상태', '일봉', '�
 const DETAIL_HEADERS = ['종목', '종가', '평균선', '변동성', '목표', '이전→이후', '주문', '수량', '금액', '체결가', '수수료', '비고'];
 
 const TH_CLASS = 'py-2 px-2 font-medium';
+
+/** 실행 기록의 종목별 가격 { symbol: price } (detail 에 종목마다 저장됨) */
+const runPrices = (run) => Object.fromEntries((run.detail || []).filter((d) => d.price > 0).map((d) => [d.symbol, d.price]));
+
+/**
+ * 첫 실행일에 기본 비중대로 사서 보유했을 때의 수익률(%) — 서버 holdReturnPct 와 같은 계산, 기준일만 그래프 첫날
+ * 종목 가격이 하나라도 없으면 null (그 날은 선을 끊음)
+ */
+const holdReturnPct = (assets, base, prices) => {
+    const pairs = assets.map((a) => [a.baseWeight, prices[a.symbol], base[a.symbol]]);
+    if (!pairs.length || !pairs.every(([, p, b]) => p && b)) return null;
+    const total = pairs.reduce((sum, [w]) => sum + w, 0);
+    return +((pairs.reduce((sum, [w, p, b]) => sum + (w * p) / b, 0) / total - 1) * 100).toFixed(2);
+};
 const HEAD_ROW_CLASS = 'text-left text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700';
 
 const fmtPrice = (v) => (v ? fmtKrw(v) : '-');
@@ -148,11 +162,13 @@ export default function StockStrategyPanel({ header }) {
         const rows = [...byDate.values()];
         if (!rows.length) return [];
         const eq0 = rows[0].equityKrw;
+        const px0 = runPrices(rows[0]);
         return rows.map((r) => ({
             date: r.runDate.slice(5),
             strategy: +((r.equityKrw / eq0 - 1) * 100).toFixed(2),
+            hold: holdReturnPct(assets, px0, runPrices(r)),
         }));
-    }, [runs, status?.mode]);
+    }, [runs, status?.mode, assets]);
 
     const headerRow = (
         <div className="flex items-center justify-between gap-2">
@@ -368,6 +384,7 @@ export default function StockStrategyPanel({ header }) {
                                 <Tooltip formatter={(v) => `${v}%`} />
                                 <Legend />
                                 <Line type="monotone" dataKey="strategy" name="전략" stroke={COLOR_STRATEGY} dot={false} strokeWidth={2} />
+                                <Line type="monotone" dataKey="hold" name="기본 비중 보유" stroke={COLOR_HOLD} dot={false} strokeWidth={2} strokeDasharray="5 3" />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
