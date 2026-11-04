@@ -1,13 +1,10 @@
 import Home from '@/pages/Home'
-import CompList from '@/pages/trade/CompList'
 import FreeBoard from '@/pages/board/freeBoard/FreeBoard'
 import FreeBoardList from '@/pages/board/freeBoard/List'
 import NotFound from '@/pages/NotFound'
 import FreeBoardView from '@/pages/board/freeBoard/View'
 import FreeBoardUpdate from '@/pages/board/freeBoard/Update'
 import Register from '@/pages/board/freeBoard/Register'
-import CompValue from '@/pages/trade/CompValue'
-import CompValueCustom from '@/pages/trade/CompValueCustom'
 import TransactionOverview from '@/pages/transaction/TransactionOverview'
 import AbroadCompValue from '@/pages/trade/AbroadCompValue'
 import RecommendProfileSettings from '@/pages/trade/RecommendProfileSettings'
@@ -41,7 +38,7 @@ import UsOnlyPanel from '@/component/common/market/UsOnlyPanel';
 import MarketSwitch from '@/component/common/market/MarketSwitch';
 import { SECTIONS } from '@/component/layouts/common/SideBar001';
 import {
-    Home as HomeIcon, List, BarChart3, Pencil, Telescope, Briefcase,
+    Home as HomeIcon, BarChart3, Telescope, Briefcase,
     MessageSquare, LayoutDashboard,
     History, LineChart, FileSpreadsheet, DollarSign, Braces,
     StickyNote, Calculator as CalculatorIcon, Activity, CalendarClock
@@ -62,11 +59,6 @@ const routes = {
     "MyProfile": { section: '회원정보', show: false, label: '내 정보', path: '/member/myprofile', element: <MyProfile /> },
     "EditProfile": { section: '회원정보', show: false, label: '회원정보 수정', path: '/member/myprofile/edit', element: <EditProfile /> },
     "MemberManagement": { section: '회원정보', show: false, label: '회원 관리 (관리자)', path: '/member/management', element: <MemberManagement /> },
-
-    /* 기업분석(국내) — 2026-10 메뉴 숨김 (KIS 전환 시 새로 구현 예정, 그때 코드 삭제) */
-    "CompList": { section: '기업분석(국내)', show: false, label: '기업목록', path: '/complist', element: <CompList />, icon: List },
-    "CompValue": { section: '기업분석(국내)', show: false, label: '기업분석', path: '/compvalue', element: <CompValue />, icon: BarChart3 },
-    "CompValueCustom": { section: '기업분석(국내)', show: false, label: '기업분석(수동)', path: '/compvalue/custom', element: <CompValueCustom />, icon: Pencil },
 
     /* 주식 — 발굴(매수후보·성과·프로파일 설정, 미국/국내 토글) / 분석(단건 미국/국내 토글, 일괄은 미국만) / 포트폴리오(보유·매도, 미국/국내 토글) */
     "StockDiscover": {
@@ -123,6 +115,10 @@ const routes = {
     "LegacyDailyPicks": { section: 'None', show: false, label: '이동 중', path: '/trade/daily-picks', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.DAILY_PICKS} /> },
     "LegacyPerformance": { section: 'None', show: false, label: '이동 중', path: '/trade/performance', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.PERFORMANCE} /> },
     "LegacyAbroadCompValue": { section: 'None', show: false, label: '이동 중', path: '/compvalue/abroad', element: <LegacyRedirect to={STOCK_ANALYSIS_PATH} subTab={SUB_TAB.SEARCH} /> },
+    // 구 국내 화면(2026-11 삭제) → 국내 토글이 있는 새 화면
+    "LegacyKrCompList": { section: 'None', show: false, label: '이동 중', path: '/complist', element: <LegacyRedirect to={STOCK_DISCOVER_PATH} subTab={SUB_TAB.DAILY_PICKS} /> },
+    "LegacyKrCompValue": { section: 'None', show: false, label: '이동 중', path: '/compvalue', element: <LegacyRedirect to={STOCK_ANALYSIS_PATH} subTab={SUB_TAB.SEARCH} /> },
+    "LegacyKrCompValueCustom": { section: 'None', show: false, label: '이동 중', path: '/compvalue/custom', element: <LegacyRedirect to={STOCK_ANALYSIS_PATH} subTab={SUB_TAB.SEARCH} /> },
     "LegacyEvaluation": { section: 'None', show: false, label: '이동 중', path: '/trade/evaluation', element: <LegacyRedirect to={STOCK_ANALYSIS_PATH} subTab={SUB_TAB.EVALUATE} /> },
     "LegacyTransaction": { section: 'None', show: false, label: '이동 중', path: '/transaction/overview', element: <LegacyRedirect to={PORTFOLIO_PATH} subTab={SUB_TAB.HOLDINGS} /> },
     "LegacySellRecord": { section: 'None', show: false, label: '이동 중', path: '/trade/sellrecord', element: <LegacyRedirect to={PORTFOLIO_PATH} subTab={SUB_TAB.SELL_RECORD} /> },

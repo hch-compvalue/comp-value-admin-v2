@@ -32,7 +32,6 @@ export const EXTERNAL_API_DESC = {
     FMP: '미국 주식 시세·재무',
     DART: '국내 공시·재무',
     KIS: '국내 주식 시세 (한국투자증권)',
-    Yahoo: '국내 주식 현재가 (주당가치 계산)',
     Upbit: '코인 시세',
     OpenAI: '기업명 영문 번역',
 };
