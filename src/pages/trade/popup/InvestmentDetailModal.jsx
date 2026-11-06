@@ -15,6 +15,7 @@ import { send } from '@/util/ClientUtil';
 import { fetchCompValue } from '@/util/StockApi';
 import { useMarket } from '@/context/MarketContext';
 import { MARKET, fmtPrice } from '@/util/MarketUtil';
+import { drawdownInfo, marketCompareText, fmtSignedPct, DROP_WARN_PCT } from '@/util/DrawdownUtil';
 
 // 국내면 원화 정수, 미국이면 기존 표시(usText) 그대로
 const money = (isKr, v, usText) => (isKr ? fmtPrice(v, MARKET.KR) : usText);
@@ -858,12 +859,22 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                         </div>
                     )}
 
-                    {/* 52주 고점 대비 하락률 경고 배너 */}
+                    {/* 52주 고점 대비 하락률 경고 배너 — 시장(기준 지수) 대비로 판단 (util/DrawdownUtil) */}
                     {(() => {
-                        if (!data.high52wDropPercent) return null;
-                        const dropPct = parseFloat(data.high52wDropPercent.replace('%', ''));
-                        if (isNaN(dropPct) || dropPct > -20) return null;
-                        const isSevere = dropPct <= -30;
+                        const info = drawdownInfo(data);
+                        if (!info) return null;
+                        const compare = marketCompareText(info);
+                        if (info.level === 'none') {
+                            // 고정 기준으로는 경고였지만 시장도 같이 빠진 경우 — 경고 대신 비교 정보만
+                            if (info.drop > DROP_WARN_PCT || !compare) return null;
+                            return (
+                                <div className="mb-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 break-keep">
+                                    52주 고점 대비 <span className="font-semibold">{fmtSignedPct(info.drop)}</span> · {compare}
+                                    <span className="text-slate-400"> — 시장 전체 하락 수준이라 경고하지 않음 (기준: 시장보다 {Math.abs(DROP_WARN_PCT)}% 이상 더 하락)</span>
+                                </div>
+                            );
+                        }
+                        const isSevere = info.level === 'severe';
                         return (
                             <div className={`mb-4 p-3 rounded-lg flex items-start gap-2 ${
                                 isSevere
@@ -879,6 +890,7 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                                         : 'text-amber-800 dark:text-amber-200'
                                 }`}>
                                     52주 고점 대비 <span className="font-bold">{data.high52wDropPercent}</span> 하락
+                                    {compare && <> · {compare}</>}
                                     {isSevere ? ' — 강한 하락 추세, 추가 하락 가능성 주의' : ' — 하락 추세 주의'}
                                 </div>
                             </div>
@@ -950,7 +962,7 @@ const InvestmentDetailModal = ({ isOpen, data, onClose, onOpenFullDetail, zIndex
                         <InfoCard label="PER" value={data.per ? parseFloat(data.per).toFixed(2) : '-'} />
                         <InfoCard label="PEG" value={data.peg || '-'} />
                         <InfoCard label="Forward PER" value={data.forwardPer || '-'} />
-                        <InfoCard label="52주 고점 대비" value={data.high52wDropPercent || '-'} />
+                        <InfoCard label="52주 고점 대비" value={data.high52wDropPercent ? `${data.high52wDropPercent}${data.benchmarkHigh52wDropPercent ? ` (${data.benchmarkName} ${data.benchmarkHigh52wDropPercent})` : ''}` : '-'} />
                     </div>
 
                     {/* 기업 정보 */}

@@ -7,6 +7,7 @@ import PageTitle from '@/component/common/display/PageTitle';
 import Loading from '@/component/common/display/Loading';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
 import InvestmentDetailModal, { FullDetailModal } from '@/pages/trade/popup/InvestmentDetailModal';
+import { drawdownInfo, marketCompareText, fmtSignedPct } from '@/util/DrawdownUtil';
 import { GRADE_STYLE, GRADE_STYLE_DEFAULT, GRADE_EXCEL_ARGB } from '@/util/GradeStyleUtil';
 import { SIGNAL_STYLE, SignalDot } from '@/util/SignalStyleUtil';
 import { AlertTriangle } from 'lucide-react';
@@ -352,23 +353,22 @@ const TABLE_COLUMNS = [
     {
         key: 'high52wDropPercent',
         label: '52주 고점대비',
-        width: '110px',
+        width: '130px',
         sortable: true,
         headerClassName: 'px-4 py-3 text-right text-xs font-semibold',
         cellClassName: 'px-4 py-3 whitespace-nowrap text-right',
-        render: (value) => {
-            if (!value) return '-';
-            const num = parseFloat(value.replace('%', ''));
-            if (isNaN(num)) return '-';
-            const isSevere = num <= -30;
-            const isWarning = num <= -20;
+        render: (value, row) => {
+            // 색 = 시장(SPY) 대비 하락 기준 (util/DrawdownUtil) — 시장도 같이 빠졌으면 경고색 아님
+            const info = drawdownInfo({ ...row, high52wDropPercent: value });
+            if (!info) return '-';
             return (
-                <span className={
-                    isSevere ? 'text-orange-500 dark:text-orange-400 font-semibold' :
-                    isWarning ? 'text-amber-600 dark:text-amber-400 font-medium' :
+                <span title={marketCompareText(info) || undefined} className={
+                    info.level === 'severe' ? 'text-orange-500 dark:text-orange-400 font-semibold' :
+                    info.level === 'warn' ? 'text-amber-600 dark:text-amber-400 font-medium' :
                     'text-slate-600 dark:text-slate-300'
                 }>
-                    {num > 0 ? '+' : ''}{num.toFixed(1)}%
+                    {fmtSignedPct(info.drop)}
+                    {info.rel != null && <span className="block text-[11px] font-normal text-slate-400">시장 대비 {fmtSignedPct(info.rel)}</span>}
                 </span>
             );
         },
