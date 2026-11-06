@@ -76,3 +76,12 @@ export const ErrorBanner = ({ errors }) => (errors?.length > 0 ? (
         {errors.map((e) => <div key={e}>⚠ {e}</div>)}
     </div>
 ) : null);
+
+/** 목록 아래 [더 보기] / [접기] (useShowMore 와 함께 사용) */
+export const ShowMoreBar = ({ list, step }) => (list.hasMore || list.canCollapse ? (
+    <div className="mt-3 flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <span>{list.total}건 중 {list.shown}건 표시</span>
+        {list.hasMore && <Button variant="secondary" size="sm" onClick={list.showMore}>{Math.min(step, list.total - list.shown)}건 더 보기</Button>}
+        {list.canCollapse && <Button variant="ghost" size="sm" onClick={list.collapse}>접기</Button>}
+    </div>
+) : null);

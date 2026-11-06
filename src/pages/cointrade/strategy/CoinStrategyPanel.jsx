@@ -3,12 +3,13 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Ca
 import Toast from '@/component/common/display/Toast';
 import Button from '@/component/common/button/Button';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
-import { Card, Row, WeightBar, ModeSelector, ErrorBanner, RefreshButton } from './StrategyUi';
+import { Card, Row, WeightBar, ModeSelector, ErrorBanner, RefreshButton, ShowMoreBar } from './StrategyUi';
 import useStrategyData from './useStrategyData';
 import {
     RUN_LIMIT, MIN_CAPITAL_KRW, EMERGENCY_CONFIRM_WORD, COLOR_STRATEGY, COLOR_BTC, STRATEGY_COIN, MODES,
     modeLabel, hourRange, fmtKrw, fmtPct, fmtSignedPct, returnAccent, fmtBtc, fmtDateTime, INPUT_CLASS, statusBadge, actionLabel,
 } from './strategyCommon';
+import useShowMore, { RUNS_STEP } from './useShowMore';
 import { SLATE, withAlpha } from '@/config/themeColors';
 
 /**
@@ -88,6 +89,8 @@ export default function CoinStrategyPanel({ header }) {
     const liveLedger = status?.ledgers?.LIVE;
     const liveHasBtc = (liveLedger?.btcUnits || 0) > 0;
     const sig = status?.signal;
+
+    const runList = useShowMore(runs);
 
     const chartData = useMemo(() => {
         const ok = runs.filter((r) => r.status === 'SUCCESS' && r.mode === status?.mode && r.equityKrw && r.btcPrice)
@@ -247,7 +250,7 @@ export default function CoinStrategyPanel({ header }) {
                 ) : <p className="text-sm text-slate-400">실행 기록이 2일 이상 쌓이면 표시됩니다.</p>}
             </Card>
 
-            <Card title="실행 기록" right={<span className="text-xs text-slate-400">최근 {RUN_LIMIT}건 · 전체 모드</span>}>
+            <Card title="실행 기록" right={<span className="text-xs text-slate-400">최근 {RUN_LIMIT}건까지 · 전체 모드</span>}>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm whitespace-nowrap">
                         <thead>
@@ -258,7 +261,7 @@ export default function CoinStrategyPanel({ header }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {runs.map((r) => (
+                            {runList.visible.map((r) => (
                                 <tr key={r.id} className="border-b border-slate-100 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                                     <td className="py-1.5 px-2">{fmtDateTime(r.createdAt)}</td>
                                     <td className="px-2">{modeLabel(r.mode) || r.mode}</td>
@@ -280,6 +283,7 @@ export default function CoinStrategyPanel({ header }) {
                         </tbody>
                     </table>
                 </div>
+                <ShowMoreBar list={runList} step={RUNS_STEP} />
             </Card>
 
             <AlertModal

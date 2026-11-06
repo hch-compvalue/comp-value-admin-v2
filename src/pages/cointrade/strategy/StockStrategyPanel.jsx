@@ -4,12 +4,13 @@ import { Lock, ChevronRight, ChevronDown } from 'lucide-react';
 import Toast from '@/component/common/display/Toast';
 import Button from '@/component/common/button/Button';
 import AlertModal from '@/component/layouts/common/popup/AlertModal';
-import { Card, Row, WeightBar, ModeSelector, ErrorBanner, RefreshButton } from './StrategyUi';
+import { Card, Row, WeightBar, ModeSelector, ErrorBanner, RefreshButton, ShowMoreBar } from './StrategyUi';
 import useStrategyData from './useStrategyData';
 import {
     RUN_LIMIT, MIN_CAPITAL_KRW, EMERGENCY_CONFIRM_WORD, COLOR_STRATEGY, COLOR_HOLD, STRATEGY_STOCK, MODES,
     modeLabel, hourRange, fmtKrw, fmtPct, fmtSignedPct, returnAccent, fmtShares, fmtDateTime, INPUT_CLASS,
 } from './strategyCommon';
+import useShowMore, { RUNS_STEP } from './useShowMore';
 import { SLATE, withAlpha } from '@/config/themeColors';
 
 /**
@@ -154,6 +155,8 @@ export default function StockStrategyPanel({ header }) {
         else next.add(id);
         return next;
     });
+
+    const runList = useShowMore(runs);
 
     const chartData = useMemo(() => {
         const ok = runs.filter((r) => r.status === 'SUCCESS' && r.mode === status?.mode && r.equityKrw)
@@ -391,7 +394,7 @@ export default function StockStrategyPanel({ header }) {
                 ) : <p className="text-sm text-slate-400">실행 기록이 2일 이상 쌓이면 표시됩니다.</p>}
             </Card>
 
-            <Card title="실행 기록" right={<span className="text-xs text-slate-400">최근 {RUN_LIMIT}건 · 전체 모드 · 행을 누르면 종목별 상세</span>}>
+            <Card title="실행 기록" right={<span className="text-xs text-slate-400">최근 {RUN_LIMIT}건까지 · 전체 모드 · 행을 누르면 종목별 상세</span>}>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm whitespace-nowrap">
                         <thead>
@@ -400,7 +403,7 @@ export default function StockStrategyPanel({ header }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {runs.map((r) => {
+                            {runList.visible.map((r) => {
                                 const hasDetail = r.detail?.length > 0;
                                 const isOpen = expanded.has(r.id);
                                 return (
@@ -444,6 +447,7 @@ export default function StockStrategyPanel({ header }) {
                         </tbody>
                     </table>
                 </div>
+                <ShowMoreBar list={runList} step={RUNS_STEP} />
             </Card>
 
             <AlertModal
