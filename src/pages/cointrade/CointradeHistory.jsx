@@ -1280,7 +1280,7 @@ export default function CointradeHistory() {
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     시작
                                 </label>
-                                <div className="flex gap-2">
+                                <div className="flex flex-col gap-2 sm:flex-row">
                                     <Input
                                         type="date"
                                         value={filters.startDate}
@@ -1291,7 +1291,7 @@ export default function CointradeHistory() {
                                         type="time"
                                         value={filters.startTime}
                                         onChange={(e) => handleFilterChange('startTime', e.target.value)}
-                                        className="w-36 flex-shrink-0"
+                                        className="w-full sm:w-36 sm:flex-shrink-0"
                                     />
                                 </div>
                             </div>
@@ -1299,7 +1299,7 @@ export default function CointradeHistory() {
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     종료
                                 </label>
-                                <div className="flex gap-2">
+                                <div className="flex flex-col gap-2 sm:flex-row">
                                     <Input
                                         type="date"
                                         value={filters.endDate}
@@ -1310,7 +1310,7 @@ export default function CointradeHistory() {
                                         type="time"
                                         value={filters.endTime}
                                         onChange={(e) => handleFilterChange('endTime', e.target.value)}
-                                        className="w-36 flex-shrink-0"
+                                        className="w-full sm:w-36 sm:flex-shrink-0"
                                     />
                                 </div>
                             </div>

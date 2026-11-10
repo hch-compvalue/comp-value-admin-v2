@@ -281,7 +281,7 @@ export default function SellRecordHistory() {
 
             <div className="px-2 py-8 md:px-4 space-y-6">
                 {/* 헤더 및 통계 */}
-                <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 dark:bg-slate-800 dark:border-slate-700">
+                <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                         <div>
                             <div className="flex items-center gap-2 mb-2">
@@ -314,11 +314,11 @@ export default function SellRecordHistory() {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                             <select
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
-                                className="px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                className="min-w-0 flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                             >
                                 <option value="all">전체 기간</option>
                                 {availableMonths.map(month => (
@@ -330,7 +330,7 @@ export default function SellRecordHistory() {
                             <select
                                 value={selectedSymbol}
                                 onChange={(e) => setSelectedSymbol(e.target.value)}
-                                className="px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                className="min-w-0 flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                             >
                                 <option value="all">전체 티커</option>
                                 {availableSymbols.map(symbol => (

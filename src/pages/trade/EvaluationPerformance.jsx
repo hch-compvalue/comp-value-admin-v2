@@ -266,7 +266,7 @@ const EvaluationPerformance = () => {
     const elapsedDays = result ? daysBetween(result.baseDate, result.latestDate) : 0;
 
     return (
-        <div className="p-4 md:p-6">
+        <div>
             <div className="flex items-start justify-between gap-3">
                 <PageTitle />
                 <button

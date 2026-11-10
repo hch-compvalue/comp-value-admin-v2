@@ -59,6 +59,9 @@ const valuationWarnings = (row) => {
 const topPct = (pct) => Math.max(1, Math.round(100 - pct));
 
 /** 투자 순위 근거: 수익성·가치 상위 비율 + 최근 1주 수익률 (순위 점수가 없으면 null) */
+// 가로 스크롤해도 어느 종목인지 보이게 심볼 열 고정
+const STICKY_CELL = 'sticky left-0 z-10';
+
 const RankReason = ({ row, excludeReasons = [] }) => {
     const warnings = valuationWarnings(row).map((w) => (
         <span key={w.label} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 font-semibold dark:bg-orange-900/50 dark:text-orange-200" title={w.title}>
@@ -152,8 +155,8 @@ const DailyPicks = () => {
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
-    // 행 더블클릭 → 기업가치 실시간 재계산 후 결과 모달 표시
-    const handleRowDoubleClick = useCallback(async (symbol) => {
+    // 행 클릭(모바일은 탭) → 기업가치 실시간 재계산 후 결과 모달 표시
+    const handleRowClick = useCallback(async (symbol) => {
         if (!symbol || valueInFlight.current) return;
         valueInFlight.current = true;
         setValueLoadingSymbol(symbol);
@@ -243,7 +246,7 @@ const DailyPicks = () => {
         else { setSortKey(key); setSortDir('desc'); }
     };
 
-    // 적정가·매수적정가는 상세(더블클릭)에서 확인 — V9 적정가는 보수적 추정이라 표에서 현재가와 바로 비교하면 오해 소지
+    // 적정가·매수적정가는 상세(행 클릭)에서 확인 — V9 적정가는 보수적 추정이라 표에서 현재가와 바로 비교하면 오해 소지
     const COLUMNS = [
         { key: 'rankScore', label: '순위', num: true },
         { key: 'symbol', label: isKr ? '종목코드' : '심볼' },
@@ -259,7 +262,7 @@ const DailyPicks = () => {
     ];
 
     return (
-        <div className="p-4 md:p-6">
+        <div>
             <div className="flex items-start justify-between gap-3">
                 <PageTitle />
                 <button
@@ -364,11 +367,11 @@ const DailyPicks = () => {
                 <div className="mb-4 text-xs text-slate-400">이 평가 스냅샷에는 추천 프로파일 정보가 없습니다 (2026-10-13 이후 평가분부터 표시)</div>
             )}
 
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
                 <div className="text-sm text-slate-500 dark:text-slate-400">
                     {baseDate && `평가 기준일: ${baseDate}`} · {isKr
                         ? '평일 17:30 자동 전수평가 결과 (가격은 전 거래일 종가)'
-                        : '매일 오전 10시 자동 전수평가 결과 · 행 더블클릭 시 기업가치 계산'}
+                        : '매일 오전 10시 자동 전수평가 결과 · 행을 누르면 기업가치 계산'}
                     {valueLoadingSymbol && <span className="ml-2 text-blue-600 dark:text-blue-400">({valueLoadingSymbol} 계산 중…)</span>}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -407,7 +410,7 @@ const DailyPicks = () => {
                                 <th
                                     key={col.id || col.label}
                                     onClick={() => handleSort(col.key)}
-                                    className={`px-4 py-3 font-semibold text-slate-600 dark:text-slate-300 cursor-pointer whitespace-nowrap ${col.num ? 'text-right' : 'text-left'}`}
+                                    className={`px-4 py-3 font-semibold text-slate-600 dark:text-slate-300 cursor-pointer whitespace-nowrap ${col.num ? 'text-right' : 'text-left'} ${col.key === 'symbol' ? `${STICKY_CELL} bg-slate-50 dark:bg-slate-800` : ''}`}
                                 >
                                     {col.label}
                                     {effectiveSortKey === col.key && col.id !== 'rankScoreBar' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
@@ -426,14 +429,14 @@ const DailyPicks = () => {
                         {filtered.map((r) => (
                             <tr
                                 key={r.symbol}
-                                onDoubleClick={() => handleRowDoubleClick(r.symbol)}
-                                title="더블클릭: 기업가치 계산 결과 보기"
-                                className={`border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 select-none cursor-pointer ${
+                                onClick={() => handleRowClick(r.symbol)}
+                                title="클릭: 기업가치 계산 결과 보기"
+                                className={`group border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 select-none cursor-pointer ${
                                     valueLoadingSymbol === r.symbol ? 'opacity-60' : ''
                                 }`}
                             >
                                 <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400 tabular-nums">{rankBySymbol.get(r.symbol) ?? '-'}</td>
-                                <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-white">{r.symbol}</td>
+                                <td className={`px-4 py-2.5 font-semibold text-slate-900 dark:text-white ${STICKY_CELL} bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800`}>{r.symbol}</td>
                                 <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 max-w-[200px] truncate">{r.companyName || '-'}</td>
                                 <td className="px-4 py-2.5"><RankBar score={r.rankScore} /></td>
                                 <td className="px-4 py-2.5 min-w-[220px]"><RankReason row={r} excludeReasons={activeFilter === BUY_TARGETS || !hasRank ? [] : reasonsOf(r)} /></td>

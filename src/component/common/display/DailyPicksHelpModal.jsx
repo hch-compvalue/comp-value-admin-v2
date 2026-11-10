@@ -73,7 +73,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                             </ul>
                             <p>
                                 과거 데이터(2018~2026, 약 1,500종목) 백테스트에서 <strong>2~4주 보유 기준</strong> 순위가 높을수록 성과가 나았던 요소만 썼습니다.
-                                효과는 크지 않으니 <strong>최종 판단은 근거 칩과 상세(더블클릭)를 함께 보고</strong> 하세요.
+                                효과는 크지 않으니 <strong>최종 판단은 근거 칩과 상세(행 클릭)를 함께 보고</strong> 하세요.
                                 6~12개월 기준으로 <strong>시장 평균보다 낫다는 것은 아직 검증 중</strong>입니다(새 종목 표본 포함 백테스트에서 +1.5%p, 기준 +2%p 미달). 매도는 목표매도가(최신 기업가치 × 0.95) 도달 시 검토하는 방식이 검증됐습니다. 실제 운영 성과는 성과 추적의 "투자 순위별 성과"에서 확인할 수 있습니다.
                             </p>
                             <p>타이밍 신호는 같은 백테스트에서 효과가 확인되지 않아 <strong>참고용</strong>으로만 표시합니다(투자판정에는 아직 사용).</p>
@@ -349,7 +349,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">적정가 (상세)</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">주당가치 계산 로직이 산출한 내재가치. 보수적 추정이라 대부분 종목이 이보다 비싸게 거래되므로 표에서는 빼고 상세(더블클릭)에서 보여줍니다</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">주당가치 계산 로직이 산출한 내재가치. 보수적 추정이라 대부분 종목이 이보다 비싸게 거래되므로 표에서는 빼고 상세(행 클릭)에서 보여줍니다</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">매수적정가 (상세)</td>
@@ -368,7 +368,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                             헤더를 클릭하면 해당 컬럼 기준으로 정렬됩니다(▲ 오름차순 / ▼ 내림차순).
-                            행을 더블클릭하면 해당 종목의 기업가치를 실시간으로 다시 계산해 결과 팝업을 띄웁니다(평가 시점 적정가와 다를 수 있음).
+                            행을 누르면 해당 종목의 기업가치를 실시간으로 다시 계산해 결과 팝업을 띄웁니다(평가 시점 적정가와 다를 수 있음).
                         </p>
                     </section>
 
