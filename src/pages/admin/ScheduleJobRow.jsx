@@ -267,6 +267,23 @@ const COLLAPSED_ROWS = 1;
 /**
  * 최근 실행 이력 — 기본 접힘 (가장 최근 1건만 표시, 펼치면 전체)
  */
+/** 실행 결과 메시지 — 길면 한 줄로 줄이고 눌러서 펼침 (모바일은 마우스오버 툴팁이 안 떠서) */
+const RunMessage = ({ message }) => {
+    const [expanded, setExpanded] = useState(false);
+    if (!message) return '-';
+    return (
+        <button
+            type="button"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((v) => !v)}
+            title={expanded ? '접기' : message}
+            className={`block w-64 text-left md:w-96 ${expanded ? 'whitespace-pre-wrap break-words' : 'truncate'}`}
+        >
+            {message}
+        </button>
+    );
+};
+
 const RunHistory = ({ history }) => {
     const [open, setOpen] = useState(false);
     const canToggle = history.length > COLLAPSED_ROWS;
@@ -310,7 +327,7 @@ const RunHistory = ({ history }) => {
                                 </td>
                                 <td className="px-3 py-2"><StatusBadge status={h.status} /></td>
                                 <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">{formatDuration(h.startedAt, h.endedAt)}</td>
-                                <td className="max-w-md truncate px-3 py-2 text-slate-600 dark:text-slate-400" title={h.message || ''}>{h.message || '-'}</td>
+                                <td className="px-3 py-2 text-slate-600 dark:text-slate-400"><RunMessage message={h.message} /></td>
                             </tr>
                         ))}
                     </tbody>

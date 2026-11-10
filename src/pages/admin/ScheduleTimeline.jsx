@@ -61,9 +61,12 @@ export default function ScheduleTimeline({ rows }) {
                 <h2 className="text-base font-semibold text-slate-900 dark:text-white">하루 일정</h2>
                 <Legend />
             </div>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">막대 길이는 최근 성공 실행의 평소 소요 시간입니다. 막대에 마우스를 올리면 자세히 보입니다.</p>
+            <p className="mt-1 hidden text-xs text-slate-500 md:block dark:text-slate-400">막대 길이는 최근 성공 실행의 평소 소요 시간입니다. 막대에 마우스를 올리면 자세히 보입니다.</p>
 
-            <div className="mt-4 overflow-x-auto">
+            {/* 모바일: 막대 차트는 가로 스크롤·마우스오버가 필요해서 시각 순 목록으로 대신 보여줌 */}
+            <TimelineList rows={placed} warnedKeys={warnedKeys} now={now} />
+
+            <div className="mt-4 hidden overflow-x-auto md:block">
                 <div className="min-w-[640px]">
                     {/* 시각 눈금 */}
                     <div className="flex">
@@ -126,6 +129,46 @@ export default function ScheduleTimeline({ rows }) {
                 </ul>
             )}
         </section>
+    );
+}
+
+/** 모바일용 시각 순 목록 — 시작~평소 종료, 지금 시각 구분선 */
+function TimelineList({ rows, warnedKeys, now }) {
+    const sorted = [...rows].sort((a, b) => a.start - b.start);
+    const nowIndex = sorted.findIndex((r) => r.start > now);
+    const nowAt = nowIndex === -1 ? sorted.length : nowIndex;
+    const items = sorted.map((row) => <TimelineListItem key={row.key} row={row} warned={warnedKeys.has(row.key)} />);
+    items.splice(nowAt, 0, (
+        <li key="now" className="flex items-center gap-2 py-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+            <span className="h-px flex-1 bg-blue-600 dark:bg-blue-400" />지금 {minuteText(now)}<span className="h-px flex-1 bg-blue-600 dark:bg-blue-400" />
+        </li>
+    ));
+    return <ul className="mt-3 divide-y divide-slate-100 md:hidden dark:divide-slate-700">{items}</ul>;
+}
+
+function TimelineListItem({ row, warned }) {
+    const endText = row.duration != null ? ` ~ ${minuteText(row.start + row.duration)}` : '';
+    return (
+        <li className={`flex items-start gap-3 py-2.5 ${row.enabled ? '' : 'opacity-50'}`}>
+            <span aria-hidden="true" className={`mt-1.5 inline-block h-2.5 w-4 shrink-0 rounded-sm ${barStyleOf(row)} ${row.running ? 'animate-pulse' : ''}`} />
+            <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{row.label}</span>
+                    <span className="shrink-0 text-sm tabular-nums text-slate-700 dark:text-slate-300">{minuteText(row.start)}{endText}</span>
+                </div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-500 dark:text-slate-400">
+                    <span>{describeDays(row.days)}</span>
+                    <span>{row.duration != null ? `평소 ${formatMinutes(row.duration)}` : '소요 시간 기록 없음'}</span>
+                    {!row.enabled && <span>꺼짐</span>}
+                    {row.running && <span className="font-semibold text-blue-600 dark:text-blue-400">실행 중</span>}
+                    {warned && (
+                        <span className="inline-flex items-center gap-1 font-semibold text-orange-700 dark:text-orange-300">
+                            <AlertTriangle aria-hidden="true" className="h-3 w-3" />순서 주의
+                        </span>
+                    )}
+                </div>
+            </div>
+        </li>
     );
 }
 

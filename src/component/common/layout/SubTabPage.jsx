@@ -93,7 +93,8 @@ export default function SubTabPage({ basePath, section, label, tabs: allTabs, to
                     );
                 })}
             </div>
-            {toolbar && <div className="pb-2">{toolbar}</div>}
+            {/* 모바일은 탭 개수와 상관없이 항상 탭 위 별도 줄 (wrap-reverse 라 w-full 이면 위로 감) */}
+            {toolbar && <div className="w-full pb-2 sm:w-auto">{toolbar}</div>}
             </div>
 
             {tabs.map((tab) => {

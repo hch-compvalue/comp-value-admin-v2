@@ -21,14 +21,14 @@ function PageTitle() {
     // 현재 경로와 일치하는 라우트 찾기
     const findRoute = () => {
         // 먼저 정확히 일치하는 경로 찾기
-        for (const [key, route] of Object.entries(routes)) {
+        for (const route of Object.values(routes)) {
             if (route.path === location.pathname) {
                 return route;
             }
         }
 
         // 동적 경로 또는 자식 경로 찾기
-        for (const [key, route] of Object.entries(routes)) {
+        for (const route of Object.values(routes)) {
             if (route.children) {
                 for (const child of route.children) {
                     const fullPath = route.path + child.path;
@@ -53,8 +53,8 @@ function PageTitle() {
 
     return (
         <div className="mb-6">
-            {/* 브레드크럼 */}
-            <div className="mb-2 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            {/* 브레드크럼 — 모바일은 하위 탭·제목과 겹쳐 공간만 차지해서 숨김 */}
+            <div className="mb-2 hidden md:flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <span>{currentRoute.section}</span>
                 {currentRoute.parentLabel && (
                     <>

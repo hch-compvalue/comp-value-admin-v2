@@ -63,7 +63,8 @@ const topPct = (pct) => Math.max(1, Math.round(100 - pct));
 const STICKY_CELL = 'sticky left-0 z-10';
 
 const RankReason = ({ row, excludeReasons = [] }) => {
-    const warnings = valuationWarnings(row).map((w) => (
+    const valuation = valuationWarnings(row);
+    const warnings = valuation.map((w) => (
         <span key={w.label} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 font-semibold dark:bg-orange-900/50 dark:text-orange-200" title={w.title}>
             <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />{w.label}
         </span>
@@ -74,8 +75,16 @@ const RankReason = ({ row, excludeReasons = [] }) => {
             {reason}
         </span>
     ));
+    // 경고 칩 설명은 툴팁에만 있어서 모바일에선 안 보임 → 모바일만 칩 아래에 글로 표시
+    const warningNotes = valuation.length > 0 && (
+        <ul className="mt-1 space-y-0.5 text-[11px] leading-snug text-orange-800 md:hidden dark:text-orange-200">
+            {valuation.map((w) => <li key={w.label}>{w.title}</li>)}
+        </ul>
+    );
     if (row.rankScore == null) {
-        return warnings.length > 0 ? <div className="flex flex-wrap gap-1 text-xs">{warnings}</div> : <span className="text-slate-400">-</span>;
+        return warnings.length > 0
+            ? <div><div className="flex flex-wrap gap-1 text-xs">{warnings}</div>{warningNotes}</div>
+            : <span className="text-slate-400">-</span>;
     }
     const ret = row.return1wPct;
     return (
@@ -91,6 +100,7 @@ const RankReason = ({ row, excludeReasons = [] }) => {
                 1주 {ret > 0 ? '+' : ''}{Number(ret).toFixed(1)}%
             </span>
             {warnings}
+            {warningNotes && <div className="basis-full">{warningNotes}</div>}
         </div>
     );
 };

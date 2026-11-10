@@ -36,13 +36,13 @@ export default function TopPicks() {
 
     return (
         <section className="rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-            <div className="flex items-baseline justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-                <h2 className="text-sm font-semibold text-slate-800 dark:text-white">
+            <div className="flex items-baseline justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                <h2 className="min-w-0 text-sm font-semibold text-slate-800 dark:text-white">
                     <span title={BUY_TARGET_NOTE}>{BUY_TARGET_LABEL} 상위 {TOP_COUNT}</span>
                     <span className={`${PENDING_BADGE} ml-2 align-middle`} title={RANK_PENDING_TITLE}>{PENDING_LABEL}</span>
-                    {baseDate && <span className="ml-2 text-xs font-normal text-slate-400">{baseDate} 기준</span>}
+                    {baseDate && <span className="ml-2 whitespace-nowrap text-xs font-normal text-slate-400">{baseDate} 기준</span>}
                 </h2>
-                <Link to={STOCK_DISCOVER_PATH} className="text-xs text-brand hover:underline dark:text-blue-400">전체 보기</Link>
+                <Link to={STOCK_DISCOVER_PATH} className="shrink-0 whitespace-nowrap text-xs text-brand hover:underline dark:text-blue-400">전체 보기</Link>
             </div>
 
             {loading ? (
@@ -57,14 +57,17 @@ export default function TopPicks() {
                         {rows.map((r, i) => (
                             <tr key={r.symbol} className="border-t border-slate-100 first:border-t-0 dark:border-slate-700">
                                 <td className="w-10 py-2.5 pl-4 text-right text-slate-400">{i + 1}</td>
-                                <td className="py-2.5 pl-3 font-semibold text-slate-900 dark:text-white">{r.symbol}</td>
-                                <td className="max-w-[180px] truncate py-2.5 pl-3 text-slate-600 dark:text-slate-300">{r.companyName || '-'}</td>
+                                <td className="whitespace-nowrap py-2.5 pl-3 font-semibold text-slate-900 dark:text-white">{r.symbol}</td>
+                                {/* 표 칸은 max-width 로 안 줄어듦 → w-full + max-w-0 으로 남는 폭만 쓰고 말줄임 (긴 이름이 가격을 표 밖으로 밀던 문제) */}
+                                <td className="w-full max-w-0 py-2.5 pl-3 text-slate-600 dark:text-slate-300">
+                                    <div className="truncate" title={r.companyName || ''}>{r.companyName || '-'}</div>
+                                </td>
                                 <td className="py-2.5 pl-3 whitespace-nowrap">
                                     <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-bold ${GRADE_STYLE[r.valueGrade] || ''}`} title="가치등급">
                                         {r.valueGrade || '-'}
                                     </span>
                                 </td>
-                                <td className="py-2.5 pr-4 text-right text-slate-600 dark:text-slate-300">{fmtPrice(r.currentPrice)}</td>
+                                <td className="whitespace-nowrap py-2.5 pr-4 pl-3 text-right tabular-nums text-slate-600 dark:text-slate-300">{fmtPrice(r.currentPrice)}</td>
                             </tr>
                         ))}
                     </tbody>
