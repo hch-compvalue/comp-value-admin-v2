@@ -53,7 +53,7 @@ export default function Home() {
                             </div>
                         </div>
 
-                        {/* 투자 순위 상위 종목 */}
+                        {/* 가치점수 상위 종목 */}
                         <div className="mb-8">
                             <TopPicks />
                         </div>
@@ -66,7 +66,7 @@ export default function Home() {
                     <div className="max-w-2xl py-12">
                         <h1 className="mb-3 text-2xl font-bold text-slate-900 dark:text-white">CompValue</h1>
                         <p className="mb-6 leading-relaxed text-slate-600 dark:text-slate-300">
-                            미국 주식의 내재가치를 계산하고 투자 순위·보유종목·자동매매를 한곳에서 관리합니다.
+                            미국·국내 주식의 내재가치를 계산하고 종목 발굴·보유종목·자동매매를 한곳에서 관리합니다.
                         </p>
                         <p className="text-sm text-slate-500 dark:text-slate-400">상단의 로그인 버튼으로 시작하세요.</p>
                     </div>

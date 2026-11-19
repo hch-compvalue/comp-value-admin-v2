@@ -51,7 +51,7 @@ export default function EvaluationPerformanceHelpModal({ isOpen, onClose }) {
                     <section>
                         <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">맨 위 핵심 질문 4개</h4>
                         <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300">
-                            <li><strong>매수 대상이 나았나?</strong> — 종목 발굴 기본 목록(투자 순위 상위 20% · 가치 B 이상 · 목표가 미도달 · 금융 제외)의 중앙값 − 후보 전체 중앙값</li>
+                            <li><strong>매수 대상이 나았나?</strong> — 매수 대상 목록(투자 순위 상위 20% · 가치 B 이상 · 목표가 미도달 · 금융 제외, 2026-11-19부터 참고용)의 중앙값 − 후보 전체 중앙값</li>
                             <li><strong>순위 상위 20% &gt; 하위 20%?</strong> — 투자 순위가 실제로 좋은 종목을 위로 올리는지</li>
                             <li><strong>가치 B 이상 &gt; C 이하?</strong> — 매수 대상 거름망(가치등급)이 맞는지</li>
                             <li><strong>후보 전체 vs SPY</strong> — 추천 후보 자체가 지수보다 나은지</li>

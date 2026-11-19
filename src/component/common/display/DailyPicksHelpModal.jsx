@@ -53,7 +53,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                     <section className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4">
                         <div className="font-semibold text-slate-800 dark:text-slate-100 mb-1">이 페이지는?</div>
                         <div className="text-slate-700 dark:text-slate-300">
-                            매일 오전 자동으로 돌린 <strong>추천 종목 전수 평가 결과</strong>를 <strong>투자 순위</strong> 순으로 보는 화면입니다.
+                            매일 오전 자동으로 돌린 <strong>추천 종목 전수 평가 결과</strong>를 <strong>가치점수</strong> 순으로 보는 화면입니다.
                             내가 직접 종목을 넣고 분석하는 게 아니라, <strong>이미 저장된 최신 평가 스냅샷을 그대로 읽어옵니다</strong>
                             (조회 시점에 재계산하지 않음).
                         </div>
@@ -61,7 +61,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
 
                     {/* 투자 순위 */}
                     <section>
-                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">투자 순위 (기본 정렬)</h4>
+                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">투자 순위 (참고용 — 실전 근거 없음)</h4>
                         <div className="space-y-2 text-slate-600 dark:text-slate-400 text-xs">
                             <p>
                                 그날 평가한 후보 안에서 세 가지의 <strong>상위 비율(백분위)</strong>을 구해 같은 비중으로 평균한 0~100점입니다.
@@ -76,9 +76,13 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                 효과는 크지 않으니 <strong>최종 판단은 근거 칩과 상세(행 클릭)를 함께 보고</strong> 하세요.
                                 6~12개월 기준으로 <strong>시장 평균보다 낫다는 것은 아직 검증 중</strong>입니다(새 종목 표본 포함 백테스트에서 +1.5%p, 기준 +2%p 미달). 매도는 목표매도가(최신 기업가치 × 0.95) 도달 시 검토하는 방식이 검증됐습니다. 실제 운영 성과는 성과 추적의 "투자 순위별 성과"에서 확인할 수 있습니다.
                             </p>
+                            <p>
+                                <strong>실전 결과(2026-10-15~11-19, 4주 보유)</strong>: 미국에서 순위 상위 종목과 매수 대상이 다른 후보보다 <strong>오히려 성과가 낮았습니다</strong>(매수 대상은 6개 기준일 모두, 평균 약 −8%p — 특히 "단기 눌림" 요소가 반대로 작동).
+                                국내도 백테스트에서 순위 근거가 없었습니다. 그래서 <strong>기본 화면은 미국·국내 모두 전체 후보를 가치점수 순</strong>으로 보여주고, 순위·매수 대상은 참고용으로만 남겨 둡니다.
+                            </p>
                             <p>타이밍 신호는 같은 백테스트에서 효과가 확인되지 않아 <strong>참고용</strong>으로만 표시합니다(투자판정에는 아직 사용).</p>
                             <p>
-                                <strong>매수 대상</strong>(기본 화면) = 투자 순위 상위 20% 중 <strong>가치등급 B 이상</strong>이고 <strong>현재가가 목표매도가보다 낮은</strong> 종목입니다(금융 제외는 선택).
+                                <strong>매수 대상</strong>(참고용 타일) = 투자 순위 상위 20% 중 <strong>가치등급 B 이상</strong>이고 <strong>현재가가 목표매도가보다 낮은</strong> 종목입니다(금융 제외는 선택).
                                 두 백테스트 표본에서 12개월 시장 평균 대비 약 +3%p로 같은 방향이었고(탐색값), 가치등급 C 이하는 순위가 높아도 평균보다 나빴습니다.
                                 목록 안의 순서 차이는 작아서 <strong>10~20종목을 같은 금액씩 나눠 담는 것</strong>이 핵심입니다. 투자판정의 매수 후보/관심목록 차이는 타이밍뿐이라 구분하지 않습니다.
                             </p>
@@ -120,7 +124,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                 <div>
                                     <div className="font-semibold">이 화면에서 최신 스냅샷 조회</div>
                                     <div className="text-xs text-slate-600 dark:text-slate-400">
-                                        기본값은 <strong>가장 최근 평가일</strong>이며, <strong>투자 순위 점수</strong> 내림차순으로 정렬해 보여줍니다(순위 점수가 없는 옛 스냅샷은 가치점수순).
+                                        기본값은 <strong>가장 최근 평가일</strong>이며, <strong>가치점수</strong> 내림차순으로 정렬해 보여줍니다(열 제목을 누르면 다른 기준으로 정렬).
                                     </div>
                                 </div>
                             </li>
@@ -167,7 +171,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                             </table>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                            요약 타일(매수 대상·전체·매수 후보·관심목록·관망)을 클릭하면 해당 목록만 보입니다. 기본 화면은 <strong>매수 대상</strong>을 투자 순위순으로 보여주며, 다른 목록에서는 매수 대상에서 빠진 이유가 회색 칩으로 표시됩니다.
+                            요약 타일(매수 대상·전체·매수 후보·관심목록·관망)을 클릭하면 해당 목록만 보입니다. 기본 화면은 <strong>전체 후보</strong>를 가치점수순으로 보여주며, 매수 대상에서 빠진 이유가 회색 칩으로 표시됩니다.
                         </p>
                     </section>
 
