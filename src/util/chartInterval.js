@@ -6,12 +6,12 @@
 /** FMP historical-price-eod 1회 최대 5,000행 ≈ 20년 → 그 이상은 조회해도 잘림 */
 const MAX_FETCH_DAYS = 365 * 20;
 
-/** 봉 단위 정의 — bars: 표시할 최근 봉 개수(null = 조회 가능한 전체), calendarDaysPerBar: 봉 1개당 달력일(조회 기간 계산용) */
+/** 봉 단위 정의 — prevLabel: 툴팁 등락률 기준(직전 봉), bars: 표시할 최근 봉 개수(null = 조회 가능한 전체), calendarDaysPerBar: 봉 1개당 달력일(조회 기간 계산용) */
 export const CHART_INTERVALS = [
-    { key: 'day', label: '일봉', unit: '일', bars: 120, calendarDaysPerBar: 1.5 }, // 거래일 → 달력일 (주말·휴일 보정)
-    { key: 'week', label: '주봉', unit: '주', bars: 104, calendarDaysPerBar: 7 },
-    { key: 'month', label: '월봉', unit: '개월', bars: 120, calendarDaysPerBar: 31 },
-    { key: 'year', label: '년봉', unit: '년', bars: null, calendarDaysPerBar: 366 },
+    { key: 'day', label: '일봉', unit: '일', prevLabel: '전일', bars: 120, calendarDaysPerBar: 1.5 }, // 거래일 → 달력일 (주말·휴일 보정)
+    { key: 'week', label: '주봉', unit: '주', prevLabel: '전주', bars: 104, calendarDaysPerBar: 7 },
+    { key: 'month', label: '월봉', unit: '개월', prevLabel: '전월', bars: 120, calendarDaysPerBar: 31 },
+    { key: 'year', label: '년봉', unit: '년', prevLabel: '전년', bars: null, calendarDaysPerBar: 366 },
 ];
 
 export const DEFAULT_INTERVAL = 'day';

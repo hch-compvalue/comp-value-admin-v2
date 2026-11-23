@@ -234,6 +234,9 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
         if (indicators.macd) result = calcMACD(result, 12, 26, 9);
         if (indicators.stochastic) result = calcStochastic(result, 14, 3);
 
+        // 툴팁 등락률용 직전 봉 종가 — 자르기 전에 붙여서 표시 구간 첫 봉도 값이 있음
+        result = result.map((bar, i) => ({ ...bar, prevClose: i > 0 ? result[i - 1].close : null }));
+
         return takeRecentBars(result, interval);
     }, [allBars, indicators, interval]);
 
@@ -442,7 +445,7 @@ const StockChartModal = ({ isOpen, onClose, symbol, companyName, zIndex = 140 })
                                             domain={priceDomain(zoomedData, overlayKeys)}
                                             tickFormatter={(value) => (isKr ? Math.round(value).toLocaleString('ko-KR') : `$${value.toFixed(value < 10 ? 2 : 0)}`)}
                                         />
-                                        <Tooltip content={<OhlcTooltip labelFmt={labelFmt} prefix="$" formatValue={isKr ? fmtPx : undefined} extraRows={overlayKeys.map((k) => ({ key: k, label: OVERLAY_LABELS[k] }))} />} />
+                                        <Tooltip content={<OhlcTooltip labelFmt={labelFmt} prefix="$" formatValue={isKr ? fmtPx : undefined} changeLabel={intervalInfo.prevLabel} extraRows={overlayKeys.map((k) => ({ key: k, label: OVERLAY_LABELS[k] }))} />} />
 
                                         {/* 캔들 / 선(고가·저가 점선 + 종가) — Recharts 2 는 Fragment 안 요소를 못 찾으므로 개별 조건 렌더링 */}
                                         {isCandle && <Bar dataKey={candleRange} shape={<CandleShape />} isAnimationActive={false} />}
