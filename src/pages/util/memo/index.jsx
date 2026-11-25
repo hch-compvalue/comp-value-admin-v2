@@ -42,7 +42,7 @@ function ConfirmDialog({ open, message, onConfirm, onCancel }) {
 }
 
 // ── 메모 카드 ──
-function MemoCard({ memo, onEdit, onDelete, onTogglePin }) {
+function MemoCard({ memo, onView, onEdit, onDelete, onTogglePin }) {
     return (
         <div
             className={`group relative flex flex-col rounded-xl border bg-white p-4 shadow-sm dark:bg-slate-800 ${
@@ -55,7 +55,7 @@ function MemoCard({ memo, onEdit, onDelete, onTogglePin }) {
             <div className="mb-2 flex items-start justify-between gap-2">
                 <h3
                     className="line-clamp-1 cursor-pointer text-base font-semibold text-slate-900 dark:text-white"
-                    onClick={() => onEdit(memo)}
+                    onClick={() => onView(memo)}
                 >
                     {memo.title || '(제목 없음)'}
                 </h3>
@@ -86,8 +86,8 @@ function MemoCard({ memo, onEdit, onDelete, onTogglePin }) {
 
             {/* 내용 미리보기 */}
             <p
-                className="mb-3 line-clamp-3 flex-1 cursor-pointer whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300"
-                onClick={() => onEdit(memo)}
+                className="mb-3 line-clamp-3 flex-1 cursor-pointer whitespace-pre-wrap break-words text-sm text-slate-600 dark:text-slate-300"
+                onClick={() => onView(memo)}
             >
                 {memo.content || '(내용 없음)'}
             </p>
@@ -105,6 +105,82 @@ function MemoCard({ memo, onEdit, onDelete, onTogglePin }) {
                 <span className="text-xs text-slate-400 dark:text-slate-500">
                     {formatDate(memo.updatedAt || memo.createdAt)}
                 </span>
+            </div>
+        </div>
+    );
+}
+
+// ── 메모 보기 모달 (긴 내용도 한 화면에서 스크롤로 전부 보기) ──
+function MemoViewModal({ memo, onClose, onEdit, onDelete }) {
+    useEffect(() => {
+        if (!memo) return undefined;
+        const handleKey = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+    }, [memo, onClose]);
+
+    if (!memo) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-0 sm:p-4" onClick={onClose}>
+            <div
+                role="dialog"
+                aria-modal="true"
+                className="flex h-full w-full flex-col bg-white shadow-xl sm:h-auto sm:max-h-[90vh] sm:max-w-3xl sm:rounded-xl dark:bg-slate-800"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* 헤더: 제목 + 정보 */}
+                <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 sm:px-6 dark:border-slate-700">
+                    <div className="min-w-0">
+                        <h2 className="break-words text-lg font-bold text-slate-900 dark:text-white">
+                            {memo.pinned && <Pin className="mr-1.5 inline h-4 w-4 -translate-y-0.5 text-sky-500 dark:text-sky-400" />}
+                            {memo.title || '(제목 없음)'}
+                        </h2>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+                            {memo.category && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2.5 py-0.5 font-medium text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">
+                                    <Tag className="h-3 w-3" />
+                                    {memo.category}
+                                </span>
+                            )}
+                            <span>{formatDate(memo.updatedAt || memo.createdAt)}</span>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="shrink-0 rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                        title="닫기 (Esc)"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
+
+                {/* 본문: 길면 이 영역만 스크롤 */}
+                <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+                    <p className="whitespace-pre-wrap break-words text-[15px] leading-7 text-slate-700 dark:text-slate-200">
+                        {memo.content || '(내용 없음)'}
+                    </p>
+                </div>
+
+                {/* 하단 버튼 */}
+                <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 sm:px-6 dark:border-slate-700">
+                    <button
+                        onClick={() => onDelete(memo)}
+                        className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 transition-colors hover:border-orange-300 hover:text-orange-600 dark:border-slate-600 dark:text-slate-300 dark:hover:text-orange-400"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        삭제
+                    </button>
+                    <button
+                        onClick={() => onEdit(memo)}
+                        className="flex items-center gap-1.5 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-600"
+                    >
+                        <Pencil className="h-4 w-4" />
+                        수정
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -302,6 +378,7 @@ export default function Memo() {
     const [loading, setLoading] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [editingMemo, setEditingMemo] = useState(null); // null = 신규, object = 수정
+    const [viewingMemo, setViewingMemo] = useState(null); // 보기 모달에 띄운 메모
     const [alertConfig, setAlertConfig] = useState({ open: false, message: '', onConfirm: null });
 
     // ── 데이터 로드 ──
@@ -347,9 +424,12 @@ export default function Memo() {
     };
 
     const openEditMemo = (memo) => {
+        setViewingMemo(null);
         setEditingMemo(memo);
         setModalOpen(true);
     };
+
+    const closeViewMemo = useCallback(() => setViewingMemo(null), []);
 
     const closeModal = () => {
         setModalOpen(false);
@@ -374,6 +454,7 @@ export default function Memo() {
 
     // ── 삭제 ──
     const handleDeleteClick = (memo) => {
+        setViewingMemo(null);
         setAlertConfig({
             open: true,
             message: `"${memo.title || '(제목 없음)'}" 메모를 삭제하시겠습니까?`,
@@ -487,12 +568,21 @@ export default function Memo() {
                     <MemoCard
                         key={memo.id}
                         memo={memo}
+                        onView={setViewingMemo}
                         onEdit={openEditMemo}
                         onDelete={handleDeleteClick}
                         onTogglePin={handleTogglePin}
                     />
                 ))}
             </div>
+
+            {/* 메모 보기 모달 */}
+            <MemoViewModal
+                memo={viewingMemo}
+                onClose={closeViewMemo}
+                onEdit={openEditMemo}
+                onDelete={handleDeleteClick}
+            />
 
             {/* 메모 작성/수정 모달 */}
             <MemoModal
