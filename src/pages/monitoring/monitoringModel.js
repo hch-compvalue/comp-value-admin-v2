@@ -14,6 +14,10 @@ export const API_VERY_SLOW_MS = 2000;
 
 const MB_PER_GB = 1024;
 const PERCENT = 100;
+const SEC_PER_MIN = 60;
+const SEC_PER_HOUR = 3600;
+const SEC_PER_DAY = 86400;
+const MS_PER_SEC = 1000;
 
 /**
  * 서비스 목록 — 헬스체크 이름(status)과 쿠버네티스 파드 이름(pod)이 달라 여기서 짝지음
@@ -53,6 +57,18 @@ export const usageLevel = (pct) => (pct >= CRITICAL_PCT ? LEVEL.DOWN : pct >= WA
 export function formatUptime(raw) {
     if (!raw || raw === 'null') return null;
     return raw.replace(/(\d+)\s*d/g, '$1일').replace(/(\d+)\s*h/g, '$1시간').replace(/(\d+)\s*m(?!s)/g, '$1분').replace(/(\d+)\s*s/g, '$1초');
+}
+
+/** 컨테이너 시작 시각(epoch 초) → "2일 4시간" / "3시간 12분" / "5분" (모르면 null) */
+export function uptimeSince(startedAtSec, nowMs = Date.now()) {
+    if (!(startedAtSec > 0)) return null;
+    const sec = Math.max(Math.floor(nowMs / MS_PER_SEC - startedAtSec), 0);
+    const days = Math.floor(sec / SEC_PER_DAY);
+    const hours = Math.floor((sec % SEC_PER_DAY) / SEC_PER_HOUR);
+    const minutes = Math.floor((sec % SEC_PER_HOUR) / SEC_PER_MIN);
+    if (days > 0) return `${days}일 ${hours}시간`;
+    if (hours > 0) return `${hours}시간 ${minutes}분`;
+    return `${minutes}분`;
 }
 
 /** MB → "512 MB" / "1.5 GB" */
@@ -105,7 +121,8 @@ export function buildServiceRows(services = [], resources = null) {
             orig,
             status: svc?.status ?? null,
             level: rowLevel(svc?.status, cpu, mem),
-            uptime: formatUptime(svc?.uptime),
+            // 파드 시작 시각(재시작 반영)을 우선 — 백엔드 외 서비스는 헬스체크가 가동시간을 안 줌
+            uptime: uptimeSince(pod?.startedAt) ?? formatUptime(svc?.uptime),
             cpu,
             mem,
         });
