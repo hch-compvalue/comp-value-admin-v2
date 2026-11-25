@@ -59,9 +59,29 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                         </div>
                     </section>
 
+                    {/* 기본 순위: 가치점수 순 (1~3개월 보유 시험 2026-11-25 — test/factor-kr-2026-11, test/factor-us-2026-11) */}
+                    <section>
+                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">순위 = 가치점수 순 (1~3개월 보유 기준, 검증 중)</h4>
+                        <div className="space-y-2 text-slate-600 dark:text-slate-400 text-xs">
+                            <p>
+                                표 맨 왼쪽 <strong>순위</strong>는 가치점수가 높은 순서입니다. 과거 데이터로 "매달 점수 상위 30종목을 같은 금액씩 사서 한 달 보유"를 반복해
+                                네 가지 공식(괴리율, 가치점수, 괴리율+12개월 추세, 거기에 건전성 거름)을 비교했고, 결과를 보기 전에 판정 기준을 정해 두었습니다.
+                            </p>
+                            <ul className="list-disc list-inside space-y-1">
+                                <li><strong>국내</strong>(2024-04~2026-10): 가치점수가 전체 종목 평균보다 연 +16%p — 앞·뒤 기간 모두 우위. 단 대형주가 이끈 2025-07 이후엔 <strong>KOSPI보다 크게 뒤졌습니다</strong>(누적 +55% vs +142%)</li>
+                                <li><strong>미국</strong>(2018-01~2026-08): 가치점수만 기준 통과 — 연 +5%p, 누적 +221%로 SPY(+185%)보다도 앞섬. 효과는 크지 않음</li>
+                                <li>가치점수 순위는 주마다 거의 그대로입니다(상위 30 중 약 90% 유지). 투자 순위는 26~27%만 유지돼 1~3개월 보유와 맞지 않습니다</li>
+                            </ul>
+                            <p>
+                                <strong>보는 법</strong>: 상위권에서 10~30종목을 같은 금액씩 나눠 담고 1~3개월 보유, 한 달에 한 번 상위 30위 밖으로 밀려난 종목만 교체합니다.
+                                시험 대상은 거래가 충분한 전 종목이라 이 화면 후보 목록과 다르고, 이전 연구에 쓴 데이터를 다시 쓴 시험이라 <strong>실전 성과 추적으로 확인 중</strong>입니다.
+                            </p>
+                        </div>
+                    </section>
+
                     {/* 투자 순위 */}
                     <section>
-                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">투자 순위 (참고용 — 실전 근거 없음)</h4>
+                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">투자 순위 점수 (참고용 — 1~3개월 근거 약함)</h4>
                         <div className="space-y-2 text-slate-600 dark:text-slate-400 text-xs">
                             <p>
                                 그날 평가한 후보 안에서 세 가지의 <strong>상위 비율(백분위)</strong>을 구해 같은 비중으로 평균한 0~100점입니다.
@@ -78,7 +98,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                             </p>
                             <p>
                                 <strong>실전 결과(2026-10-15~11-19, 4주 보유)</strong>: 미국에서 순위 상위 종목과 매수 대상이 다른 후보보다 <strong>오히려 성과가 낮았습니다</strong>(매수 대상은 6개 기준일 모두, 평균 약 −8%p — 특히 "단기 눌림" 요소가 반대로 작동).
-                                국내도 백테스트에서 순위 근거가 없었습니다. 그래서 <strong>기본 화면은 미국·국내 모두 전체 후보를 가치점수 순</strong>으로 보여주고, 순위·매수 대상은 참고용으로만 남겨 둡니다.
+                                국내도 백테스트에서 순위 근거가 없었습니다. 1~3개월 보유 시험에서도 국내는 가장 낮았고(연 +4.6%p) 순위가 매주 대부분 바뀌었습니다. 그래서 <strong>기본 화면은 미국·국내 모두 전체 후보를 가치점수 순</strong>으로 보여주고, 투자 순위·매수 대상은 참고용으로만 남겨 둡니다.
                             </p>
                             <p>타이밍 신호는 같은 백테스트에서 효과가 확인되지 않아 <strong>참고용</strong>으로만 표시합니다(투자판정에는 아직 사용).</p>
                             <p>
@@ -325,7 +345,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">순위 / 투자 순위 점수</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">위 "투자 순위" 점수와 그 순위. 추천 프로파일로 거르면 그 안에서 다시 순위를 매깁니다. 2026-10-15 평가분부터 표시</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">순위 = 가치점수 순위(추천 프로파일로 거르면 그 안에서 다시 매김). 투자 순위 점수(참고) = 위 "투자 순위 점수" 막대, 2026-10-15 평가분부터 표시</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">근거</td>

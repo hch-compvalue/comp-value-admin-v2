@@ -11,13 +11,14 @@ import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal
 import { GRADE_STYLE } from '@/util/GradeStyleUtil';
 import { SIGNAL_STYLE, SignalDot } from '@/util/SignalStyleUtil';
 import { AlertTriangle } from 'lucide-react';
-import { PENDING_LABEL, VERIFIED_LABEL, US_RANK_NOTE, RANK_NOT_SUPPORTED_NOTE, KR_FAIR_VALUE_NOTE, KR_RANK_NOTE, SELL_RULE_NOTE, DIVERSIFY_NOTE, PENDING_BADGE, VERIFIED_BADGE } from '@/util/ValidationGuide';
+import { PENDING_LABEL, VERIFIED_LABEL, US_RANK_NOTE, RANK_NOT_SUPPORTED_NOTE, KR_FAIR_VALUE_NOTE, KR_RANK_NOTE, SELL_RULE_NOTE, DIVERSIFY_NOTE, PENDING_BADGE, VERIFIED_BADGE, KR_VALUE_ORDER_NOTE, US_VALUE_ORDER_NOTE, HOLD_GUIDE_NOTE, VALUE_ORDER_PENDING_NOTE } from '@/util/ValidationGuide';
 import { BUY_TARGET_LABEL, BUY_TARGET_NOTE, FINANCIAL_SECTOR, topRankSymbols, buyExcludeReasons } from '@/util/BuyTargetUtil';
 
 const SIGNAL_ORDER = ['매수 후보', '관심목록', '관망'];
 const ALL_SIGNALS = '전체';
 const BUY_TARGETS = BUY_TARGET_LABEL;   // 매수 대상 거름망 (util/BuyTargetUtil) — 참고용 타일
-// 기본 목록·정렬: 미국·국내 모두 전체 후보를 가치점수순 (투자 순위·매수 대상은 국내 백테스트 불통과, 미국 실전 4주 성과추적 미달 — util/ValidationGuide)
+// 기본 목록·정렬: 미국·국내 모두 전체 후보를 가치점수순 — 1~3개월 보유 시험(2026-11-25)에서 두 시장 모두 가장 나았음.
+// 투자 순위·매수 대상은 국내 백테스트 불통과, 미국 실전 4주 성과추적 미달 → 참고용 (util/ValidationGuide)
 const DEFAULT_FILTER = ALL_SIGNALS;
 const DEFAULT_SORT_KEY = 'valueScore';
 
@@ -207,12 +208,13 @@ const DailyPicks = () => {
         profileFilter === ALL_PROFILES ? rows : rows.filter((r) => parseProfiles(r.sourceProfiles).includes(profileFilter))
     ), [rows, profileFilter]);
 
-    // 투자 순위 (선택한 프로파일 모집단 안에서 순위 점수 내림차순, 점수 없는 종목은 순위 없음)
-    const rankBySymbol = useMemo(() => {
-        const ranked = profileRows.filter((r) => r.rankScore != null).sort((a, b) => b.rankScore - a.rankScore);
+    // 표의 '순위' = 가치점수 순위 (선택한 프로파일 모집단 안에서 내림차순, 점수 없는 종목은 순위 없음)
+    const valueRankBySymbol = useMemo(() => {
+        const ranked = profileRows.filter((r) => r.valueScore != null).sort((a, b) => b.valueScore - a.valueScore);
         return new Map(ranked.map((r, i) => [r.symbol, i + 1]));
     }, [profileRows]);
-    const hasRank = rankBySymbol.size > 0;
+    // 투자 순위 점수(참고용)가 있는 스냅샷인지 — 2026-10-15 평가분부터
+    const hasRank = useMemo(() => profileRows.some((r) => r.rankScore != null), [profileRows]);
 
     // 순위 점수가 없는 옛 스냅샷이면 가치점수 정렬로 대체
     const effectiveSortKey = sortKey === 'rankScore' && !hasRank ? 'valueScore' : sortKey;
@@ -261,10 +263,10 @@ const DailyPicks = () => {
 
     // 적정가·매수적정가는 상세(행 클릭)에서 확인 — V9 적정가는 보수적 추정이라 표에서 현재가와 바로 비교하면 오해 소지
     const COLUMNS = [
-        { key: 'rankScore', label: '순위', num: true },
+        { key: 'valueScore', label: '순위', num: true, id: 'valueRank', title: '가치점수 순위' },
         { key: 'symbol', label: isKr ? '종목코드' : '심볼' },
         { key: 'companyName', label: '기업명' },
-        { key: 'rankScore', label: '투자 순위 점수', num: true, id: 'rankScoreBar' },
+        { key: 'rankScore', label: '투자 순위 점수(참고)', num: true, id: 'rankScoreBar' },
         { key: 'roePct', label: '근거' },
         { key: 'investmentSignal', label: '투자판정' },
         { key: 'valueScore', label: '가치등급', num: true },
@@ -293,16 +295,6 @@ const DailyPicks = () => {
             {/* 요약 타일 */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
                 <button
-                    onClick={() => setSignalFilter(BUY_TARGETS)}
-                    title={BUY_TARGET_NOTE}
-                    className={`rounded-lg border px-4 py-3 text-left transition-colors bg-white dark:bg-slate-800 ${
-                        activeFilter === BUY_TARGETS ? 'border-blue-500 ring-2 ring-blue-400/40' : 'border-slate-200 dark:border-slate-700'
-                    }`}
-                >
-                    <div className="text-xs font-semibold text-blue-700 dark:text-blue-300">{BUY_TARGET_LABEL}</div>
-                    <div className="text-2xl font-bold text-slate-900 dark:text-white">{hasRank ? buyTargetCount : '-'}</div>
-                </button>
-                <button
                     onClick={() => setSignalFilter(ALL_SIGNALS)}
                     className={`rounded-lg border px-4 py-3 text-left transition-colors bg-white dark:bg-slate-800 ${
                         activeFilter === ALL_SIGNALS ? 'border-blue-500 ring-2 ring-blue-400/40' : 'border-slate-200 dark:border-slate-700'
@@ -310,6 +302,16 @@ const DailyPicks = () => {
                 >
                     <div className="text-xs font-medium text-slate-500 dark:text-slate-400">전체 후보</div>
                     <div className="text-2xl font-bold text-slate-900 dark:text-white">{profileRows.length}</div>
+                </button>
+                <button
+                    onClick={() => setSignalFilter(BUY_TARGETS)}
+                    title={BUY_TARGET_NOTE}
+                    className={`rounded-lg border px-4 py-3 text-left transition-colors bg-white dark:bg-slate-800 ${
+                        activeFilter === BUY_TARGETS ? 'border-blue-500 ring-2 ring-blue-400/40' : 'border-slate-200 dark:border-slate-700'
+                    }`}
+                >
+                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{BUY_TARGET_LABEL} <span className="font-normal text-slate-400">(참고)</span></div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-white">{hasRank ? buyTargetCount : '-'}</div>
                 </button>
                 {SIGNAL_ORDER.map((sig) => (
                     <button
@@ -327,10 +329,12 @@ const DailyPicks = () => {
                 ))}
             </div>
 
-            {/* 투자 순위·매수 대상 근거 없음 안내 — 국내: 6단계 백테스트 불통과(적정가는 통과) / 미국: 실전 4주 성과추적 미달 */}
-            <div className="mb-4 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
+            {/* 기본 순서(가치점수 순) 근거·보는 법 — 1~3개월 보유 시험(2026-11-25), 이전 연구 데이터 재사용이라 '검증 중' */}
+            <div className="mb-4 rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
                 <span className={`${PENDING_BADGE} mr-1.5`}>{PENDING_LABEL}</span>
-                {isKr ? KR_RANK_NOTE : US_RANK_NOTE}
+                <strong>순위 = 가치점수 순 (1~3개월 보유 기준)</strong> — {isKr ? KR_VALUE_ORDER_NOTE : US_VALUE_ORDER_NOTE} {VALUE_ORDER_PENDING_NOTE}
+                <div className="mt-1">{HOLD_GUIDE_NOTE}</div>
+                <div className="mt-1">{SELL_RULE_NOTE} <span className={`${VERIFIED_BADGE} ml-1`}>{VERIFIED_LABEL}</span></div>
                 {isKr && (
                     <>
                         <div className="mt-1"><span className={`${VERIFIED_BADGE} mr-1.5`}>{VERIFIED_LABEL}</span>{KR_FAIR_VALUE_NOTE}</div>
@@ -339,22 +343,18 @@ const DailyPicks = () => {
                 )}
             </div>
 
-            {/* 투자 순위 안내 — 순위 점수 없는 옛 스냅샷이면 대체 정렬 안내 */}
-            {rows.length > 0 && (
-                <div className="mb-4 rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
-                    {hasRank
-                        ? <>
-                            <span className={`${PENDING_BADGE} mr-1.5`}>{PENDING_LABEL}</span>
-                            투자 순위 = 후보 안에서 <strong>수익성(ROE) · 가치점수 · 최근 1주 눌림</strong>의 상위 비율을 같은 비중으로 합친 점수입니다. {RANK_NOT_SUPPORTED_NOTE}
-                            <div className="mt-1">{SELL_RULE_NOTE} <span className={`${VERIFIED_BADGE} ml-1`}>{VERIFIED_LABEL}</span></div>
-                            <div className="mt-1">{BUY_TARGET_NOTE}</div>
-                            <div className="mt-1">{DIVERSIFY_NOTE}</div>
-                            <label className="mt-1.5 inline-flex items-center gap-1.5 cursor-pointer select-none">
-                                <input type="checkbox" checked={excludeFinancial} onChange={(e) => setExcludeFinancial(e.target.checked)} className="rounded border-slate-300" />
-                                {BUY_TARGET_LABEL}에서 금융({FINANCIAL_SECTOR}) 제외 <span className="text-slate-400">(데이터상 넣고 빼는 차이는 불분명 — 선택)</span>
-                            </label>
-                        </>
-                        : <>이 스냅샷에는 투자 순위가 없어 가치점수 순으로 보여줍니다. 투자 순위는 2026-10-15 평가분부터 표시됩니다.</>}
+            {/* 투자 순위·매수 대상(참고용) 안내 — 국내: 백테스트 불통과 / 미국: 실전 4주 성과추적 미달. 순위 점수 없는 옛 스냅샷이면 안내 생략 */}
+            {rows.length > 0 && hasRank && (
+                <div className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
+                    <span className="font-semibold text-slate-700 dark:text-slate-200 mr-1.5">참고</span>
+                    {isKr ? KR_RANK_NOTE : US_RANK_NOTE}
+                    <div className="mt-1">투자 순위 점수 = 후보 안에서 <strong>수익성(ROE) · 가치점수 · 최근 1주 눌림</strong>의 상위 비율을 같은 비중으로 합친 점수입니다. {RANK_NOT_SUPPORTED_NOTE}</div>
+                    <div className="mt-1">{BUY_TARGET_NOTE}</div>
+                    <div className="mt-1">{DIVERSIFY_NOTE}</div>
+                    <label className="mt-1.5 inline-flex items-center gap-1.5 cursor-pointer select-none">
+                        <input type="checkbox" checked={excludeFinancial} onChange={(e) => setExcludeFinancial(e.target.checked)} className="rounded border-slate-300" />
+                        {BUY_TARGET_LABEL}에서 금융({FINANCIAL_SECTOR}) 제외 <span className="text-slate-400">(데이터상 넣고 빼는 차이는 불분명 — 선택)</span>
+                    </label>
                 </div>
             )}
 
@@ -425,10 +425,11 @@ const DailyPicks = () => {
                                 <th
                                     key={col.id || col.label}
                                     onClick={() => handleSort(col.key)}
+                                    title={col.title}
                                     className={`px-4 py-3 font-semibold text-slate-600 dark:text-slate-300 cursor-pointer whitespace-nowrap ${col.num ? 'text-right' : 'text-left'} ${col.key === 'symbol' ? `${STICKY_CELL} bg-slate-50 dark:bg-slate-800` : ''}`}
                                 >
                                     {col.label}
-                                    {effectiveSortKey === col.key && col.id !== 'rankScoreBar' && (sortDir === 'asc' ? ' ▲' : ' ▼')}
+                                    {effectiveSortKey === col.key && !col.id && (sortDir === 'asc' ? ' ▲' : ' ▼')}
                                 </th>
                             ))}
                         </tr>
@@ -450,7 +451,7 @@ const DailyPicks = () => {
                                     valueLoadingSymbol === r.symbol ? 'opacity-60' : ''
                                 }`}
                             >
-                                <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400 tabular-nums">{rankBySymbol.get(r.symbol) ?? '-'}</td>
+                                <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400 tabular-nums">{valueRankBySymbol.get(r.symbol) ?? '-'}</td>
                                 <td className={`px-4 py-2.5 font-semibold text-slate-900 dark:text-white ${STICKY_CELL} bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800`}>{r.symbol}</td>
                                 <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 max-w-[200px] truncate">{r.companyName || '-'}</td>
                                 <td className="px-4 py-2.5"><RankBar score={r.rankScore} /></td>
