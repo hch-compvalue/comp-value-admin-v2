@@ -8,6 +8,7 @@ import { useTransactions } from './hooks/useTransactions';
 import { useFxRate } from './hooks/useFxRate';
 import { useCurrencyPreference } from './hooks/useCurrencyPreference';
 import { useSymbolMemos } from './hooks/useSymbolMemos';
+import { usePickRanks } from './hooks/usePickRanks';
 import { groupRowsBySymbol, mapGroupRowForDetailModal } from './utils/grouping';
 import { calculateTotals, calculateDiffAndPercent } from './utils/calculations';
 import { sortTransactionRows } from './utils/sorting';
@@ -121,6 +122,7 @@ export default function TransactionOverview() {
         [rows]
     );
     const { getMemo, saveMemo } = useSymbolMemos(heldSymbolsKey);
+    const rankInfo = usePickRanks(market);
 
     // 삭제 실행 (상세 모달에서 호출)
     const handleRemoveTransaction = async (id) => {
@@ -486,7 +488,7 @@ export default function TransactionOverview() {
 
                 <HoldingsTable
                     displayRows={displayRows}
-                    ctx={{ ...(isKr ? KR_TABLE_CTX : { currency, fx: fxRate }), expandedSymbols, onToggleGroup: handleToggleGroup, getMemo }}
+                    ctx={{ ...(isKr ? KR_TABLE_CTX : { currency, fx: fxRate }), expandedSymbols, onToggleGroup: handleToggleGroup, getMemo, rankInfo }}
                     sortConfig={sortConfig}
                     onSort={handleSort}
                     onRowClick={handleRowClick}

@@ -1,6 +1,7 @@
 import { FmtAmount } from '../TableCells';
 import { fmtMoney, fmtDate } from '../../utils/formatters';
-import { HOLD_DEADLINE_MONTHS } from '@/util/TradingRule';
+import { CHECK_INTERVAL_MONTHS } from '@/util/TradingRule';
+import { PICK_TOP_N } from '@/util/ValidationGuide';
 
 /** 손익 방향 색 — 국내 관행(상승 빨강 / 하락 파랑), 적록색약도 구분 가능한 조합 */
 const TONE = {
@@ -128,36 +129,49 @@ export function CurPriceCell({ m, ctx }) {
     );
 }
 
-/** 기한 줄 색 — 지남/임박만 호박색(목표 도달 표시와 같은 '매도 검토' 신호), 나머지 회색 */
-function deadlineTone(hold) {
-    if (hold.expired) return 'font-semibold text-amber-600 dark:text-amber-400';
-    if (hold.soon) return 'text-amber-600 dark:text-amber-400';
-    return 'text-slate-400 dark:text-slate-500';
-}
-
-function deadlineText(hold) {
-    if (hold.expired) return `기한 지남 · ${fmtDate(hold.deadline)}`;
-    if (hold.soon) return `기한 ${fmtDate(hold.deadline)} (D-${hold.daysLeft})`;
-    return `기한 ${fmtDate(hold.deadline)}`;
+/** 점검일 줄 — 7일 안이면 호박색, 그 외 회색 */
+function checkText(hold) {
+    const when = hold.daysLeft === 0 ? '오늘 점검' : `점검 ${fmtDate(hold.nextCheck)} (D-${hold.daysLeft})`;
+    return <div className={`mt-0.5 text-xs ${hold.soon ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'}`}>{when}</div>;
 }
 
 /**
- * 매수일 + 경과 개월 / 매도 기한(매수 후 HOLD_DEADLINE_MONTHS개월)
- * - 합계 행: 가장 먼저 산 건 기준 (가장 먼저 기한이 옴)
+ * 종목 발굴 현재 순위 줄 — 상위 PICK_TOP_N 안 파랑, 첫 점검이 지났는데 밖이면 호박색 '교체 대상'
+ * (순위를 못 불러왔으면 표시 안 함)
  */
-export function BuyDateCell({ m }) {
+function RankLine({ m, rankInfo }) {
+    if (!rankInfo) return null;
+    const rank = rankInfo.ranks.get(m.symbol);
+    const inTop = rank != null && rank <= PICK_TOP_N;
+    const rankLabel = rank != null ? `${rank}위` : '후보 밖';
+    if (!inTop && m.hold?.firstCheckPassed) {
+        return <div className="mt-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">교체 대상 · {rankLabel}</div>;
+    }
+    return <div className={`mt-0.5 text-xs ${inTop ? 'font-medium text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}>순위 {rankLabel}</div>;
+}
+
+function buyDateTitle(isGroup, rankInfo) {
+    const base = `매수 후 ${CHECK_INTERVAL_MONTHS}개월마다 점검 — 종목 발굴 순위(가치점수) ${PICK_TOP_N}위 밖이면 교체`;
+    const scope = isGroup ? ' (가장 먼저 산 건 기준)' : '';
+    const date = rankInfo?.baseDate ? `\n순위 기준일 ${rankInfo.baseDate}` : '';
+    return base + scope + date;
+}
+
+/**
+ * 매수일 + 경과 개월 / 다음 점검일 / 종목 발굴 현재 순위
+ * - 합계 행: 가장 먼저 산 건 기준 / 개별 매수 행: 순위 줄 생략(합계 행과 같음)
+ */
+export function BuyDateCell({ m, ctx }) {
     const { hold } = m;
     const isGroup = m.kind === 'group';
     return (
-        <div
-            className="leading-tight"
-            title={hold ? `매수 후 ${HOLD_DEADLINE_MONTHS}개월이 지나면 목표가 미도달이어도 매도 검토${isGroup ? ' (가장 먼저 산 건 기준)' : ''}` : undefined}
-        >
+        <div className="leading-tight" title={hold ? buyDateTitle(isGroup, ctx.rankInfo) : undefined}>
             <div className="text-slate-500 dark:text-slate-400">
                 {isGroup ? (hold ? `최초 ${fmtDate(m.holdFrom)}` : '') : fmtDate(m.buyDate)}
                 {hold && <span className="ml-1 text-xs text-slate-400 dark:text-slate-500">({hold.months}개월)</span>}
             </div>
-            {hold && <div className={`mt-0.5 text-xs ${deadlineTone(hold)}`}>{deadlineText(hold)}</div>}
+            {hold && checkText(hold)}
+            {m.kind !== 'lot' && <RankLine m={m} rankInfo={ctx.rankInfo} />}
         </div>
     );
 }

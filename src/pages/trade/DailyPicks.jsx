@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { buildValueRankMap } from '@/util/PickRank';
 import { useNavigate } from 'react-router-dom';
 import { send } from '@/util/ClientUtil';
 import { fetchCompValue } from '@/util/StockApi';
@@ -108,10 +109,7 @@ const DailyPicks = () => {
     }, [market]);
 
     // 순위 = 후보 전체 안 가치점수 내림차순 (점수 없는 종목은 순위 없음)
-    const rankBySymbol = useMemo(() => {
-        const ranked = rows.filter((r) => r.valueScore != null).sort((a, b) => b.valueScore - a.valueScore);
-        return new Map(ranked.map((r, i) => [r.symbol, i + 1]));
-    }, [rows]);
+    const rankBySymbol = useMemo(() => buildValueRankMap(rows), [rows]);
 
     const sorted = useMemo(() => [...rows].sort((a, b) => {
         const av = a[sortKey], bv = b[sortKey];

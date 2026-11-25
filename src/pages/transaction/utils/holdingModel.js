@@ -80,7 +80,7 @@ export function groupToModel(group) {
         evalAmount: group.curSumUSD,
         targetPrice: group.targetAvgUSD,
         buyDate: '',
-        holdFrom: earliestBuyDate(group.groupRows),   // 합계 행 기한 = 가장 먼저 산 건 기준
+        holdFrom: earliestBuyDate(group.groupRows),   // 합계 행 점검일 = 가장 먼저 산 건 기준
         rmk: '',
         source: group,
         lotCount: group.groupRows.length,

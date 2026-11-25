@@ -1,4 +1,4 @@
-import { HOLD_DEADLINE_MONTHS, DEADLINE_SOON_DAYS } from '@/util/TradingRule';
+import { CHECK_INTERVAL_MONTHS, CHECK_SOON_DAYS } from '@/util/TradingRule';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MONTHS_PER_YEAR = 12;
@@ -27,23 +27,26 @@ function fullMonthsBetween(from, to) {
 }
 
 /**
- * 매수일 기준 보유 경과·매도 기한
+ * 매수일 기준 보유 경과·다음 순위 점검일 (매수 후 CHECK_INTERVAL_MONTHS개월마다, 오늘이 점검일이면 오늘)
  * @param {string} buyDate 'YYYY-MM-DD'
  * @param {Date} today 기준일 (기본: 오늘)
- * @returns {{months:number, deadline:Date, daysLeft:number, expired:boolean, soon:boolean}|null} 매수일이 없거나 형식이 다르면 null
+ * @returns {{months:number, nextCheck:Date, daysLeft:number, firstCheckPassed:boolean, soon:boolean}|null} 매수일이 없거나 형식이 다르면 null
  */
 export function calcHoldPeriod(buyDate, today = new Date()) {
     const start = parseLocalDate(buyDate);
     if (!start) return null;
     const base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const deadline = addMonths(start, HOLD_DEADLINE_MONTHS);
-    const daysLeft = Math.round((deadline - base) / MS_PER_DAY);
+    const months = Math.max(0, fullMonthsBetween(start, base));
+    let periods = Math.max(1, Math.floor(months / CHECK_INTERVAL_MONTHS));
+    let nextCheck = addMonths(start, periods * CHECK_INTERVAL_MONTHS);
+    if (nextCheck < base) nextCheck = addMonths(start, ++periods * CHECK_INTERVAL_MONTHS);
+    const daysLeft = Math.round((nextCheck - base) / MS_PER_DAY);
     return {
-        months: Math.max(0, fullMonthsBetween(start, base)),
-        deadline,
+        months,
+        nextCheck,
         daysLeft,
-        expired: daysLeft <= 0,
-        soon: daysLeft > 0 && daysLeft <= DEADLINE_SOON_DAYS,
+        firstCheckPassed: months >= CHECK_INTERVAL_MONTHS,
+        soon: daysLeft <= CHECK_SOON_DAYS,
     };
 }
 

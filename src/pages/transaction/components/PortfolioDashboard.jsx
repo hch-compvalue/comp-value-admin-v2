@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { fmtUsd } from '../utils/formatters';
 import { fmtKrw } from '@/util/MarketUtil';
 import { FmtAmount } from './TableCells';
-import { TRADING_RULE_TITLE, TRADING_RULE_STEPS, TRADING_RULE_NOTES } from '@/util/TradingRule';
+import { TRADING_RULE_TITLE, TRADING_RULE_STEPS, tradingRuleNotes } from '@/util/TradingRule';
 
 /**
  * 포트폴리오 요약 대시보드 (테이블 상단 배치)
@@ -108,7 +108,7 @@ export function PortfolioDashboard({ buySum, curSum, diff, diffPct, fx, fxUpdate
                             {TRADING_RULE_STEPS.map((step) => <li key={step}>{step}</li>)}
                         </ol>
                         <ul className="mt-2 space-y-0.5">
-                            {TRADING_RULE_NOTES.map((note) => <li key={note}>• {note}</li>)}
+                            {tradingRuleNotes(isKr).map((note) => <li key={note}>• {note}</li>)}
                         </ul>
                     </div>
                 )}
