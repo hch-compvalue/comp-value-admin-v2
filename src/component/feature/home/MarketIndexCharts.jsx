@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { fetchMultipleIndices } from '@/util/ChartApi';
+import { fetchIndexChart, fetchKrIndexChart } from '@/util/ChartApi';
 import { SLATE, CHART_GRID } from '@/config/themeColors';
 import {
     calcFetchDays, fetchFromDate, aggregateBars, takeRecentBars, getInterval,
@@ -16,18 +16,40 @@ import useModalAnimation from '@/hooks/useModalAnimation';
 // 확대 창 열고 닫는 애니메이션 시간
 const MODAL_ANIMATION_MS = 250;
 
-// 미국 3대 지수 정보
-const US_INDICES = [
-    { symbol: '^GSPC', name: 'S&P 500', color: '#3b82f6' }, // blue
-    { symbol: '^DJI', name: 'Dow Jones', color: '#8b5cf6' }, // purple
-    { symbol: '^IXIC', name: 'NASDAQ', color: '#f59e0b' }, // amber (적록색약 — 초록 미사용)
-];
+// 시장별 지수 구성 — 봉 단위·차트 형태 선택은 시장별로 따로 기억
+const MARKET_INDEX_CONFIG = {
+    US: {
+        title: '미국 주요 지수',
+        prefKey: 'chart.index',
+        fetch: (symbol, from, to) => fetchIndexChart(symbol, from, to),
+        indices: [
+            { symbol: '^GSPC', name: 'S&P 500', color: '#3b82f6' }, // blue
+            { symbol: '^DJI', name: 'Dow Jones', color: '#8b5cf6' }, // purple
+            { symbol: '^IXIC', name: 'NASDAQ', color: '#f59e0b' }, // amber (적록색약 — 초록 미사용)
+        ],
+    },
+    KR: {
+        title: '국내 주요 지수',
+        prefKey: 'chart.index.kr',
+        fetch: (symbol, from) => fetchKrIndexChart(symbol, from),
+        indices: [
+            { symbol: 'KOSPI', name: 'KOSPI', color: '#3b82f6' }, // blue
+            { symbol: 'KOSDAQ', name: 'KOSDAQ', color: '#f59e0b' }, // amber
+        ],
+    },
+};
 
-export default function MarketIndexCharts() {
+// 카드 개수별 넓은 화면 열 수 (Tailwind 는 완성된 클래스 문자열이 필요)
+const GRID_COLS = { 2: 'lg:grid-cols-2', 3: 'lg:grid-cols-3' };
+
+/** @param market 'US' | 'KR' */
+export default function MarketIndexCharts({ market = 'US' }) {
+    const { title, prefKey, fetch, indices } = MARKET_INDEX_CONFIG[market];
+    const gridCols = GRID_COLS[indices.length] || GRID_COLS[3];
     const [chartsData, setChartsData] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const { interval, style, setInterval: setChartInterval, setStyle } = useChartPreference('chart.index');
+    const { interval, style, setInterval: setChartInterval, setStyle } = useChartPreference(prefKey);
     const fetchDays = calcFetchDays(interval);
     const [expandedSymbol, setExpandedSymbol] = useState(null);
     const fetchedDaysRef = useRef(0); // 이미 받은 일수 — 봉 단위 변경 시 충분하면 재집계만
@@ -45,14 +67,8 @@ export default function MarketIndexCharts() {
         const to = new Date().toISOString().split('T')[0];
         const from = fetchFromDate(fetchDays);
 
-        const queries = US_INDICES.map(index => ({
-            symbol: index.symbol,
-            from,
-            to,
-        }));
-
         try {
-            const results = await fetchMultipleIndices(queries);
+            const results = await Promise.all(indices.map(async ({ symbol }) => ({ symbol, ...(await fetch(symbol, from, to)) })));
             const dataMap = {};
             let hasAnyData = false;
 
@@ -92,11 +108,11 @@ export default function MarketIndexCharts() {
         return (
             <div className="w-full">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">미국 주요 지수</h2>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">{title}</h2>
                     <ChartControls interval={interval} onIntervalChange={setChartInterval} style={style} onStyleChange={setStyle} disabled={loading} />
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    {US_INDICES.map(index => (
+                <div className={`grid grid-cols-1 ${gridCols} gap-4`}>
+                    {indices.map(index => (
                         <div key={index.symbol} className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm dark:bg-slate-800 dark:border-slate-700">
                             <div className="animate-pulse">
                                 <div className="h-4 bg-slate-200 rounded w-1/3 mb-3 dark:bg-slate-700"></div>
@@ -113,7 +129,7 @@ export default function MarketIndexCharts() {
         return (
             <div className="w-full">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">미국 주요 지수</h2>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">{title}</h2>
                     <ChartControls interval={interval} onIntervalChange={setChartInterval} style={style} onStyleChange={setStyle} disabled={loading} />
                 </div>
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-orange-700 text-sm dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-300">
@@ -126,13 +142,13 @@ export default function MarketIndexCharts() {
     return (
         <div className="w-full">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
-                <h2 className="text-xl font-bold text-slate-800 flex-shrink-0 dark:text-white">미국 주요 지수</h2>
+                <h2 className="text-xl font-bold text-slate-800 flex-shrink-0 dark:text-white">{title}</h2>
                 <div className="overflow-x-auto scrollbar-always min-w-0">
                     <ChartControls interval={interval} onIntervalChange={setChartInterval} style={style} onStyleChange={setStyle} disabled={loading} />
                 </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {US_INDICES.map(index => {
+            <div className={`grid grid-cols-1 ${gridCols} gap-4`}>
+                {indices.map(index => {
                     // 헤더(현재값·등락)는 마지막 거래일 기준, 차트는 봉 단위 집계
                     const daily = chartsData[index.symbol] || [];
                     const latestData = daily[daily.length - 1];
@@ -161,7 +177,7 @@ export default function MarketIndexCharts() {
                 })}
             </div>
             <IndexChartModal
-                index={US_INDICES.find((x) => x.symbol === expandedSymbol)}
+                index={indices.find((x) => x.symbol === expandedSymbol)}
                 daily={chartsData[expandedSymbol] || []}
                 onClose={() => setExpandedSymbol(null)}
                 controls={<ChartControls interval={interval} onIntervalChange={setChartInterval} style={style} onStyleChange={setStyle} disabled={loading} />}
@@ -259,7 +275,7 @@ function IndexCard({ index, daily, interval, isCandle, latestData, change, chang
                 <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-slate-800 dark:text-white">{index.name}</h3>
                     <span className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                        {index.symbol}
+                        {index.symbol !== index.name && index.symbol}
                         <Maximize2 aria-hidden="true" className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-500" />
                     </span>
                 </div>
@@ -309,7 +325,7 @@ function IndexChartModal({ index, daily, onClose, controls, interval, isCandle }
                         <div>
                             <div className="flex items-baseline gap-2">
                                 <h2 className="text-lg font-semibold text-slate-800 dark:text-white">{shown.name}</h2>
-                                <span className="text-xs text-slate-500 dark:text-slate-400">{shown.symbol}</span>
+                                {shown.symbol !== shown.name && <span className="text-xs text-slate-500 dark:text-slate-400">{shown.symbol}</span>}
                             </div>
                             <IndexSummary latestData={latest} change={change} changePercent={latest?.changePercent || 0} isPositive={change >= 0} large />
                         </div>

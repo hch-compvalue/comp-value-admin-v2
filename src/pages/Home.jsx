@@ -59,7 +59,12 @@ export default function Home() {
                         </div>
 
                         {/* 미국 3대 지수 차트 */}
-                        <MarketIndexCharts />
+                        <MarketIndexCharts market="US" />
+
+                        {/* 국내 지수 차트 (KOSPI·KOSDAQ) */}
+                        <div className="mt-8">
+                            <MarketIndexCharts market="KR" />
+                        </div>
                     </>
                 ) : (
                     /* 소개 — 비로그인 */

@@ -13,18 +13,12 @@ export const fetchIndexChart = async (symbol, from, to) => {
 };
 
 /**
- * 여러 지수의 차트 데이터를 병렬로 조회
- * @param {Array<{symbol: string, from: string, to: string}>} queries - 조회할 지수 목록
- * @returns {Promise<Array<{ symbol: string, data: any, error: string|null }>>}
+ * 국내 지수 차트 데이터 조회 (저장된 지수 일봉 + 최근분 KIS 보충, 미국 지수와 같은 응답 형식)
+ * @param {string} symbol - KOSPI / KOSDAQ
+ * @param {string} from - 시작일 (YYYY-MM-DD)
+ * @returns {Promise<{ data: any, error: string|null }>}
  */
-export const fetchMultipleIndices = async (queries) => {
-    const promises = queries.map(async ({ symbol, from, to }) => {
-        const result = await fetchIndexChart(symbol, from, to);
-        return { symbol, ...result };
-    });
-
-    return await Promise.all(promises);
-};
+export const fetchKrIndexChart = async (symbol, from) => send('/dart/kr/index/chart', { symbol, from }, 'GET');
 
 /**
  * 주식 가격 및 거래량 차트 데이터 조회
