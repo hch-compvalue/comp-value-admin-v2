@@ -9,34 +9,18 @@ import PageTitle from '@/component/common/display/PageTitle';
 import DailyPicksHelpModal from '@/component/common/display/DailyPicksHelpModal';
 import CompanyValueResultModal from '@/pages/trade/popup/CompanyValueResultModal';
 import { GRADE_STYLE } from '@/util/GradeStyleUtil';
-import { SIGNAL_STYLE, SignalDot } from '@/util/SignalStyleUtil';
 import { AlertTriangle } from 'lucide-react';
-import { PENDING_LABEL, VERIFIED_LABEL, US_RANK_NOTE, RANK_NOT_SUPPORTED_NOTE, KR_FAIR_VALUE_NOTE, KR_RANK_NOTE, SELL_RULE_NOTE, DIVERSIFY_NOTE, PENDING_BADGE, VERIFIED_BADGE, KR_VALUE_ORDER_NOTE, US_VALUE_ORDER_NOTE, HOLD_GUIDE_NOTE, VALUE_ORDER_PENDING_NOTE } from '@/util/ValidationGuide';
-import { BUY_TARGET_LABEL, BUY_TARGET_NOTE, FINANCIAL_SECTOR, topRankSymbols, buyExcludeReasons } from '@/util/BuyTargetUtil';
+import { PENDING_LABEL, PENDING_BADGE, PICK_TOP_N, PICK_RULES, KR_PICK_CAUTION, US_PICK_CAUTION, KR_PICK_EVIDENCE, US_PICK_EVIDENCE } from '@/util/ValidationGuide';
+import { FINANCIAL_SECTOR } from '@/util/BuyTargetUtil';
 
-const SIGNAL_ORDER = ['매수 후보', '관심목록', '관망'];
-const ALL_SIGNALS = '전체';
-const BUY_TARGETS = BUY_TARGET_LABEL;   // 매수 대상 거름망 (util/BuyTargetUtil) — 참고용 타일
-// 기본 목록·정렬: 미국·국내 모두 전체 후보를 가치점수순 — 1~3개월 보유 시험(2026-11-25)에서 두 시장 모두 가장 나았음.
-// 투자 순위·매수 대상은 국내 백테스트 불통과, 미국 실전 4주 성과추적 미달 → 참고용 (util/ValidationGuide)
-const DEFAULT_FILTER = ALL_SIGNALS;
+// 순위 = 가치점수 순 — 1개월 순위 시합(2026-11-25, 합성 점수·AI 포함)에서 가치점수를 넘는 방식 없음 (util/ValidationGuide)
+// 투자 순위 점수·투자판정·타이밍·매수 대상은 근거가 없어 화면에서 뺌 (데이터는 성과 추적에서 계속 기록)
 const DEFAULT_SORT_KEY = 'valueScore';
 
-const TIMING_STYLE = {
-    '양호': 'text-blue-600 dark:text-blue-400 font-semibold',
-    '대기': 'text-amber-600 dark:text-amber-400 font-medium',
-    '하락': 'text-orange-600 dark:text-orange-400 font-semibold',
-    '관망': 'text-slate-500 dark:text-slate-400',
-};
-
-// 추천 프로파일 태그 (백엔드 EvaluationHistoryEntity.PROFILE_DELIMITER와 동일)
-const PROFILE_DELIMITER = '|';
 // 일괄 평가로 넘길 수 있는 최대 종목 수 (일괄 평가는 50건씩 15초 간격이라 200건 ≈ 1분 + FMP 호출량 고려)
 const MAX_HANDOFF_SYMBOLS = 200;
-const ALL_PROFILES = '전체';
-const parseProfiles = (value) => (value ? value.split(PROFILE_DELIMITER).filter(Boolean) : []);
 
-// 적정가 경고 기준 — 백엔드 EvaluationConst 와 같은 값 (순위 점수에는 영향 없음, 표시만)
+// 적정가 경고 기준 — 백엔드 EvaluationConst 와 같은 값 (순위에는 영향 없음, 표시만)
 // 고평가 구간 = Step3 가격괴리 0점 구간: 공통 STEP3_GAP_SLIGHT_OVERVALUED_PCT, 금융 FIN_STEP3_GAP_SLIGHT_OVERVALUED_PCT
 // (금융 기준은 PBR 경로 종목용 — 화면엔 경로 정보가 없어 섹터로 판단하므로 해외 공시 금융주는 조금 엄격하게 경고될 수 있음)
 const OVERVALUED_GAP_PCT = -36;
@@ -46,85 +30,23 @@ const EXTREME_GAP_PCT = 200;   // QUALITY_GATE_UNREALISTIC_GAP_PCT — 계산 �
 /** 적정가 대비 괴리율(%) — 적정가·현재가가 없으면 null */
 const gapPct = (row) => (row.fairValue == null || !row.currentPrice ? null : (row.fairValue / row.currentPrice - 1) * 100);
 
-/** 투자 판단 시 놓치면 안 되는 적정가 경고 (순위 점수와 별개) */
-const valuationWarnings = (row) => {
+/** 투자 판단 시 놓치면 안 되는 적정가 경고 (순위와 별개) */
+const valuationWarning = (row) => {
     const gap = gapPct(row);
-    if (gap == null) return [];
+    if (gap == null) return null;
     if (Math.abs(gap) >= EXTREME_GAP_PCT) {
-        return [{ label: '적정가 극단값', title: `적정가 대비 ${gap > 0 ? '+' : ''}${gap.toFixed(0)}% — 적정가 계산을 믿기 어려운 수준` }];
+        return { label: '적정가 극단값', title: `적정가 대비 ${gap > 0 ? '+' : ''}${gap.toFixed(0)}% — 적정가 계산을 믿기 어려운 수준` };
     }
     const limit = row.sector === FINANCIAL_SECTOR ? FIN_OVERVALUED_GAP_PCT : OVERVALUED_GAP_PCT;
-    return gap < limit
-        ? [{ label: 'V9 고평가 구간', title: `현재가가 적정가보다 ${Math.abs(gap).toFixed(0)}% 높음 (가치 평가상 고평가 구간 ${limit}% 미만)` }]
-        : [];
+    return gap < limit ? { label: '고평가 구간', title: `현재가가 적정가보다 ${Math.abs(gap).toFixed(0)}% 높음 (가치 평가상 고평가 구간 ${limit}% 미만)` } : null;
 };
 
-// 백분위(0~100, 높을수록 좋음) → "상위 N%" 표기 (최소 1%)
-const topPct = (pct) => Math.max(1, Math.round(100 - pct));
-
-/** 투자 순위 근거: 수익성·가치 상위 비율 + 최근 1주 수익률 (순위 점수가 없으면 null) */
 // 가로 스크롤해도 어느 종목인지 보이게 심볼 열 고정
 const STICKY_CELL = 'sticky left-0 z-10';
 
-const RankReason = ({ row, excludeReasons = [] }) => {
-    const valuation = valuationWarnings(row);
-    const warnings = valuation.map((w) => (
-        <span key={w.label} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 font-semibold dark:bg-orange-900/50 dark:text-orange-200" title={w.title}>
-            <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />{w.label}
-        </span>
-    ));
-    // 매수 대상에서 빠진 이유 — 경고가 아닌 안내라 회색 (전체·판정별 목록에서만 보임)
-    excludeReasons.forEach((reason) => warnings.push(
-        <span key={`ex-${reason}`} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400" title={`${BUY_TARGET_LABEL}에서 빠진 이유`}>
-            {reason}
-        </span>
-    ));
-    // 경고 칩 설명은 툴팁에만 있어서 모바일에선 안 보임 → 모바일만 칩 아래에 글로 표시
-    const warningNotes = valuation.length > 0 && (
-        <ul className="mt-1 space-y-0.5 text-[11px] leading-snug text-orange-800 md:hidden dark:text-orange-200">
-            {valuation.map((w) => <li key={w.label}>{w.title}</li>)}
-        </ul>
-    );
-    if (row.rankScore == null) {
-        return warnings.length > 0
-            ? <div><div className="flex flex-wrap gap-1 text-xs">{warnings}</div>{warningNotes}</div>
-            : <span className="text-slate-400">-</span>;
-    }
-    const ret = row.return1wPct;
-    return (
-        <div className="flex flex-wrap gap-1 text-xs">
-            <span className="px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300" title={`ROE ${row.roe != null ? (row.roe * 100).toFixed(1) + '%' : '-'}`}>
-                수익성 상위 {topPct(row.roePct)}%
-            </span>
-            <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" title={`가치점수 ${Number(row.valueScore).toFixed(0)}`}>
-                가치 상위 {topPct(row.valuePct)}%
-            </span>
-            <span className={`px-1.5 py-0.5 rounded ${ret < 0 ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}
-                  title="최근 5거래일 수익률 — 하락이 클수록 단기 눌림 점수가 높음">
-                1주 {ret > 0 ? '+' : ''}{Number(ret).toFixed(1)}%
-            </span>
-            {warnings}
-            {warningNotes && <div className="basis-full">{warningNotes}</div>}
-        </div>
-    );
-};
-
-/** 투자 순위 점수 막대 (0~100) */
-const RankBar = ({ score }) => (
-    score == null ? <span className="text-slate-400">-</span> : (
-        <div className="flex items-center justify-end gap-2">
-            <div className="w-16 h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
-                <div className="h-full bg-blue-500 dark:bg-blue-400" style={{ width: `${score}%` }} />
-            </div>
-            <span className="font-semibold text-slate-800 dark:text-slate-100 tabular-nums">{Number(score).toFixed(1)}</span>
-        </div>
-    )
-);
-
-
 /**
- * 오늘의 매수후보 (2-2)
- * 자동 전수평가 결과를 투자판정(매수후보>관심목록>관망) 순으로 표시
+ * 오늘의 매수후보 (종목 발굴)
+ * 자동 전수평가 후보를 가치점수 순위로 보여주고, 매달 상위 30에서 나눠 담는 규칙만 안내
  */
 const DailyPicks = () => {
     const navigate = useNavigate();
@@ -135,15 +57,11 @@ const DailyPicks = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-    const [signalFilter, setSignalFilter] = useState(DEFAULT_FILTER);
-    const [excludeFinancial, setExcludeFinancial] = useState(true);
-    const [profileFilter, setProfileFilter] = useState(ALL_PROFILES);
     const [sortKey, setSortKey] = useState(DEFAULT_SORT_KEY);
     const [sortDir, setSortDir] = useState('desc');
 
-    // 시장 전환 시 기본 목록·정렬로 되돌림
+    // 시장 전환 시 기본 정렬로 되돌림
     useEffect(() => {
-        setSignalFilter(DEFAULT_FILTER);
         setSortKey(DEFAULT_SORT_KEY);
         setSortDir('desc');
     }, [isKr]);
@@ -189,72 +107,29 @@ const DailyPicks = () => {
         }
     }, [market]);
 
-    // 프로파일별 종목 수 (태그 등장 순서 = 프로파일 정렬순). 태그 없는 옛 스냅샷이면 빈 배열
-    const profileCounts = useMemo(() => {
-        const map = new Map();
-        rows.forEach((r) => parseProfiles(r.sourceProfiles).forEach((p) => map.set(p, (map.get(p) || 0) + 1)));
-        return Array.from(map.entries());
+    // 순위 = 후보 전체 안 가치점수 내림차순 (점수 없는 종목은 순위 없음)
+    const rankBySymbol = useMemo(() => {
+        const ranked = rows.filter((r) => r.valueScore != null).sort((a, b) => b.valueScore - a.valueScore);
+        return new Map(ranked.map((r, i) => [r.symbol, i + 1]));
     }, [rows]);
 
-    // 선택한 프로파일이 다른 날짜 스냅샷에 없으면 전체로 되돌림
-    useEffect(() => {
-        if (profileFilter !== ALL_PROFILES && !profileCounts.some(([p]) => p === profileFilter)) {
-            setProfileFilter(ALL_PROFILES);
-        }
-    }, [profileCounts, profileFilter]);
+    const sorted = useMemo(() => [...rows].sort((a, b) => {
+        const av = a[sortKey], bv = b[sortKey];
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        const an = typeof av === 'string' ? parseFloat(av) : av;
+        const bn = typeof bv === 'string' ? parseFloat(bv) : bv;
+        if (!isNaN(an) && !isNaN(bn)) return sortDir === 'asc' ? an - bn : bn - an;
+        return sortDir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+    }), [rows, sortKey, sortDir]);
 
-    // 프로파일 필터 적용 → 투자판정 타일과 표가 같은 모집단을 보도록
-    const profileRows = useMemo(() => (
-        profileFilter === ALL_PROFILES ? rows : rows.filter((r) => parseProfiles(r.sourceProfiles).includes(profileFilter))
-    ), [rows, profileFilter]);
-
-    // 표의 '순위' = 가치점수 순위 (선택한 프로파일 모집단 안에서 내림차순, 점수 없는 종목은 순위 없음)
-    const valueRankBySymbol = useMemo(() => {
-        const ranked = profileRows.filter((r) => r.valueScore != null).sort((a, b) => b.valueScore - a.valueScore);
-        return new Map(ranked.map((r, i) => [r.symbol, i + 1]));
-    }, [profileRows]);
-    // 투자 순위 점수(참고용)가 있는 스냅샷인지 — 2026-10-15 평가분부터
-    const hasRank = useMemo(() => profileRows.some((r) => r.rankScore != null), [profileRows]);
-
-    // 순위 점수가 없는 옛 스냅샷이면 가치점수 정렬로 대체
-    const effectiveSortKey = sortKey === 'rankScore' && !hasRank ? 'valueScore' : sortKey;
-
-    // 매수 대상 거름망 — 순위 상위 20%는 후보 전체 기준(백테스트와 같은 모집단), 프로파일 필터와 무관
-    const topSet = useMemo(() => topRankSymbols(rows), [rows]);
-    const reasonsOf = useCallback((r) => buyExcludeReasons(r, topSet, excludeFinancial), [topSet, excludeFinancial]);
-    // 순위 점수 없는 옛 스냅샷은 거름망을 만들 수 없어 전체로 대체
-    const activeFilter = signalFilter === BUY_TARGETS && !hasRank ? ALL_SIGNALS : signalFilter;
-    const buyTargetCount = useMemo(() => profileRows.filter((r) => reasonsOf(r).length === 0).length, [profileRows, reasonsOf]);
-
-    // 투자판정별 집계
-    const counts = useMemo(() => {
-        const c = { '매수 후보': 0, '관심목록': 0, '관망': 0 };
-        profileRows.forEach((r) => { if (c[r.investmentSignal] != null) c[r.investmentSignal]++; });
-        return c;
-    }, [profileRows]);
-
-    const filtered = useMemo(() => {
-        let list = activeFilter === ALL_SIGNALS ? profileRows
-            : activeFilter === BUY_TARGETS ? profileRows.filter((r) => reasonsOf(r).length === 0)
-            : profileRows.filter((r) => r.investmentSignal === activeFilter);
-        list = [...list].sort((a, b) => {
-            const av = a[effectiveSortKey], bv = b[effectiveSortKey];
-            if (av == null) return 1;
-            if (bv == null) return -1;
-            const an = typeof av === 'string' ? parseFloat(av) : av;
-            const bn = typeof bv === 'string' ? parseFloat(bv) : bv;
-            if (!isNaN(an) && !isNaN(bn)) return sortDir === 'asc' ? an - bn : bn - an;
-            return sortDir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-        });
-        return list;
-    }, [profileRows, activeFilter, reasonsOf, effectiveSortKey, sortDir]);
-
-    // 현재 표에 보이는 종목을 종목 분석 > 일괄 평가로 넘겨 실시간 재평가
-    const handleEvaluateVisible = () => {
-        const query = new URLSearchParams({ symbol: filtered.map((r) => r.symbol).join(',') });
+    // 상위 30 종목을 종목 분석 > 일괄 평가로 넘겨 실시간 재평가 (미국만)
+    const topSymbols = useMemo(() => rows.filter((r) => (rankBySymbol.get(r.symbol) ?? Infinity) <= PICK_TOP_N).map((r) => r.symbol), [rows, rankBySymbol]);
+    const handleEvaluateTop = () => {
+        const query = new URLSearchParams({ symbol: topSymbols.join(',') });
         navigate(`${STOCK_ANALYSIS_PATH}?${query}`, { state: { subTab: SUB_TAB.EVALUATE } });
     };
-    const canHandoff = !isKr && filtered.length > 0 && filtered.length <= MAX_HANDOFF_SYMBOLS;
+    const canHandoff = !isKr && topSymbols.length > 0 && topSymbols.length <= MAX_HANDOFF_SYMBOLS;
 
     const handleSort = (key) => {
         if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -263,17 +138,12 @@ const DailyPicks = () => {
 
     // 적정가·매수적정가는 상세(행 클릭)에서 확인 — V9 적정가는 보수적 추정이라 표에서 현재가와 바로 비교하면 오해 소지
     const COLUMNS = [
-        { key: 'valueScore', label: '순위', num: true, id: 'valueRank', title: '가치점수 순위' },
+        { key: 'valueScore', label: '순위', num: true, id: 'rank', title: '가치점수 순위' },
         { key: 'symbol', label: isKr ? '종목코드' : '심볼' },
         { key: 'companyName', label: '기업명' },
-        { key: 'rankScore', label: '투자 순위 점수(참고)', num: true, id: 'rankScoreBar' },
-        { key: 'roePct', label: '근거' },
-        { key: 'investmentSignal', label: '투자판정' },
         { key: 'valueScore', label: '가치등급', num: true },
-        { key: 'timingSignal', label: '타이밍(참고)' },
         { key: 'currentPrice', label: '현재가', num: true },
         { key: 'sector', label: '섹터' },
-        { key: 'sourceProfiles', label: '추천 프로파일' },
     ];
 
     return (
@@ -292,115 +162,35 @@ const DailyPicks = () => {
                 </button>
             </div>
 
-            {/* 요약 타일 */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-                <button
-                    onClick={() => setSignalFilter(ALL_SIGNALS)}
-                    className={`rounded-lg border px-4 py-3 text-left transition-colors bg-white dark:bg-slate-800 ${
-                        activeFilter === ALL_SIGNALS ? 'border-blue-500 ring-2 ring-blue-400/40' : 'border-slate-200 dark:border-slate-700'
-                    }`}
-                >
-                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">전체 후보</div>
-                    <div className="text-2xl font-bold text-slate-900 dark:text-white">{profileRows.length}</div>
-                </button>
-                <button
-                    onClick={() => setSignalFilter(BUY_TARGETS)}
-                    title={BUY_TARGET_NOTE}
-                    className={`rounded-lg border px-4 py-3 text-left transition-colors bg-white dark:bg-slate-800 ${
-                        activeFilter === BUY_TARGETS ? 'border-blue-500 ring-2 ring-blue-400/40' : 'border-slate-200 dark:border-slate-700'
-                    }`}
-                >
-                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{BUY_TARGET_LABEL} <span className="font-normal text-slate-400">(참고)</span></div>
-                    <div className="text-2xl font-bold text-slate-900 dark:text-white">{hasRank ? buyTargetCount : '-'}</div>
-                </button>
-                {SIGNAL_ORDER.map((sig) => (
-                    <button
-                        key={sig}
-                        onClick={() => setSignalFilter(sig)}
-                        className={`rounded-lg border px-4 py-3 text-left transition-colors bg-white dark:bg-slate-800 ${
-                            signalFilter === sig
-                                ? 'border-blue-500 ring-2 ring-blue-400/40'
-                                : 'border-slate-200 dark:border-slate-700'
-                        }`}
-                    >
-                        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400"><SignalDot signal={sig} />{sig}</div>
-                        <div className="text-2xl font-bold text-slate-900 dark:text-white">{counts[sig]}</div>
-                    </button>
-                ))}
-            </div>
-
-            {/* 기본 순서(가치점수 순) 근거·보는 법 — 1~3개월 보유 시험(2026-11-25), 이전 연구 데이터 재사용이라 '검증 중' */}
-            <div className="mb-4 rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
-                <span className={`${PENDING_BADGE} mr-1.5`}>{PENDING_LABEL}</span>
-                <strong>순위 = 가치점수 순 (1~3개월 보유 기준)</strong> — {isKr ? KR_VALUE_ORDER_NOTE : US_VALUE_ORDER_NOTE} {VALUE_ORDER_PENDING_NOTE}
-                <div className="mt-1">{HOLD_GUIDE_NOTE}</div>
-                <div className="mt-1">{SELL_RULE_NOTE} <span className={`${VERIFIED_BADGE} ml-1`}>{VERIFIED_LABEL}</span></div>
-                {isKr && (
-                    <>
-                        <div className="mt-1"><span className={`${VERIFIED_BADGE} mr-1.5`}>{VERIFIED_LABEL}</span>{KR_FAIR_VALUE_NOTE}</div>
-                        <div className="mt-1">지주회사·시가총액 1,000억 원 미만 종목은 매수후보에서 관심목록으로 낮춥니다.</div>
-                    </>
-                )}
-            </div>
-
-            {/* 투자 순위·매수 대상(참고용) 안내 — 국내: 백테스트 불통과 / 미국: 실전 4주 성과추적 미달. 순위 점수 없는 옛 스냅샷이면 안내 생략 */}
-            {rows.length > 0 && hasRank && (
-                <div className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">
-                    <span className="font-semibold text-slate-700 dark:text-slate-200 mr-1.5">참고</span>
-                    {isKr ? KR_RANK_NOTE : US_RANK_NOTE}
-                    <div className="mt-1">투자 순위 점수 = 후보 안에서 <strong>수익성(ROE) · 가치점수 · 최근 1주 눌림</strong>의 상위 비율을 같은 비중으로 합친 점수입니다. {RANK_NOT_SUPPORTED_NOTE}</div>
-                    <div className="mt-1">{BUY_TARGET_NOTE}</div>
-                    <div className="mt-1">{DIVERSIFY_NOTE}</div>
-                    <label className="mt-1.5 inline-flex items-center gap-1.5 cursor-pointer select-none">
-                        <input type="checkbox" checked={excludeFinancial} onChange={(e) => setExcludeFinancial(e.target.checked)} className="rounded border-slate-300" />
-                        {BUY_TARGET_LABEL}에서 금융({FINANCIAL_SECTOR}) 제외 <span className="text-slate-400">(데이터상 넣고 빼는 차이는 불분명 — 선택)</span>
-                    </label>
+            {/* 사용 규칙 — 근거 수치는 페이지 설명(도움말)에 */}
+            <div className="mb-4 rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 px-4 py-3 text-sm text-slate-700 dark:text-slate-200">
+                <ol className="list-decimal list-inside space-y-1">
+                    {PICK_RULES.map((rule) => <li key={rule}>{rule}</li>)}
+                    <li>{isKr ? KR_PICK_CAUTION : US_PICK_CAUTION}</li>
+                </ol>
+                <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                    <span className={`${PENDING_BADGE} mr-1.5`}>{PENDING_LABEL}</span>
+                    {isKr ? KR_PICK_EVIDENCE : US_PICK_EVIDENCE} 자세한 근거는 페이지 설명에 있습니다.
                 </div>
-            )}
-
-            {/* 추천 프로파일 필터 (태그가 있는 스냅샷만) */}
-            {profileCounts.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">추천 프로파일</span>
-                    {[[ALL_PROFILES, rows.length], ...profileCounts].map(([name, count]) => (
-                        <button
-                            key={name}
-                            type="button"
-                            onClick={() => setProfileFilter(name)}
-                            aria-pressed={profileFilter === name}
-                            className={`px-3 py-1 rounded-lg border text-xs font-medium transition-colors ${
-                                profileFilter === name
-                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
-                                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                            }`}
-                        >
-                            {name} <span className="ml-0.5 text-slate-400">{count}</span>
-                        </button>
-                    ))}
-                </div>
-            ) : rows.length > 0 && (
-                <div className="mb-4 text-xs text-slate-400">이 평가 스냅샷에는 추천 프로파일 정보가 없습니다 (2026-10-13 이후 평가분부터 표시)</div>
-            )}
+            </div>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
                 <div className="text-sm text-slate-500 dark:text-slate-400">
-                    {baseDate && `평가 기준일: ${baseDate}`} · {isKr
-                        ? '평일 17:30 자동 전수평가 결과 (가격은 전 거래일 종가)'
-                        : '매일 오전 10시 자동 전수평가 결과 · 행을 누르면 기업가치 계산'}
+                    후보 {rows.length}종목{baseDate && ` · 평가 기준일 ${baseDate}`} · {isKr ? '평일 17:30 갱신 (가격은 전 거래일 종가)' : '매일 오전 10시 갱신'} · 행을 누르면 기업가치 계산
                     {valueLoadingSymbol && <span className="ml-2 text-blue-600 dark:text-blue-400">({valueLoadingSymbol} 계산 중…)</span>}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                    <button
-                        type="button"
-                        onClick={handleEvaluateVisible}
-                        disabled={!canHandoff}
-                        title={isKr ? '국내 종목 일괄 평가는 준비 중입니다' : filtered.length > MAX_HANDOFF_SYMBOLS
-                            ? `한 번에 ${MAX_HANDOFF_SYMBOLS}종목까지 넘길 수 있습니다. 투자판정·프로파일로 범위를 좁혀주세요.`
-                            : '표에 보이는 종목을 종목 분석 > 일괄 평가에서 실시간으로 다시 평가합니다'}
-                        className="px-3 py-1.5 text-sm rounded-lg border border-blue-600 text-blue-700 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-blue-300 dark:border-blue-500 dark:hover:bg-slate-800"
-                    >
-                        표시 종목 일괄 평가 ({filtered.length})
-                    </button>
+                    {!isKr && (
+                        <button
+                            type="button"
+                            onClick={handleEvaluateTop}
+                            disabled={!canHandoff}
+                            title={`순위 상위 ${PICK_TOP_N}종목을 종목 분석 > 일괄 평가에서 실시간으로 다시 평가합니다`}
+                            className="px-3 py-1.5 text-sm rounded-lg border border-blue-600 text-blue-700 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-blue-300 dark:border-blue-500 dark:hover:bg-slate-800"
+                        >
+                            상위 {PICK_TOP_N} 일괄 평가
+                        </button>
+                    )}
                     <button
                         onClick={fetchData}
                         className="px-3 py-1.5 text-sm rounded-lg bg-brand text-white hover:bg-brand-hover disabled:opacity-50"
@@ -429,56 +219,55 @@ const DailyPicks = () => {
                                     className={`px-4 py-3 font-semibold text-slate-600 dark:text-slate-300 cursor-pointer whitespace-nowrap ${col.num ? 'text-right' : 'text-left'} ${col.key === 'symbol' ? `${STICKY_CELL} bg-slate-50 dark:bg-slate-800` : ''}`}
                                 >
                                     {col.label}
-                                    {effectiveSortKey === col.key && !col.id && (sortDir === 'asc' ? ' ▲' : ' ▼')}
+                                    {sortKey === col.key && !col.id && (sortDir === 'asc' ? ' ▲' : ' ▼')}
                                 </th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {filtered.length === 0 && !loading && (
+                        {sorted.length === 0 && !loading && (
                             <tr><td colSpan={COLUMNS.length} className="px-4 py-8 text-center text-slate-400">
-                                {activeFilter === BUY_TARGETS && rows.length > 0
-                                    ? `오늘은 ${BUY_TARGET_LABEL}이 없습니다. 전체 목록에서 빠진 이유를 확인하세요.`
-                                    : `데이터가 없습니다. (${isKr ? '평일 17:30' : '매일 오전 10시'} 스케줄 실행 후 표시됩니다)`}
+                                데이터가 없습니다. ({isKr ? '평일 17:30' : '매일 오전 10시'} 스케줄 실행 후 표시됩니다)
                             </td></tr>
                         )}
-                        {filtered.map((r) => (
-                            <tr
-                                key={r.symbol}
-                                onClick={() => handleRowClick(r.symbol)}
-                                title="클릭: 기업가치 계산 결과 보기"
-                                className={`group border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 select-none cursor-pointer ${
-                                    valueLoadingSymbol === r.symbol ? 'opacity-60' : ''
-                                }`}
-                            >
-                                <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400 tabular-nums">{valueRankBySymbol.get(r.symbol) ?? '-'}</td>
-                                <td className={`px-4 py-2.5 font-semibold text-slate-900 dark:text-white ${STICKY_CELL} bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800`}>{r.symbol}</td>
-                                <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 max-w-[200px] truncate">{r.companyName || '-'}</td>
-                                <td className="px-4 py-2.5"><RankBar score={r.rankScore} /></td>
-                                <td className="px-4 py-2.5 min-w-[220px]"><RankReason row={r} excludeReasons={activeFilter === BUY_TARGETS || !hasRank ? [] : reasonsOf(r)} /></td>
-                                <td className="px-4 py-2.5 whitespace-nowrap">
-                                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${SIGNAL_STYLE[r.investmentSignal] || ''}`}>
-                                        <SignalDot signal={r.investmentSignal} />{r.investmentSignal || '-'}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                                    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-bold ${GRADE_STYLE[r.valueGrade] || ''}`}>{r.valueGrade || '-'}</span>
-                                    <span className="ml-1 text-xs text-slate-400">{r.valueScore != null ? Number(r.valueScore).toFixed(0) : ''}</span>
-                                </td>
-                                <td className={`px-4 py-2.5 text-center ${TIMING_STYLE[r.timingSignal] || ''}`}>{r.timingSignal || '-'}</td>
-                                <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-300">{fmtPrice(r.currentPrice, market)}</td>
-                                <td className="px-4 py-2.5 text-left text-slate-500 dark:text-slate-400 whitespace-nowrap">{r.sector || '-'}</td>
-                                <td className="px-4 py-2.5 text-left whitespace-nowrap">
-                                    {parseProfiles(r.sourceProfiles).length === 0 ? <span className="text-slate-400">-</span> : (
-                                        <div className="flex gap-1">
-                                            {parseProfiles(r.sourceProfiles).map((p) => (
-                                                <span key={p} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 text-xs">{p}</span>
-                                            ))}
+                        {sorted.map((r) => {
+                            const rank = rankBySymbol.get(r.symbol);
+                            const inTop = rank != null && rank <= PICK_TOP_N;
+                            const warning = valuationWarning(r);
+                            return (
+                                <tr
+                                    key={r.symbol}
+                                    onClick={() => handleRowClick(r.symbol)}
+                                    title="클릭: 기업가치 계산 결과 보기"
+                                    className={`group border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 select-none cursor-pointer ${
+                                        valueLoadingSymbol === r.symbol ? 'opacity-60' : ''
+                                    }`}
+                                >
+                                    <td className="px-4 py-2.5 text-right tabular-nums whitespace-nowrap">
+                                        {inTop
+                                            ? <span className="inline-flex min-w-[2rem] justify-center px-1.5 py-0.5 rounded bg-blue-600 text-white text-xs font-bold" title={`상위 ${PICK_TOP_N}`}>{rank}</span>
+                                            : <span className="text-slate-400">{rank ?? '-'}</span>}
+                                    </td>
+                                    <td className={`px-4 py-2.5 font-semibold text-slate-900 dark:text-white ${STICKY_CELL} bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800`}>{r.symbol}</td>
+                                    <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="max-w-[200px] truncate">{r.companyName || '-'}</span>
+                                            {warning && (
+                                                <span className="inline-flex shrink-0 items-center gap-1 px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 text-xs font-semibold dark:bg-orange-900/50 dark:text-orange-200" title={warning.title}>
+                                                    <AlertTriangle className="h-3 w-3" aria-hidden="true" />{warning.label}
+                                                </span>
+                                            )}
                                         </div>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
+                                    </td>
+                                    <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-bold ${GRADE_STYLE[r.valueGrade] || ''}`}>{r.valueGrade || '-'}</span>
+                                        <span className="ml-1 text-xs text-slate-400">{r.valueScore != null ? Number(r.valueScore).toFixed(0) : ''}</span>
+                                    </td>
+                                    <td className="px-4 py-2.5 text-right text-slate-600 dark:text-slate-300">{fmtPrice(r.currentPrice, market)}</td>
+                                    <td className="px-4 py-2.5 text-left text-slate-500 dark:text-slate-400 whitespace-nowrap">{r.sector || '-'}</td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

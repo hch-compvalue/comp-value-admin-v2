@@ -1,17 +1,14 @@
 import { GRADE_STYLE } from '@/util/GradeStyleUtil';
-import { SIGNAL_STYLE, SignalDot } from '@/util/SignalStyleUtil';
 import useModalAnimation from '@/hooks/useModalAnimation';
 
 /**
  * 오늘의 매수후보 페이지 설명 모달
- * - 데이터 생성 경로(일별 전수평가), 투자판정/가치등급/타이밍 산출 기준, 컬럼 의미 설명
+ * - 보는 법과 근거, 데이터 생성 경로(일별 전수평가), 가치등급 산출 기준, 컬럼 의미 설명
  *
  * ⚠️ 아래 수치는 백엔드 상수를 사람이 옮겨 적은 값이라 자동 동기화되지 않는다.
  *    해당 상수를 바꾸면 이 파일도 함께 고칠 것 (comp-value-service 기준 원본 위치):
- *    - Step 배점(12/18/20/15/17/18), 게이트($300M·200%·2000%), 타이밍 상한(77/65),
- *      타이밍 폴백(13/9) → EvaluationConst
+ *    - Step 배점(12/18/20/15/17/18) → EvaluationConst
  *    - 가치등급 임계값(92/83/73/63/50)  → StockEvaluationService.calculateGrade()
- *    - 타이밍 신호 임계값(70/50/30)     → TechnicalAnalysisService (진입 타이밍 점수)
  *    - 배치 크기(50종목)                → RecommendedStocksEvaluator.EVAL_BATCH_SIZE
  *    - 실행 시각(매일 00:00)            → RecommendedStocks @Scheduled(cron)
  *    주당가치 계산 버전(V8 등)은 버전업 시 문구가 상하지 않도록 의도적으로 표기하지 않는다.
@@ -59,52 +56,27 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                         </div>
                     </section>
 
-                    {/* 기본 순위: 가치점수 순 (1~3개월 보유 시험 2026-11-25 — test/factor-kr-2026-11, test/factor-us-2026-11) */}
+                    {/* 보는 법과 근거 — test/factor-screen-2026-11, test/rank-model-2026-11 (2026-11-25) */}
                     <section>
-                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">순위 = 가치점수 순 (1~3개월 보유 기준, 검증 중)</h4>
+                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">보는 법과 근거 (검증 중)</h4>
                         <div className="space-y-2 text-slate-600 dark:text-slate-400 text-xs">
                             <p>
-                                표 맨 왼쪽 <strong>순위</strong>는 가치점수가 높은 순서입니다. 과거 데이터로 "매달 점수 상위 30종목을 같은 금액씩 사서 한 달 보유"를 반복해
-                                네 가지 공식(괴리율, 가치점수, 괴리율+12개월 추세, 거기에 건전성 거름)을 비교했고, 결과를 보기 전에 판정 기준을 정해 두었습니다.
+                                <strong>순위</strong>는 후보 안에서 가치점수가 높은 순서입니다. 파란 배지는 상위 30위입니다.
+                                사용 규칙: 매달 첫 주 상위 30 중 10종목 이상을 같은 금액으로 사고, 한 달 뒤 30위 밖으로 밀려난 종목만 바꿉니다.
                             </p>
+                            <p>과거 데이터로 이 규칙을 그대로 따라 했을 때(그날 후보 목록 안, 거래 비용 포함, 전체 종목을 같은 금액으로 산 경우와 비교):</p>
                             <ul className="list-disc list-inside space-y-1">
-                                <li><strong>국내</strong>(2024-04~2026-10): 가치점수가 전체 종목 평균보다 연 +16%p — 앞·뒤 기간 모두 우위. 단 대형주가 이끈 2025-07 이후엔 <strong>KOSPI보다 크게 뒤졌습니다</strong>(누적 +55% vs +142%)</li>
-                                <li><strong>미국</strong>(2018-01~2026-08): 가치점수만 기준 통과 — 연 +5%p, 누적 +221%로 SPY(+185%)보다도 앞섬. 효과는 크지 않음</li>
-                                <li>가치점수 순위는 주마다 거의 그대로입니다(상위 30 중 약 90% 유지). 투자 순위는 26~27%만 유지돼 1~3개월 보유와 맞지 않습니다</li>
+                                <li><strong>국내</strong>(2024-04~2026-09): 상위 30 연 +15%p, 앞·뒤 기간 모두 우위. 단 대형주 장세였던 2025-07 이후 KOSPI에는 크게 뒤짐(누적 +50% vs +142%)</li>
+                                <li><strong>미국</strong>(2018-01~2026-08): 상위 30 연 +4%p, 2020년 이후만 보면 +6%p. 이긴 달 비율이 기준(55%)에 경계선이라 효과가 작습니다</li>
+                                <li><strong>10종목만</strong> 사면 결과가 크게 흔들립니다(국내는 뒤 기간 손해). 상위 30 안에서 나눠 고르는 쪽이 손해 볼 확률이 낮았습니다</li>
                             </ul>
                             <p>
-                                <strong>보는 법</strong>: 상위권에서 10~30종목을 같은 금액씩 나눠 담고 1~3개월 보유, 한 달에 한 번 상위 30위 밖으로 밀려난 종목만 교체합니다.
-                                시험 대상은 거래가 충분한 전 종목이라 이 화면 후보 목록과 다르고, 이전 연구에 쓴 데이터를 다시 쓴 시험이라 <strong>실전 성과 추적으로 확인 중</strong>입니다.
-                            </p>
-                        </div>
-                    </section>
-
-                    {/* 투자 순위 */}
-                    <section>
-                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">투자 순위 점수 (참고용 — 1~3개월 근거 약함)</h4>
-                        <div className="space-y-2 text-slate-600 dark:text-slate-400 text-xs">
-                            <p>
-                                그날 평가한 후보 안에서 세 가지의 <strong>상위 비율(백분위)</strong>을 구해 같은 비중으로 평균한 0~100점입니다.
-                            </p>
-                            <ul className="list-disc list-inside space-y-1">
-                                <li><strong>수익성</strong> — ROE(자기자본이익률)가 높을수록 높음</li>
-                                <li><strong>가치</strong> — 아래 가치등급의 가치점수가 높을수록 높음</li>
-                                <li><strong>단기 눌림</strong> — 최근 5거래일 수익률이 낮을수록 높음 (좋은 종목의 일시적 하락은 2~4주 뒤 되돌아오는 경향)</li>
-                            </ul>
-                            <p>
-                                과거 데이터(2018~2026, 약 1,500종목) 백테스트에서 <strong>2~4주 보유 기준</strong> 순위가 높을수록 성과가 나았던 요소만 썼습니다.
-                                효과는 크지 않으니 <strong>최종 판단은 근거 칩과 상세(행 클릭)를 함께 보고</strong> 하세요.
-                                6~12개월 기준으로 <strong>시장 평균보다 낫다는 것은 아직 검증 중</strong>입니다(새 종목 표본 포함 백테스트에서 +1.5%p, 기준 +2%p 미달). 매도는 목표매도가(최신 기업가치 × 0.95) 도달 시 검토하는 방식이 검증됐습니다. 실제 운영 성과는 성과 추적의 "투자 순위별 성과"에서 확인할 수 있습니다.
+                                여러 지표(이익·장부가·영업이익 대비 기업가치·ROE·변동성)를 섞은 점수와 AI 학습 점수도 같은 규칙으로 시험했지만 <strong>가치점수를 넘지 못했습니다</strong>.
+                                또 순위가 높든 낮든 <strong>종목 하나가 한 달 뒤 오를 확률은 거의 반반</strong>이었습니다 — 차이는 여러 종목을 묶어 여러 달 반복할 때만 쌓입니다.
                             </p>
                             <p>
-                                <strong>실전 결과(2026-10-15~11-19, 4주 보유)</strong>: 미국에서 순위 상위 종목과 매수 대상이 다른 후보보다 <strong>오히려 성과가 낮았습니다</strong>(매수 대상은 6개 기준일 모두, 평균 약 −8%p — 특히 "단기 눌림" 요소가 반대로 작동).
-                                국내도 백테스트에서 순위 근거가 없었습니다. 1~3개월 보유 시험에서도 국내는 가장 낮았고(연 +4.6%p) 순위가 매주 대부분 바뀌었습니다. 그래서 <strong>기본 화면은 미국·국내 모두 전체 후보를 가치점수 순</strong>으로 보여주고, 투자 순위·매수 대상은 참고용으로만 남겨 둡니다.
-                            </p>
-                            <p>타이밍 신호는 같은 백테스트에서 효과가 확인되지 않아 <strong>참고용</strong>으로만 표시합니다(투자판정에는 아직 사용).</p>
-                            <p>
-                                <strong>매수 대상</strong>(참고용 타일) = 투자 순위 상위 20% 중 <strong>가치등급 B 이상</strong>이고 <strong>현재가가 목표매도가보다 낮은</strong> 종목입니다(금융 제외는 선택).
-                                두 백테스트 표본에서 12개월 시장 평균 대비 약 +3%p로 같은 방향이었고(탐색값), 가치등급 C 이하는 순위가 높아도 평균보다 나빴습니다.
-                                목록 안의 순서 차이는 작아서 <strong>10~20종목을 같은 금액씩 나눠 담는 것</strong>이 핵심입니다. 투자판정의 매수 후보/관심목록 차이는 타이밍뿐이라 구분하지 않습니다.
+                                투자 순위 점수(수익성·가치·1주 눌림), 투자판정, 타이밍, 매수 대상은 같은 시험에서 근거가 없거나 실전 성과 추적에서 뒤져 화면에서 뺐습니다(성과 추적에는 계속 기록).
+                                이전 연구에 쓴 데이터로 고른 규칙이라 앞으로의 성과 추적으로 확인합니다.
                             </p>
                         </div>
                     </section>
@@ -149,50 +121,6 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                 </div>
                             </li>
                         </ol>
-                    </section>
-
-                    {/* 투자판정 */}
-                    <section>
-                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">
-                            투자판정 = 가치등급 × 타이밍 (2축 매트릭스)
-                        </h4>
-                        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-                            <table className="min-w-full text-xs">
-                                <thead className="bg-slate-50 dark:bg-slate-900/40">
-                                    <tr>
-                                        <th className="px-4 py-2 text-left font-medium text-slate-700 dark:text-slate-300">판정</th>
-                                        <th className="px-4 py-2 text-left font-medium text-slate-700 dark:text-slate-300">조건</th>
-                                        <th className="px-4 py-2 text-left font-medium text-slate-700 dark:text-slate-300">의미</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                    <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 whitespace-nowrap">
-                                            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${SIGNAL_STYLE['매수 후보']}`}><SignalDot signal="매수 후보" />매수 후보</span>
-                                        </td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">가치등급 S/A/B <strong>+</strong> 타이밍 양호</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">펀더멘털도 좋고 진입 시점도 괜찮음 → 오늘 볼 종목</td>
-                                    </tr>
-                                    <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 whitespace-nowrap">
-                                            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${SIGNAL_STYLE['관심목록']}`}><SignalDot signal="관심목록" />관심목록</span>
-                                        </td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">가치등급 S/A/B <strong>+</strong> 타이밍 미흡(대기/하락/관망)</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">기업은 좋은데 지금 사기엔 시점이 아쉬움 → 대기</td>
-                                    </tr>
-                                    <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 whitespace-nowrap">
-                                            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${SIGNAL_STYLE['관망']}`}><SignalDot signal="관망" />관망</span>
-                                        </td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">가치등급 C/D/F (타이밍 무관)</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">펀더멘털이 기준 미달 → 타이밍이 좋아도 제외</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                            요약 타일(매수 대상·전체·매수 후보·관심목록·관망)을 클릭하면 해당 목록만 보입니다. 기본 화면은 <strong>전체 후보</strong>를 가치점수순으로 보여주며, 매수 대상에서 빠진 이유가 회색 칩으로 표시됩니다.
-                        </p>
                     </section>
 
                     {/* 가치등급 */}
@@ -244,7 +172,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">Step 6</td>
                                         <td className="px-4 py-2 text-slate-500 dark:text-slate-500">
-                                            모멘텀/기술적 분석 (18점) — <strong>가치등급에는 미포함</strong>, 아래 타이밍 신호로 분리
+                                            모멘텀/기술적 분석 (18점) — <strong>가치등급에는 미포함</strong>, 타이밍 점수로 분리(이 화면에서는 쓰지 않음)
                                         </td>
                                         <td className="px-4 py-2 text-right text-slate-500 dark:text-slate-500">—</td>
                                     </tr>
@@ -262,75 +190,6 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                         </div>
                     </section>
 
-                    {/* 타이밍 */}
-                    <section>
-                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">타이밍 신호 (진입 시점)</h4>
-                        <div className="text-slate-700 dark:text-slate-300 mb-3">
-                            기술적 분석으로 <strong>0~100점의 진입 타이밍 점수</strong>를 계산합니다.
-                            이동평균(SMA5/20/50/200), RSI, MACD, 스토캐스틱, 볼린저밴드, 거래량 추세에 가점하고,
-                            과매수·연속 상승 과열·20일 고점 근접 등에는 감점합니다.
-                        </div>
-                        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-                            <table className="min-w-full text-xs">
-                                <thead className="bg-slate-50 dark:bg-slate-900/40">
-                                    <tr>
-                                        <th className="px-4 py-2 text-left font-medium text-slate-700 dark:text-slate-300">표시</th>
-                                        <th className="px-4 py-2 text-left font-medium text-slate-700 dark:text-slate-300">타이밍 점수</th>
-                                        <th className="px-4 py-2 text-left font-medium text-slate-700 dark:text-slate-300">의미</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                    <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-semibold text-blue-600 dark:text-blue-400">양호</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">70점 이상 (매수 적기)</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">과매도 반등·추세 회복 구간 → 매수 후보 승격 조건</td>
-                                    </tr>
-                                    <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-slate-500 dark:text-slate-400">관망</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">50~69점</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">뚜렷한 신호 없음</td>
-                                    </tr>
-                                    <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-amber-600 dark:text-amber-400">대기</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">30~49점 (대기 권장)</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">진입 불리 — 총점 상한 77점(B등급 한도) 적용</td>
-                                    </tr>
-                                    <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-semibold text-orange-600 dark:text-orange-400">하락</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">30점 미만 (하락 구간)</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">하락 추세 진행 중 — 총점 상한 65점(C등급 한도) 적용</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                            * 가격 히스토리 부족 등으로 타이밍 분석에 실패하면 Step6(모멘텀) 점수로 대체 판정합니다 (13점 이상 양호 / 9점 이상 대기 / 그 외 하락).
-                        </p>
-                    </section>
-
-                    {/* 품질 게이트 */}
-                    <section>
-                        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">품질 게이트 (매수후보 강등 규칙)</h4>
-                        <div className="text-slate-700 dark:text-slate-300 mb-3">
-                            밸류에이션 계산이 부정확해지기 쉬운 종목이 매수후보로 새어 나가지 않도록, 판정 후 한 번 더 걸러냅니다.
-                        </div>
-                        <div className="space-y-2">
-                            <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
-                                <div className="font-semibold text-slate-800 dark:text-slate-200 mb-1">매수 후보 → 관심목록으로 강등</div>
-                                <div className="text-xs text-slate-600 dark:text-slate-400">
-                                    시가총액 <strong>$300M 미만(초소형주)</strong> 이거나, 적정가와 현재가의 <strong>괴리가 ±200% 이상</strong>인 경우
-                                    (계산 신뢰도가 낮아 실제 매수 리스트에서 제외)
-                                </div>
-                            </div>
-                            <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700">
-                                <div className="font-semibold text-slate-800 dark:text-slate-200 mb-1">무조건 관망으로 강등</div>
-                                <div className="text-xs text-slate-600 dark:text-slate-400">
-                                    <strong>채권·특수증권</strong>(일반 주식이 아닌 종목)이거나, 괴리가 <strong>±2000% 이상</strong>인 이상치
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
                     {/* 컬럼 설명 */}
                     <section>
                         <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">컬럼 설명</h4>
@@ -344,48 +203,24 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                                     <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">순위 / 투자 순위 점수</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">순위 = 가치점수 순위(추천 프로파일로 거르면 그 안에서 다시 매김). 투자 순위 점수(참고) = 위 "투자 순위 점수" 막대, 2026-10-15 평가분부터 표시</td>
+                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">순위</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">후보 안 가치점수 순위. 파란 배지 = 상위 30</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">근거</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">
-                                            수익성 상위 N% · 가치 상위 N% · 최근 1주 수익률. 칩에 마우스를 올리면 ROE·가치점수 원값.
-                                            주황 <strong>경고 칩</strong>은 순위와 별개로 확인할 점입니다 — <strong>V9 고평가 구간</strong>(현재가가 적정가보다 36% 넘게 높음, 금융주는 11%),
-                                            <strong>적정가 극단값</strong>(괴리 ±200% 이상, 적정가 계산을 믿기 어려움). 순위 점수에는 반영하지 않습니다
-                                        </td>
-                                    </tr>
-                                    <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">투자판정</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">가치등급 × 타이밍 매트릭스 + 품질 게이트를 거친 최종 결론</td>
+                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">기업명 옆 경고</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">주황 칩 — <strong>고평가 구간</strong>(현재가가 적정가보다 36% 넘게 높음, 금융주는 11%), <strong>적정가 극단값</strong>(괴리 ±200% 이상, 적정가 계산을 믿기 어려움). 순위에는 반영하지 않습니다</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">가치등급</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">등급 배지(S~F)와 오른쪽 작은 숫자는 100점 환산 가치점수</td>
-                                    </tr>
-                                    <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">타이밍(참고)</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">기술적 분석 기반 진입 시점 판정 (양호/관망/대기/하락). 백테스트상 효과 미확인이라 참고용</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">등급 배지(S~F)와 오른쪽 작은 숫자는 100점 환산 가치점수(순위 기준)</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
                                         <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">현재가</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400"><strong>평가 시점(오전 10시 배치)의 주가</strong>. 실시간 가격이 아닙니다</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400"><strong>평가 시점의 주가</strong>. 실시간 가격이 아닙니다</td>
                                     </tr>
                                     <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">적정가 (상세)</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">주당가치 계산 로직이 산출한 내재가치. 보수적 추정이라 대부분 종목이 이보다 비싸게 거래되므로 표에서는 빼고 상세(행 클릭)에서 보여줍니다</td>
-                                    </tr>
-                                    <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">매수적정가 (상세)</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">
-                                            적정가 × (1 − 안전마진율). <strong>현재가 &lt; 매수적정가</strong>면 안전마진을 확보한 가격대
-                                        </td>
-                                    </tr>
-                                    <tr className="bg-white dark:bg-slate-800">
-                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">추천 프로파일</td>
-                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">
-                                            이 종목을 뽑은 추천 프로파일(여러 개일 수 있음). 표 위 버튼으로 프로파일별로 거르면 투자판정 집계도 함께 바뀝니다. 2026-10-13 이후 평가분부터 표시
-                                        </td>
+                                        <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">적정가·매수적정가 (상세)</td>
+                                        <td className="px-4 py-2 text-slate-600 dark:text-slate-400">행을 누르면 나오는 상세에서 확인. 보수적 추정이라 대부분 종목이 적정가보다 비싸게 거래되므로 표에서는 뺐습니다</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -403,7 +238,7 @@ export default function DailyPicksHelpModal({ isOpen, onClose }) {
                             <li>표가 비어 있다면 오전 10시 스케줄이 아직 실행되지 않았거나, 활성 추천 프로파일이 없는 경우입니다.</li>
                             <li>평가 대상은 <strong>추천 프로파일이 뽑아낸 종목</strong>뿐입니다. 전 종목을 평가하는 화면이 아닙니다.</li>
                             <li>가격·판정 모두 평가 시점(오전 10시) 기준이므로, 장중 급변한 종목은 실제와 다를 수 있습니다.</li>
-                            <li>"매수 후보"는 최종 매수 지시가 아니라 <strong>1차 선별 결과</strong>입니다. 실제 성과는 성과 추적 페이지에서 검증하세요.</li>
+                            <li>순위는 매수 지시가 아니라 <strong>여러 종목을 나눠 담을 때의 우선순위</strong>입니다. 실제 성과는 성과 추적 페이지에서 확인하세요.</li>
                         </ul>
                     </section>
                 </div>
